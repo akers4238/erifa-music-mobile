@@ -13,6 +13,7 @@ env:
   ANDROID_COMPILE_API_LEVEL: 35
   ANDROID_TARGET_API_LEVEL: 29
   ANDROID_BUILD_TOOLS: 35.0.0
+  ANDROID_ABI: arm64-v8a
   DISABLE_SVG: 1
 
 jobs:
@@ -63,6 +64,8 @@ jobs:
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
+              -PreactNativeArchitectures="${ANDROID_ABI}" \
+              -PandroidUniversalApk=false \
               -PMYAPP_UPLOAD_STORE_FILE="${KEYSTORE_STORE_FILE}" \
               -PMYAPP_UPLOAD_KEY_ALIAS="${KEYSTORE_KEY_ALIAS}" \
               -PMYAPP_UPLOAD_STORE_PASSWORD="${KEYSTORE_PASSWORD}" \
@@ -73,6 +76,8 @@ jobs:
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
+              -PreactNativeArchitectures="${ANDROID_ABI}" \
+              -PandroidUniversalApk=false \
               -PMYAPP_UPLOAD_STORE_FILE="debug.keystore" \
               -PMYAPP_UPLOAD_KEY_ALIAS="androiddebugkey" \
               -PMYAPP_UPLOAD_STORE_PASSWORD="android" \
