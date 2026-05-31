@@ -1,0 +1,92 @@
+name: Android 15 Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ANDROID_COMPILE_API_LEVEL: 35
+  ANDROID_TARGET_API_LEVEL: 29
+  ANDROID_BUILD_TOOLS: 35.0.0
+  DISABLE_SVG: 1
+
+jobs:
+  build:
+    name: Build Android 15 APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use HTTPS for GitHub npm dependencies
+        shell: bash
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://github.com/".insteadOf "git+ssh://git@github.com/"
+
+      - name: Setup project environment
+        uses: ./.github/actions/setup
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 15 SDK
+        shell: bash
+        run: |
+          sdkmanager "platform-tools" "platforms;android-${ANDROID_COMPILE_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}"
+
+      - name: Make Gradle wrapper executable
+        shell: bash
+        run: chmod +x android/gradlew
+
+      - name: Build release APK
+        shell: bash
+        env:
+          KEYSTORE_STORE_FILE_BASE64: ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }}
+          KEYSTORE_STORE_FILE: ${{ secrets.KEYSTORE_STORE_FILE }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+        run: |
+          cd android
+
+          if [ -n "${KEYSTORE_STORE_FILE_BASE64}" ] && [ -n "${KEYSTORE_STORE_FILE}" ]; then
+            echo "${KEYSTORE_STORE_FILE_BASE64}" | base64 --decode > "app/${KEYSTORE_STORE_FILE}"
+            ./gradlew assembleRelease \
+              -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
+              -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
+              -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
+              -PMYAPP_UPLOAD_STORE_FILE="${KEYSTORE_STORE_FILE}" \
+              -PMYAPP_UPLOAD_KEY_ALIAS="${KEYSTORE_KEY_ALIAS}" \
+              -PMYAPP_UPLOAD_STORE_PASSWORD="${KEYSTORE_PASSWORD}" \
+              -PMYAPP_UPLOAD_KEY_PASSWORD="${KEYSTORE_KEY_PASSWORD}"
+            rm -f "app/${KEYSTORE_STORE_FILE}"
+          else
+            ./gradlew assembleRelease \
+              -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
+              -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
+              -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
+              -PMYAPP_UPLOAD_STORE_FILE="debug.keystore" \
+              -PMYAPP_UPLOAD_KEY_ALIAS="androiddebugkey" \
+              -PMYAPP_UPLOAD_STORE_PASSWORD="android" \
+              -PMYAPP_UPLOAD_KEY_PASSWORD="android"
+          fi
+
+      - name: Show APK checksums
+        shell: bash
+        run: |
+          cd android/app/build/outputs/apk/release
+          md5sum *.apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-15-apks
+          path: android/app/build/outputs/apk/release/*.apk
