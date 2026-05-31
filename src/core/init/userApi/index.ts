@@ -132,6 +132,19 @@ export default async(setting: LX.AppSetting) => {
           }).then(res => res.data)
         },
       }
+      sdkSource.tipSearch = {
+        search(text: string) {
+          return request('search', {
+            query: text,
+            page: 1,
+            limit: 10,
+            searchType: 'music',
+          }).then(res => {
+            const list = Array.isArray(res.data?.list) ? res.data.list : []
+            return Array.from(new Set(list.map((item: LX.Music.MusicInfoOnline) => item.name).filter(Boolean))).slice(0, 10)
+          })
+        },
+      }
       sdkSource.songList = {
         search(text: string, page: number, limit = 18) {
           return request('search', {

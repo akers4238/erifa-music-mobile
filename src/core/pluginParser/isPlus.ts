@@ -20,7 +20,18 @@ export const wrapPlusPluginScript = (script: string) => {
   const module = { exports: {} }
   const exports = module.exports
 
+  const appendParams = (url, params) => {
+    if (!params || typeof params !== 'object') return url
+    const query = Object.entries(params)
+      .filter(([, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => encodeURIComponent(key) + '=' + encodeURIComponent(String(value)))
+      .join('&')
+    if (!query) return url
+    return url + (url.includes('?') ? '&' : '?') + query
+  }
+
   const request = (url, options = {}) => new Promise((resolve, reject) => {
+    url = appendParams(url, options.params)
     lx.request(url, {
       method: options.method || 'get',
       timeout: options.timeout,
@@ -108,6 +119,20 @@ ${pluginCode}
     if (!result || typeof result !== 'object') return ''
     return result.artwork || result.cover || result.pic || result.img || ''
   }
+  const normalizeQuality = (quality) => {
+    switch (quality) {
+      case '128k':
+        return 'low'
+      case '320k':
+        return 'standard'
+      case 'flac':
+        return 'high'
+      case 'flac24bit':
+        return 'super'
+      default:
+        return quality || 'standard'
+    }
+  }
   const normalizeInterval = (value) => {
     const duration = Number(value || 0)
     if (!duration) return null
@@ -173,7 +198,7 @@ ${pluginCode}
       case 'search':
         return normalizeSearch(await plugin.search(info.query, info.page, info.searchType || 'music'), source || platform, info.page, info.limit)
       case 'musicUrl':
-        return normalizeUrl(await plugin.getMediaSource(musicItem.rawMusicFreeItem || musicItem, info.type))
+        return normalizeUrl(await plugin.getMediaSource(musicItem.rawMusicFreeItem || musicItem, normalizeQuality(info.type)))
       case 'lyric':
         return normalizeLyric(await plugin.getLyric(musicItem.rawMusicFreeItem || musicItem))
       case 'pic':
