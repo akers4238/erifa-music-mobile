@@ -16,9 +16,10 @@ import { setApiSource } from '@/core/apiSource'
 const formatVersionName = (version: string) => {
   return /^\d/.test(version) ? `v${version}` : version
 }
-const ListItem = ({ item, activeId, onRemove, onChangeAllowShowUpdateAlert }: {
+const ListItem = ({ item, activeId, onActive, onRemove, onChangeAllowShowUpdateAlert }: {
   item: LX.UserApi.UserApiInfo
   activeId: string
+  onActive: (id: string) => void
   onRemove: (id: string, name: string) => void
   onChangeAllowShowUpdateAlert: (id: string, enabled: boolean) => void
 }) => {
@@ -26,6 +27,9 @@ const ListItem = ({ item, activeId, onRemove, onChangeAllowShowUpdateAlert }: {
   const t = useI18n()
   const changeAllowShowUpdateAlert = (check: boolean) => {
     onChangeAllowShowUpdateAlert(item.id, check)
+  }
+  const handleActive = () => {
+    onActive(item.id)
   }
   const handleRemove = () => {
     onRemove(item.id, item.name)
@@ -55,6 +59,9 @@ const ListItem = ({ item, activeId, onRemove, onChangeAllowShowUpdateAlert }: {
         <CheckBox check={item.allowShowUpdateAlert} label={t('user_api_allow_show_update_alert')} onChange={changeAllowShowUpdateAlert} size={0.86} />
       </View>
       <View style={styles.listItemRight}>
+        <TouchableOpacity style={styles.btn} onPress={handleActive} disabled={activeId == item.id}>
+          <Text size={12} color={theme['c-button-font']}>{activeId == item.id ? 'Active' : 'Enable'}</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.btn} onPress={handleRemove}>
           <Icon name="close" color={theme['c-button-font']} />
         </TouchableOpacity>
@@ -96,6 +103,9 @@ export default () => {
   const handleChangeAllowShowUpdateAlert = useCallback((id: string, enabled: boolean) => {
     void setUserApiAllowShowUpdateAlert(id, enabled)
   }, [])
+  const handleActive = useCallback((id: string) => {
+    setApiSource(id)
+  }, [])
 
   return (
     <ScrollView style={styles.scrollView} keyboardShouldPersistTaps={'always'}>
@@ -108,6 +118,7 @@ export default () => {
                 key={item.id}
                 item={item}
                 activeId={apiSource}
+                onActive={handleActive}
                 onRemove={handleRemove}
                 onChangeAllowShowUpdateAlert={handleChangeAllowShowUpdateAlert}
               />
@@ -144,6 +155,8 @@ const styles = createStyle({
   },
   listItemRight: {
     flex: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
     // backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   // btns: {
@@ -159,4 +172,3 @@ const styles = createStyle({
     marginBottom: 15,
   },
 })
-

@@ -8,6 +8,7 @@ import Dialog, { type DialogType } from '@/components/common/Dialog'
 import Button from '@/components/common/Button'
 import List from './List'
 import ImportBtn from './ImportBtn'
+import ScriptInput from './ScriptInput'
 
 // interface UrlInputType {
 //   setText: (text: string) => void
@@ -105,11 +106,12 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
           <Dialog ref={dialogRef} bgHide={false}>
             <View style={styles.content}>
               {/* <UrlInput ref={inputRef} /> */}
-              <Text size={16} style={styles.title}>{t('user_api_title')}</Text>
+              <Text size={16} style={styles.title}>Is Plus Plugin Manager</Text>
+              <ScriptInput />
               <List />
               <View style={styles.tips}>
                 <Text style={styles.tipsText} size={12}>
-                  {t('user_api_readme')}
+                  Only Is Plus/MusicFree plugins are supported. Import, enable, remove, and manage plugins here.
                 </Text>
                 <TouchableOpacity onPress={openFAQPage}>
                   <Text style={{ ...styles.tipsText, textDecorationLine: 'underline' }} size={12} color={theme['c-primary-font']}>FAQ</Text>

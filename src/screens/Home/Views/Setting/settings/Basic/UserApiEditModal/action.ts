@@ -5,11 +5,13 @@ import { toast } from '@/utils/tools'
 
 
 export const handleImportScript = async(script: string) => {
-  await importUserApi(script).then(() => {
+  return importUserApi(script).then(() => {
     toast(global.i18n.t('user_api_import_success_tip'))
+    return true
   }).catch((error: any) => {
     log.error(error.stack)
     toast(global.i18n.t('user_api_import_failed_tip', { message: error.message }), 'long')
+    return false
   })
 }
 
@@ -22,4 +24,3 @@ export const handleImportLocalFile = (path: string) => {
     toast(global.i18n.t('user_api_import_failed_tip', { message: error.message }), 'long')
   })
 }
-
