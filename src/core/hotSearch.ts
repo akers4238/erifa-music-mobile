@@ -3,6 +3,7 @@ import hotSearchActions, { type Lists } from '@/store/hotSearch/action'
 import musicSdk from '@/utils/musicSdk'
 
 export const getList = async(source: Source): Promise<string[]> => {
+  if (!source) return []
   if (source == 'all') {
     let task = []
     for (const source of hotSearchState.sources) {
@@ -32,5 +33,4 @@ export const getList = async(source: Source): Promise<string[]> => {
     }).then(data => hotSearchActions.setList(source, data.list))
   }
 }
-
 

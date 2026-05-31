@@ -332,6 +332,7 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
         const qualitys = supportQualitys[source] || ['128k', '320k', 'flac', 'flac24bit']
         const actions = supportActions[source] || ['musicUrl', 'lyric', 'pic', 'search']
         sourceInfo.sources[source] = {
+          name: typeof userSource.name === 'string' ? userSource.name : source,
           type: 'music',
           actions: actions.filter(a => userSource.actions.includes(a)),
           qualitys: qualitys.filter(q => userSource.qualitys.includes(q)),

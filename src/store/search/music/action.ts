@@ -8,7 +8,7 @@ export interface SearchResult {
   allPage: number
   limit: number
   total: number
-  source: LX.OnlineSource
+  source: string
 }
 
 

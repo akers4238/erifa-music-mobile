@@ -18,7 +18,9 @@ export const clearListInfo: typeof searchSonglistActions.clearListInfo = (source
 
 
 export const search = async(text: string, page: number, sourceId: Source): Promise<ListInfoItem[]> => {
+  if (!sourceId) return []
   const listInfo = searchSonglistState.listInfos[sourceId]!
+  if (!listInfo) return []
   // if (!text) return []
   const key = `${page}__${sourceId}__${text}`
   if (listInfo.key == key && listInfo.list.length) return listInfo.list

@@ -1,25 +1,24 @@
 export type SearchType = 'music' | 'songlist'
 
 export interface InitState {
-  temp_source: 'kw'
-  // temp_source: LX.OnlineSource
+  temp_source: string
   searchType: SearchType
   searchText: string
   tipListInfo: {
     text: string
-    source: 'kw'
+    source: string
     list: string[]
   }
   historyList: string[]
 }
 
 const state: InitState = {
-  temp_source: 'kw',
+  temp_source: '',
   searchType: 'music',
   searchText: '',
   tipListInfo: {
     text: '',
-    source: 'kw',
+    source: '',
     list: [],
   },
   historyList: [],

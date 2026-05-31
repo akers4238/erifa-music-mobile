@@ -15,12 +15,16 @@ export interface MusicListType {
 
 export default forwardRef<MusicListType, {}>((props, ref) => {
   const listRef = useRef<OnlineListType>(null)
-  const searchInfoRef = useRef<{ text: string, source: Source }>({ text: '', source: 'kw' })
+  const searchInfoRef = useRef<{ text: string, source: Source }>({ text: '', source: '' })
   const isUnmountedRef = useRef(false)
   useImperativeHandle(ref, () => ({
     async loadList(text, source) {
       // const listDetailInfo = searchMusicState.listDetailInfo
       listRef.current?.setList([], false, source == 'all')
+      if (!source) {
+        listRef.current?.setStatus('end')
+        return
+      }
       if (searchMusicState.searchText == text && searchMusicState.source == source && searchMusicState.listInfos[searchMusicState.source]!.list.length) {
         requestAnimationFrame(() => {
           listRef.current?.setList(searchMusicState.listInfos[searchMusicState.source]!.list, false, source == 'all')
@@ -53,6 +57,10 @@ export default forwardRef<MusicListType, {}>((props, ref) => {
 
 
   const handleRefresh: OnlineListProps['onRefresh'] = () => {
+    if (!searchInfoRef.current.source) {
+      listRef.current?.setStatus('end')
+      return
+    }
     const page = 1
     listRef.current?.setStatus('refreshing')
     search(searchInfoRef.current.text, page, searchInfoRef.current.source).then((list) => {
@@ -65,6 +73,10 @@ export default forwardRef<MusicListType, {}>((props, ref) => {
     })
   }
   const handleLoadMore: OnlineListProps['onLoadMore'] = () => {
+    if (!searchInfoRef.current.source) {
+      listRef.current?.setStatus('end')
+      return
+    }
     listRef.current?.setStatus('loading')
     const info = searchMusicState.listInfos[searchInfoRef.current.source]!
     const page = info?.list.length ? info.page + 1 : 1
@@ -85,4 +97,3 @@ export default forwardRef<MusicListType, {}>((props, ref) => {
     checkHomePagerIdle
   />
 })
-

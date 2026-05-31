@@ -1,5 +1,3 @@
-import music from '@/utils/musicSdk'
-
 export declare interface ListInfo {
   list: LX.Music.MusicInfoOnline[]
   total: number
@@ -9,23 +7,23 @@ export declare interface ListInfo {
   key: string | null
 }
 
-interface ListInfos extends Partial<Record<LX.OnlineSource, ListInfo>> {
+interface ListInfos extends Partial<Record<string, ListInfo>> {
   'all': ListInfo
 }
 
-export type Source = LX.OnlineSource | 'all'
+export type Source = string | 'all'
 
 export interface InitState {
   searchText: string
   source: Source
   sources: Source[]
   listInfos: ListInfos
-  maxPages: Partial<Record<LX.OnlineSource, number>>
+  maxPages: Partial<Record<string, number>>
 }
 
 const state: InitState = {
   searchText: '',
-  source: 'kw',
+  source: '',
   sources: [],
   listInfos: {
     all: {
@@ -39,20 +37,5 @@ const state: InitState = {
   },
   maxPages: {},
 }
-
-for (const source of music.sources) {
-  if (!music[source.id as LX.OnlineSource]?.musicSearch) continue
-  state.sources.push(source.id as LX.OnlineSource)
-  state.listInfos[source.id as LX.OnlineSource] = {
-    page: 1,
-    maxPage: 0,
-    limit: 30,
-    total: 0,
-    list: [],
-    key: '',
-  }
-  state.maxPages[source.id as LX.OnlineSource] = 0
-}
-state.sources.push('all')
 
 export default state

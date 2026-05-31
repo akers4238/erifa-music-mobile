@@ -18,7 +18,9 @@ export const clearListInfo: typeof searchMusicActions.clearListInfo = (source) =
 
 
 export const search = async(text: string, page: number, sourceId: Source): Promise<LX.Music.MusicInfoOnline[]> => {
+  if (!sourceId) return []
   const listInfo = searchMusicState.listInfos[sourceId]!
+  if (!listInfo) return []
   if (!text) return []
   const key = `${page}__${text}`
   if (sourceId == 'all') {
@@ -55,4 +57,3 @@ export const search = async(text: string, page: number, sourceId: Source): Promi
     })
   }
 }
-

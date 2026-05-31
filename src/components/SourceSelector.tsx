@@ -6,9 +6,10 @@ import Text from '@/components/common/Text'
 import { useI18n } from '@/lang'
 
 import { useSettingValue } from '@/store/setting/hook'
+import { useSourceNames } from '@/store/common/hook'
 import { createStyle } from '@/utils/tools'
 
-type Sources = Readonly<Array<LX.OnlineSource | 'all'>>
+type Sources = Readonly<Array<string>>
 
 export interface SourceSelectorProps<S extends Sources> {
   fontSize?: number
@@ -22,17 +23,19 @@ export interface SourceSelectorType<S extends Sources> {
 
 export const useSourceListI18n = (list: Sources) => {
   const sourceNameType = useSettingValue('common.sourceNameType')
+  const sourceNames = useSourceNames()
   const t = useI18n()
   return useMemo(() => {
-    return list.map(s => ({ label: t(`source_${sourceNameType}_${s}`), action: s }))
+    return list.map(s => ({ label: sourceNames[s] || t(`source_${sourceNameType}_${s}`) || s, action: s }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list, sourceNameType, t])
+  }, [list, sourceNameType, sourceNames, t])
 }
 
 const Component = <S extends Sources>({ fontSize = 15, center, onSourceChange }: SourceSelectorProps<S>, ref: Ref<SourceSelectorType<S>>) => {
   const sourceNameType = useSettingValue('common.sourceNameType')
+  const sourceNames = useSourceNames()
   const [list, setList] = useState([] as unknown as S)
-  const [source, setSource] = useState<S[number]>('kw')
+  const [source, setSource] = useState<S[number]>('' as S[number])
   const t = useI18n()
 
   useImperativeHandle(ref, () => ({
@@ -60,7 +63,7 @@ const Component = <S extends Sources>({ fontSize = 15, center, onSourceChange }:
       activeId={source}
     >
       <View style={styles.sourceMenu}>
-        <Text style={{ textAlign: center ? 'center' : 'left' }} numberOfLines={1} size={fontSize}>{t(`source_${sourceNameType}_${source}`)}</Text>
+        <Text style={{ textAlign: center ? 'center' : 'left' }} numberOfLines={1} size={fontSize}>{sourceNames[source] || t(`source_${sourceNameType}_${source}`) || source}</Text>
       </View>
     </DorpDownMenu>
   )

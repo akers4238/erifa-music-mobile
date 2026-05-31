@@ -4,6 +4,11 @@ import musicSdk from '@/utils/musicSdk'
 import { updateSetting } from './common'
 import settingState from '@/store/setting/state'
 import { destroyUserApi, setUserApi } from './userApi'
+import searchMusicState from '@/store/search/music/state'
+import searchSonglistState from '@/store/search/songlist/state'
+import searchState from '@/store/search/state'
+import hotSearchState from '@/store/hotSearch/state'
+import commonActions from '@/store/common/action'
 
 
 export const setApiSource = (apiId: string) => {
@@ -25,6 +30,14 @@ export const setApiSource = (apiId: string) => {
     // @ts-expect-error
     global.lx.qualityList = musicSdk.supportQuality[apiId] ?? {}
     destroyUserApi()
+    ;(musicSdk as any).sources = []
+    searchState.temp_source = ''
+    searchMusicState.source = ''
+    searchMusicState.sources = []
+    searchSonglistState.source = ''
+    searchSonglistState.sources = []
+    hotSearchState.sources = []
+    commonActions.setSourceNames({})
     if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](true)
     // apiSource.value = apiId
     // void setUserApiAction(apiId)

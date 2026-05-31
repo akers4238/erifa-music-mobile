@@ -132,7 +132,7 @@ ${pluginCode}
     return ['128k', '320k', 'flac', 'flac24bit']
   }
   const normalizeSearchItem = (item, index) => {
-    const source = item.platform || item.source || platform
+    const source = platform
     const songId = item.id || item.songId || item.songmid || item.hash || index
     const qualitys = normalizeQualitys(item)
     return {

@@ -13,7 +13,14 @@ export const ITEM_HEIGHT = scaleSizeH(36)
 
 export const debounceTipSearch = debounce((keyword: string, source: SearchState['temp_source'], callback: (list: string[]) => void) => {
   // console.log(reslutList)
-  void musicSdk[source].tipSearch.search(keyword).then(callback)
+  const tipSearch = (musicSdk as any)[source]?.tipSearch?.search
+  if (!tipSearch) {
+    callback([])
+    return
+  }
+  void tipSearch(keyword).then(callback).catch(() => {
+    callback([])
+  })
 }, 200)
 
 
@@ -132,4 +139,3 @@ const styles = createStyle({
     // backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
 })
-

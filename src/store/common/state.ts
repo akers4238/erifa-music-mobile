@@ -7,7 +7,7 @@ export interface InitState {
   componentIds: Partial<Record<COMPONENT_IDS, string>>
   navActiveId: NAV_ID_Type
   lastNavActiveId: NAV_ID_Type
-  sourceNames: Record<LX.OnlineSource | 'all', string>
+  sourceNames: Record<string, string>
   bgPic: string | null
 }
 

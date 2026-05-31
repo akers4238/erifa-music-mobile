@@ -11,7 +11,7 @@ import HotSearch, { type HotSearchType } from './HotSearch'
 interface BlankViewProps {
   onSearch: (keyword: string) => void
 }
-type Source = LX.OnlineSource | 'all'
+type Source = string | 'all'
 
 export interface BlankViewType {
   show: (source: Source) => void

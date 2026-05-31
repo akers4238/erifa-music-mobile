@@ -8,6 +8,8 @@ import { confirmDialog, openUrl, tipDialog } from '@/utils/tools'
 import musicSdk from '@/utils/musicSdk'
 import searchMusicState from '@/store/search/music/state'
 import searchSonglistState from '@/store/search/songlist/state'
+import searchState from '@/store/search/state'
+import commonActions from '@/store/common/action'
 
 
 export default async(setting: LX.AppSetting) => {
@@ -144,9 +146,13 @@ export default async(setting: LX.AppSetting) => {
 
     ;(musicSdk as any).sources = [{ name: sourceName, id: source }]
     ;(musicSdk as any)[source] = sdkSource
+    commonActions.setSourceNames({
+      [source]: sourceName,
+      all: sourceName,
+    } as any)
 
     searchMusicState.source = sourceId
-    searchMusicState.sources = [sourceId, 'all']
+    searchMusicState.sources = [sourceId]
     searchMusicState.listInfos = {
       all: {
         page: 1,
@@ -166,9 +172,10 @@ export default async(setting: LX.AppSetting) => {
       },
     } as any
     searchMusicState.maxPages = { [source]: 0 } as any
+    searchState.temp_source = source
 
     searchSonglistState.source = sourceId
-    searchSonglistState.sources = [sourceId, 'all']
+    searchSonglistState.sources = [sourceId]
     searchSonglistState.listInfos = {
       all: {
         page: 1,
@@ -200,9 +207,9 @@ export default async(setting: LX.AppSetting) => {
         let apis: any = {}
         let qualitys: LX.QualityList = {}
         const pluginSources: Array<[string, LX.UserApi.UserApiSourceInfo]> = []
-        for (const [source, { actions, type, qualitys: sourceQualitys }] of Object.entries(info.sources)) {
+        for (const [source, { name, actions, type, qualitys: sourceQualitys }] of Object.entries(info.sources)) {
           if (type != 'music') continue
-          pluginSources.push([source, { name: source, actions, type, qualitys: sourceQualitys }])
+          pluginSources.push([source, { name, actions, type, qualitys: sourceQualitys }])
           apis[source as LX.Source] = {}
           for (const action of actions) {
             switch (action) {

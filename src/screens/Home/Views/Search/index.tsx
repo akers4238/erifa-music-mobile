@@ -17,8 +17,8 @@ import { addHistoryWord } from '@/core/search/search'
 
 
 interface SearchInfo {
-  temp_source: LX.OnlineSource
-  source: LX.OnlineSource | 'all'
+  temp_source: string
+  source: string | 'all'
   searchType: 'music' | 'songlist'
 }
 
@@ -27,36 +27,54 @@ export default () => {
   const searchTipListRef = useRef<TipListType>(null)
   const listRef = useRef<ListType>(null)
   const layoutHeightRef = useRef<number>(0)
-  const searchInfo = useRef<SearchInfo>({ temp_source: 'kw', source: 'kw', searchType: 'music' })
+  const searchInfo = useRef<SearchInfo>({ temp_source: '', source: '', searchType: 'music' })
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    const getCurrentSources = (type: SearchType) => type == 'music' ? searchMusicState.sources : searchSonglistState.sources
+    const getCurrentSource = (type: SearchType, fallback?: string | 'all') => {
+      const sources = getCurrentSources(type)
+      if (fallback && sources.includes(fallback)) return fallback
+      return sources.find(source => source != 'all') ?? sources[0] ?? ''
+    }
+    const setPluginSourceList = (type: SearchType, source?: string | 'all') => {
+      const sources = getCurrentSources(type)
+      const activeSource = getCurrentSource(type, source)
+      searchInfo.current.source = activeSource
+      searchInfo.current.temp_source = activeSource == 'all' ? getCurrentSource(type) : activeSource
+      headerBarRef.current?.setSourceList(sources.includes(activeSource) ? sources : activeSource ? [activeSource] : [], activeSource)
+      void saveSearchSetting({
+        source: activeSource as LX.OnlineSource,
+        temp_source: searchInfo.current.temp_source as LX.OnlineSource,
+      })
+      return activeSource
+    }
+
     void getSearchSetting().then(info => {
       // info.type = 'music'
       searchInfo.current.temp_source = info.temp_source
-      searchInfo.current.source = info.source
       searchInfo.current.searchType = info.type
-      switch (info.type) {
-        case 'music':
-          headerBarRef.current?.setSourceList(searchMusicState.sources, info.source)
-          break
-        case 'songlist':
-          headerBarRef.current?.setSourceList(searchSonglistState.sources, info.source)
-          break
-      }
+      const source = setPluginSourceList(info.type, info.source)
       headerBarRef.current?.setText(searchState.searchText)
-      listRef.current?.loadList(searchState.searchText, searchInfo.current.source, searchInfo.current.searchType)
+      listRef.current?.loadList(searchState.searchText, source, searchInfo.current.searchType)
     })
 
     const handleTypeChange = (type: SearchType) => {
       searchInfo.current.searchType = type
       void saveSearchSetting({ type })
-      listRef.current?.loadList(searchState.searchText, searchInfo.current.source, type)
+      const source = setPluginSourceList(type, searchInfo.current.source)
+      listRef.current?.loadList(searchState.searchText, source, type)
+    }
+    const handleApiSourceUpdated = () => {
+      const source = setPluginSourceList(searchInfo.current.searchType, searchInfo.current.source)
+      listRef.current?.loadList(searchState.searchText, source, searchInfo.current.searchType)
     }
     global.app_event.on('searchTypeChanged', handleTypeChange)
+    global.state_event.on('apiSourceUpdated', handleApiSourceUpdated)
 
     return () => {
       global.app_event.off('searchTypeChanged', handleTypeChange)
+      global.state_event.off('apiSourceUpdated', handleApiSourceUpdated)
     }
   }, [])
 
