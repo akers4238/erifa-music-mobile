@@ -7,7 +7,6 @@ import CheckBox from '@/components/common/CheckBox'
 import { createStyle } from '@/utils/tools'
 import { setApiSource } from '@/core/apiSource'
 import { useI18n } from '@/lang'
-import apiSourceInfo from '@/utils/musicSdk/api-source-info'
 import { useSettingValue } from '@/store/setting/hook'
 import { useStatus, useUserApiList } from '@/store/userApi'
 import Button from '../../components/Button'
@@ -15,12 +14,6 @@ import UserApiEditModal, { type UserApiEditModalType } from './UserApiEditModal'
 import Text from '@/components/common/Text'
 import { useTheme } from '@/store/theme/hook'
 // import { importUserApi, removeUserApi } from '@/core/userApi'
-
-const apiSourceList = apiSourceInfo.map(api => ({
-  id: api.id,
-  name: api.name,
-  disabled: api.disabled,
-}))
 
 const useActive = (id: string) => {
   const activeLangId = useSettingValue('common.apiSource')
@@ -55,11 +48,6 @@ const Item = ({ id, name, desc, statusLabel, change }: {
 
 export default memo(() => {
   const t = useI18n()
-  const list = useMemo(() => apiSourceList.map(s => ({
-    // @ts-expect-error
-    name: t(`setting_basic_source_${s.id}`) || s.name,
-    id: s.id,
-  })), [t])
   const setApiSourceId = useCallback((id: string) => {
     setApiSource(id)
   }, [])
@@ -98,9 +86,6 @@ export default memo(() => {
   return (
     <SubTitle title={t('setting_basic_source')}>
       <View style={styles.list}>
-        {
-          list.map(({ id, name }) => <Item name={name} id={id} key={id} change={setApiSourceId} />)
-        }
         {
           userApiList.map(({ id, name, desc, statusLabel }) => <Item name={name} desc={desc} statusLabel={statusLabel} id={id} key={id} change={setApiSourceId} />)
         }

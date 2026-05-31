@@ -3,8 +3,6 @@ import { addUserApi, getUserApiScript, removeUserApi as removeUserApiFromStore, 
 import { destroy, loadScript } from '@/utils/nativeModules/userApi'
 import { log as writeLog } from '@/utils/log'
 
-const isLXUserApiScript = (script: string) => /\blx\.(?:on|send)\s*\(/.test(script)
-
 const isMusicFreePluginScript = (script: string) => {
   return /\bplatform\s*:/.test(script) &&
     /\bgetMediaSource\s*:|\bgetMediaSource\s*\(/.test(script) &&
@@ -88,6 +86,7 @@ ${pluginCode}
 
   const platform = String(plugin.platform || lx.currentScriptInfo.name || 'musicfree')
   const actions = ['musicUrl']
+  if (typeof plugin.search === 'function') actions.push('search')
   if (typeof plugin.getLyric === 'function') actions.push('lyric')
   if (typeof plugin.getMusicInfo === 'function') actions.push('pic')
 
@@ -114,16 +113,76 @@ ${pluginCode}
     if (!result || typeof result !== 'object') return ''
     return result.artwork || result.cover || result.pic || result.img || ''
   }
+  const normalizeInterval = (value) => {
+    const duration = Number(value || 0)
+    if (!duration) return null
+    const seconds = duration > 1000 ? Math.round(duration / 1000) : Math.round(duration)
+    const minute = Math.floor(seconds / 60)
+    const second = String(seconds % 60).padStart(2, '0')
+    return minute + ':' + second
+  }
+  const normalizeQualitys = (item) => {
+    const candidates = item.qualities || item.qualitys || {}
+    if (Array.isArray(candidates)) {
+      return candidates.map(q => typeof q === 'string' ? q : q?.type).filter(Boolean)
+    }
+    if (candidates && typeof candidates === 'object') {
+      return Object.keys(candidates)
+    }
+    return ['128k', '320k', 'flac', 'flac24bit']
+  }
+  const normalizeSearchItem = (item, index) => {
+    const source = item.platform || item.source || platform
+    const songId = item.id || item.songId || item.songmid || item.hash || index
+    const qualitys = normalizeQualitys(item)
+    return {
+      id: source + '_' + songId,
+      name: item.title || item.name || '',
+      singer: item.artist || item.singer || item.artists || '',
+      source,
+      songmid: String(songId),
+      interval: item.durationText || item.interval || normalizeInterval(item.duration),
+      img: item.artwork || item.picUrl || item.cover || item.pic || null,
+      albumName: item.album || item.albumName || '',
+      lrc: null,
+      otherSource: null,
+      types: qualitys,
+      _types: qualitys,
+      typeUrl: {},
+      rawMusicFreeItem: item,
+    }
+  }
+  const normalizeSearch = (result, source, page, limit) => {
+    const rawList = Array.isArray(result)
+      ? result
+      : Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.list)
+          ? result.list
+          : []
+    const list = rawList.map((item, index) => normalizeSearchItem(item, index))
+    const total = Number(result?.total ?? (result?.isEnd ? list.length : page * limit + list.length))
+    const allPage = result?.isEnd ? page : Math.max(page + 1, Math.ceil(total / limit))
+    return {
+      list,
+      total,
+      limit,
+      allPage,
+      source,
+    }
+  }
 
   lx.on(lx.EVENT_NAMES.request, async ({ source, action, info }) => {
     const musicItem = normalizeMusicItem(info.musicInfo || {}, source || platform)
     switch (action) {
+      case 'search':
+        return normalizeSearch(await plugin.search(info.query, info.page, info.searchType || 'music'), source || platform, info.page, info.limit)
       case 'musicUrl':
-        return normalizeUrl(await plugin.getMediaSource(musicItem, info.type))
+        return normalizeUrl(await plugin.getMediaSource(musicItem.rawMusicFreeItem || musicItem, info.type))
       case 'lyric':
-        return normalizeLyric(await plugin.getLyric(musicItem))
+        return normalizeLyric(await plugin.getLyric(musicItem.rawMusicFreeItem || musicItem))
       case 'pic':
-        return normalizePic(await plugin.getMusicInfo(musicItem))
+        return normalizePic(await plugin.getMusicInfo(musicItem.rawMusicFreeItem || musicItem))
       default:
         throw new Error('Unsupported action: ' + action)
     }
@@ -144,9 +203,8 @@ ${pluginCode}
 }
 
 const normalizeImportedScript = (script: string) => {
-  if (isLXUserApiScript(script)) return script
   if (isMusicFreePluginScript(script)) return wrapMusicFreePluginScript(script)
-  return script
+  throw new Error('只支持导入 MusicFree 插件')
 }
 
 

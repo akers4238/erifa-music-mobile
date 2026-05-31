@@ -247,6 +247,14 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
               data: response,
             }
             break
+          case 'search':
+            if (!response || typeof response != 'object' || !Array.isArray(response.list)) throw new Error('failed')
+            result = {
+              source: data.source,
+              action: data.action,
+              data: response,
+            }
+            break
         }
         nativeCall(NATIVE_EVENTS_NAMES.response, { requestKey, status: true, result })
       }).catch(err => {
@@ -322,7 +330,7 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
         const userSource = info.sources[source]
         if (!userSource || userSource.type !== 'music') continue
         const qualitys = supportQualitys[source] || ['128k', '320k', 'flac', 'flac24bit']
-        const actions = supportActions[source] || ['musicUrl', 'lyric', 'pic']
+        const actions = supportActions[source] || ['musicUrl', 'lyric', 'pic', 'search']
         sourceInfo.sources[source] = {
           type: 'music',
           actions: actions.filter(a => userSource.actions.includes(a)),

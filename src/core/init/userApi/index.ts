@@ -5,6 +5,9 @@ import BackgroundTimer from 'react-native-background-timer'
 import { fetchData } from './request'
 import { getUserApiList } from '@/utils/data'
 import { confirmDialog, openUrl, tipDialog } from '@/utils/tools'
+import musicSdk from '@/utils/musicSdk'
+import searchMusicState from '@/store/search/music/state'
+import searchSonglistState from '@/store/search/songlist/state'
 
 
 export default async(setting: LX.AppSetting) => {
@@ -71,6 +74,123 @@ export default async(setting: LX.AppSetting) => {
     if (status) target.resolve(result)
     else target.reject(new Error(errorMessage ?? 'failed'))
   }
+  const resetSingleMusicFreeSource = (source: string, sourceInfo: LX.UserApi.UserApiSourceInfo) => {
+    const sourceId = source as LX.OnlineSource
+    const sourceName = sourceInfo.name || source
+    const request = (action: LX.UserApi.UserApiSourceInfoActions, info: any) => {
+      const requestKey = `request__${Math.random().toString().substring(2)}`
+      return sendUserApiRequest({
+        requestKey,
+        data: {
+          source,
+          action,
+          info,
+        },
+      })
+    }
+
+    const sdkSource: any = {
+      name: sourceName,
+      id: source,
+      getMusicUrl(songInfo: LX.Music.MusicInfo, type: LX.Quality) {
+        const promise = request('musicUrl', {
+          type,
+          musicInfo: songInfo,
+        }).then(res => ({ type, url: res.data.url }))
+        return {
+          canceleFn() {},
+          promise,
+        }
+      },
+    }
+    if (sourceInfo.actions.includes('lyric')) {
+      sdkSource.getLyric = (songInfo: LX.Music.MusicInfo) => ({
+        canceleFn() {},
+        promise: request('lyric', {
+          musicInfo: songInfo,
+        }).then(res => res.data),
+      })
+    }
+    if (sourceInfo.actions.includes('pic')) {
+      sdkSource.getPic = (songInfo: LX.Music.MusicInfo) => ({
+        canceleFn() {},
+        promise: request('pic', {
+          musicInfo: songInfo,
+        }).then(res => res.data),
+      })
+    }
+    if (sourceInfo.actions.includes('search')) {
+      sdkSource.musicSearch = {
+        search(text: string, page: number, limit = 30) {
+          return request('search', {
+            query: text,
+            page,
+            limit,
+            searchType: 'music',
+          }).then(res => res.data)
+        },
+      }
+      sdkSource.songList = {
+        search(text: string, page: number, limit = 18) {
+          return request('search', {
+            query: text,
+            page,
+            limit,
+            searchType: 'sheet',
+          }).then(res => res.data)
+        },
+      }
+    }
+
+    ;(musicSdk as any).sources = [{ name: sourceName, id: source }]
+    ;(musicSdk as any)[source] = sdkSource
+
+    searchMusicState.source = sourceId
+    searchMusicState.sources = [sourceId, 'all']
+    searchMusicState.listInfos = {
+      all: {
+        page: 1,
+        maxPage: 0,
+        limit: 30,
+        total: 0,
+        list: [],
+        key: null,
+      },
+      [source]: {
+        page: 1,
+        maxPage: 0,
+        limit: 30,
+        total: 0,
+        list: [],
+        key: '',
+      },
+    } as any
+    searchMusicState.maxPages = { [source]: 0 } as any
+
+    searchSonglistState.source = sourceId
+    searchSonglistState.sources = [sourceId, 'all']
+    searchSonglistState.listInfos = {
+      all: {
+        page: 1,
+        limit: 15,
+        total: 0,
+        list: [],
+        key: null,
+        tagId: '',
+        sortId: '',
+      },
+      [source]: {
+        page: 1,
+        limit: 18,
+        total: 0,
+        list: [],
+        key: null,
+        tagId: '',
+        sortId: '',
+      },
+    } as any
+    searchSonglistState.maxPages = { [source]: 0 } as any
+  }
   const handleStateChange = ({ status, errorMessage, info }: InitParams) => {
     // console.log(status, message, info)
     setUserApiStatus(status, errorMessage)
@@ -79,8 +199,10 @@ export default async(setting: LX.AppSetting) => {
       if (info.sources) {
         let apis: any = {}
         let qualitys: LX.QualityList = {}
+        const pluginSources: Array<[string, LX.UserApi.UserApiSourceInfo]> = []
         for (const [source, { actions, type, qualitys: sourceQualitys }] of Object.entries(info.sources)) {
           if (type != 'music') continue
+          pluginSources.push([source, { name: source, actions, type, qualitys: sourceQualitys }])
           apis[source as LX.Source] = {}
           for (const action of actions) {
             switch (action) {
@@ -176,6 +298,7 @@ export default async(setting: LX.AppSetting) => {
         }
         global.lx.qualityList = qualitys
         global.lx.apis = apis
+        if (pluginSources.length) resetSingleMusicFreeSource(pluginSources[0][0], pluginSources[0][1])
         global.state_event.apiSourceUpdated(settingState.setting['common.apiSource'])
       }
     } else {
