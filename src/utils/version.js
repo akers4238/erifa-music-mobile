@@ -19,7 +19,7 @@ const address = [
   [`https://fastly.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
   [`https://gcore.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
   ['https://registry.npmmirror.com/lx-music-mobile-version-info/latest', 'npm'],
-  ['https://gitee.com/lyswhut/lx-music-mobile-versions/raw/master/version.json', 'direct'],
+  ['https://gitee.com/akers4238/lx-music-mobile-versions/raw/master/version.json', 'direct'],
   ['http://cdn.stsky.cn/lx-music/mobile/version.json', 'direct'],
 ]
 

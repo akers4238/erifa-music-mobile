@@ -1,6 +1,6 @@
 # lx-music-mobile 常见问题
 
-本文档已迁移至：<https://lyswhut.github.io/lx-music-doc/mobile/faq>
+本文档已迁移至：<https://akers4238.github.io/lx-music-doc/mobile/faq>
 
 <!-- 在阅读本常见问题后，仍然无法解决你的问题，请提交issue或者加企鹅群`830125506`反馈（无事勿加，入群先看群公告），反馈时请**注明**已阅读常见问题！
 
@@ -34,7 +34,7 @@
 2. 尝试切换其他歌曲（或直接搜索该歌曲），若全部歌曲都无法试听与下载则进行下一步
 3. 尝试到 设置-音乐来源 切换到其他接口
 4. 尝试切换网络，比如用手机开热点（所有歌曲都提示请求异常时可通过此方法解决，或等一两天后再试）
-5. 若还不行请到这个链接查看详情：<https://github.com/lyswhut/lx-music-desktop/issues/5>
+5. 若还不行请到这个链接查看详情：<https://github.com/akers4238/lx-music-desktop/issues/5>
 6. 若没有在第5条链接中的第一条评论中看到接口无法使用的说明，则应该是你网络无法访问接口服务器的问题，如果接口有问题我会在那里说明。
 
 想要知道是不是自己网络的问题可以看看`http://ts.tempmusics.tk`能不能在浏览器打开，浏览器显示404是正常的，如果不是404那就证明所在网络无法访问接口服务器。
@@ -108,7 +108,7 @@
 
 ## 杀毒软件提示有病毒或恶意行为
 
-本人只能保证我写的代码不包含任何**恶意代码**、**收集用户信息**的行为，并且软件代码已开源，请自行查阅，软件安装包也是由CI拉取源代码构建，构建日志：[GitHub Actions](https://github.com/lyswhut/lx-music-mobile/actions)<br>
+本人只能保证我写的代码不包含任何**恶意代码**、**收集用户信息**的行为，并且软件代码已开源，请自行查阅，软件安装包也是由CI拉取源代码构建，构建日志：[GitHub Actions](https://github.com/akers4238/lx-music-mobile/actions)<br>
 尽管如此，但这不意味着软件是100%安全的，由于软件使用了第三方依赖，当这些依赖存在恶意行为时（[供应链攻击](https://docs.microsoft.com/zh-cn/windows/security/threat-protection/intelligence/supply-chain-malware)），软件也将会受到牵连，所以我只能尽量选择使用较多人用、信任度较高的依赖。<br>
 当然，以上说明建立的前提是在你所用的安装包是从**本项目主页上写的链接**下载的，或者有相关能力者还可以下载源代码自己构建安装包。
 

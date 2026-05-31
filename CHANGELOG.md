@@ -6,7 +6,7 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [1.8.4](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.3...v1.8.4) - 2026-05-01
+## [1.8.4](https://github.com/akers4238/lx-music-mobile/compare/v1.8.3...v1.8.4) - 2026-05-01
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。
 对于有播放本地音乐或播放服务器上音乐需求的人可以试试，若遇到任何问题可以发 issue 反馈。
@@ -15,7 +15,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复蓝牙歌词显示问题（#1042）
 
-## [1.8.3](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.2...v1.8.3) - 2026-05-01
+## [1.8.3](https://github.com/akers4238/lx-music-mobile/compare/v1.8.2...v1.8.3) - 2026-05-01
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。
 对于有播放本地音乐或播放服务器上音乐需求的人可以试试，若遇到任何问题可以发 issue 反馈。
@@ -33,14 +33,14 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复可忽略的错误没有正确处理的问题
 - 修复 tx 搜索结果显示异常的问题
 
-## [1.8.2](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.1...v1.8.2) - 2026-03-28
+## [1.8.2](https://github.com/akers4238/lx-music-mobile/compare/v1.8.1...v1.8.2) - 2026-03-28
 
 ### 修复
 
 - 修复在某些设备上出现切歌崩溃的问题 (#971)
 - 修复tx在偶现搜索失败的问题 (#994, @ikun0014)
 
-## [1.8.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.0...v1.8.1) - 2026-02-16
+## [1.8.1](https://github.com/akers4238/lx-music-mobile/compare/v1.8.0...v1.8.1) - 2026-02-16
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。
 对于有播放本地音乐或播放服务器上音乐需求的人可以试试，若遇到任何问题可以发 issue 反馈。
@@ -55,7 +55,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复在某些Android设备上字体显示异常的问题（#926, #718）
 
-## [1.8.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.7.1...v1.8.0) - 2025-11-29
+## [1.8.0](https://github.com/akers4238/lx-music-mobile/compare/v1.7.1...v1.8.0) - 2025-11-29
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。
 对于有播放本地音乐或播放服务器上音乐需求的人可以试试，若遇到任何问题可以发 issue 反馈。
@@ -82,7 +82,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新 Media3 到 v1.8.0
 
-## [1.7.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.7.0...v1.7.1) - 2025-05-01
+## [1.7.1](https://github.com/akers4238/lx-music-mobile/compare/v1.7.0...v1.7.1) - 2025-05-01
 
 ### 修复
 
@@ -105,7 +105,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新项目文档（@3gf8jv4dv）
 
-## [1.7.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.6.0...v1.7.0) - 2025-01-27
+## [1.7.0](https://github.com/akers4238/lx-music-mobile/compare/v1.6.0...v1.7.0) - 2025-01-27
 
 落雪祝大家新年快乐！
 
@@ -164,17 +164,17 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 更新项目文档（@3gf8jv4dv）
 - 更新 React Native 到 v0.73.11
 
-## [1.6.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.5.0...v1.6.0) - 2024-08-24
+## [1.6.0](https://github.com/akers4238/lx-music-mobile/compare/v1.5.0...v1.6.0) - 2024-08-24
 
 ### 新增
 
 - 新增 我的列表-歌曲右击菜单-歌曲换源 功能，换源后下次再播放该列表的该歌曲时将优先尝试播放所选源的歌曲，该功能允许你手动指定来源以解决自动换源失败或者换源不准确的问题
-- 新增 Scheme URL 调用支持，调用传参格式与PC端一致，详情看文档说明： https://lyswhut.github.io/lx-music-doc/mobile/scheme-url
+- 新增 Scheme URL 调用支持，调用传参格式与PC端一致，详情看文档说明： https://akers4238.github.io/lx-music-doc/mobile/scheme-url
 
-## [1.5.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.4.2...v1.5.0) - 2024-08-03
+## [1.5.0](https://github.com/akers4238/lx-music-mobile/compare/v1.4.2...v1.5.0) - 2024-08-03
 
 我们发布了关于 LX Music 项目发展调整与新项目计划的说明，
-详情看： https://github.com/lyswhut/lx-music-desktop/issues/1912
+详情看： https://github.com/akers4238/lx-music-desktop/issues/1912
 
 ### 新增
 
@@ -190,28 +190,28 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 更新 React native 到 v0.73.9
 - 更新 exoplayer 到 v1.4.0
 
-## [1.4.2](https://github.com/lyswhut/lx-music-mobile/compare/v1.4.1...v1.4.2) - 2024-06-01
+## [1.4.2](https://github.com/akers4238/lx-music-mobile/compare/v1.4.1...v1.4.2) - 2024-06-01
 
 我们发布了关于 LX Music 项目发展调整与新项目计划的说明，
-详情看： https://github.com/lyswhut/lx-music-desktop/issues/1912
+详情看： https://github.com/akers4238/lx-music-desktop/issues/1912
 
 ### 修复
 
 - 修复数据存储管理在移除数据时可能出现移除失败的问题
 
-## [1.4.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.4.0...v1.4.1) - 2024-06-01
+## [1.4.1](https://github.com/akers4238/lx-music-mobile/compare/v1.4.0...v1.4.1) - 2024-06-01
 
 我们发布了关于 LX Music 项目发展调整与新项目计划的说明，
-详情看： https://github.com/lyswhut/lx-music-desktop/issues/1912
+详情看： https://github.com/akers4238/lx-music-desktop/issues/1912
 
 ### 修复
 
 - 修复播放详情页歌词滚动问题（#518）
 
-## [1.4.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.3.0...v1.4.0) - 2024-06-01
+## [1.4.0](https://github.com/akers4238/lx-music-mobile/compare/v1.3.0...v1.4.0) - 2024-06-01
 
 我们发布了关于 LX Music 项目发展调整与新项目计划的说明，
-详情看： https://github.com/lyswhut/lx-music-desktop/issues/1912
+详情看： https://github.com/akers4238/lx-music-desktop/issues/1912
 
 ### 新增
 
@@ -230,7 +230,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新 React native 到 v0.73.8
 
-## [1.3.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.2.0...v1.3.0) - 2024-04-14
+## [1.3.0](https://github.com/akers4238/lx-music-mobile/compare/v1.2.0...v1.3.0) - 2024-04-14
 
 ### 新增
 
@@ -254,7 +254,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新 React native 到 v0.73.6
 
-## [1.2.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.1.1...v1.2.0) - 2024-02-01
+## [1.2.0](https://github.com/akers4238/lx-music-mobile/compare/v1.1.1...v1.2.0) - 2024-02-01
 
 提前祝大家新年快乐！
 
@@ -307,7 +307,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 更新 React native 到 v0.73.3
 - 核心播放器从 ExoPlayer 迁移到 media3 v1.2.1
 
-## [1.1.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.1.0...v1.1.1) - 2023-09-28
+## [1.1.1](https://github.com/akers4238/lx-music-mobile/compare/v1.1.0...v1.1.1) - 2023-09-28
 
 落雪提前祝大家中秋快乐~🥮😘！
 
@@ -328,7 +328,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新 React native 到 v0.72.5
 
-## [1.1.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.6...v1.1.0) - 2023-09-09
+## [1.1.0](https://github.com/akers4238/lx-music-mobile/compare/v1.0.6...v1.1.0) - 2023-09-09
 
 目前本项目的原始发布地址只有 **GitHub** 及 **蓝奏网盘** （在设置-关于有说明），其他渠道均为第三方转载发布，可信度请自行鉴别。
 
@@ -389,13 +389,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新 React native 到 v0.72.4
 
-## [1.0.6](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.5...v1.0.6) - 2023-05-01
+## [1.0.6](https://github.com/akers4238/lx-music-mobile/compare/v1.0.5...v1.0.6) - 2023-05-01
 
 ### 修复
 
 - 修复wy歌单分类切换无效的问题
 
-## [1.0.5](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.4...v1.0.5) - 2023-05-01
+## [1.0.5](https://github.com/akers4238/lx-music-mobile/compare/v1.0.4...v1.0.5) - 2023-05-01
 
 ### 优化
 
@@ -420,7 +420,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 更新kg、tx、wy等平台排行榜列表
 - 更新react native到v0.71.7
 
-## [1.0.4](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.3...v1.0.4) - 2023-04-01
+## [1.0.4](https://github.com/akers4238/lx-music-mobile/compare/v1.0.3...v1.0.4) - 2023-04-01
 
 ### 新增
 
@@ -443,13 +443,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级 React Native 到 v0.71.5
 
-## [1.0.3](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.2...v1.0.3) - 2023-03-26
+## [1.0.3](https://github.com/akers4238/lx-music-mobile/compare/v1.0.2...v1.0.3) - 2023-03-26
 
 ### 修复
 
 - 修复歌单详情页内歌曲最多只加载30首的问题
 
-## [1.0.2](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.1...v1.0.2) - 2023-03-26
+## [1.0.2](https://github.com/akers4238/lx-music-mobile/compare/v1.0.1...v1.0.2) - 2023-03-26
 
 ### 优化
 
@@ -460,15 +460,15 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 启用新架构
 
-## [1.0.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.0.0...v1.0.1) - 2023-03-26
+## [1.0.1](https://github.com/akers4238/lx-music-mobile/compare/v1.0.0...v1.0.1) - 2023-03-26
 
 ### 修复
 
 - 修复在线列表翻页问题
 
-## [1.0.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.5...v1.0.0) - 2023-03-26
+## [1.0.0](https://github.com/akers4238/lx-music-mobile/compare/v0.15.5...v1.0.0) - 2023-03-26
 
-从v1.0.0起，我们发布了一个独立版的[数据同步服务](https://github.com/lyswhut/lx-music-sync-server#readme)，如果你有服务器，可以将其部署到服务器上作为私人多端同步服务使用，详情看该项目说明
+从v1.0.0起，我们发布了一个独立版的[数据同步服务](https://github.com/akers4238/lx-music-sync-server#readme)，如果你有服务器，可以将其部署到服务器上作为私人多端同步服务使用，详情看该项目说明
 
 由于该版本涉及旧版数据迁移，建议更新前先到设置-备份与恢复备份歌单
 
@@ -521,39 +521,39 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级React Native到v0.71.4
 
-## [0.15.5](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.4...v0.15.5) - 2023-01-02
+## [0.15.5](https://github.com/akers4238/lx-music-mobile/compare/v0.15.4...v0.15.5) - 2023-01-02
 
 ### 修复
 
 - 修复导入PC端v2列表文件歌曲信息转换丢失的问题
 - 修复上面问题导致的tx源评论加载失败的问题
 
-## [0.15.4](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.3...v0.15.4) - 2022-12-10
+## [0.15.4](https://github.com/akers4238/lx-music-mobile/compare/v0.15.3...v0.15.4) - 2022-12-10
 
 ### 修复
 
 - 修复播放详情页歌词翻译、罗马音歌词匹配问题
 
-## [0.15.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.2...v0.15.3) - 2022-12-10
+## [0.15.3](https://github.com/akers4238/lx-music-mobile/compare/v0.15.2...v0.15.3) - 2022-12-10
 
 ### 修复
 
 - 修复鸿蒙系统下的崩溃问题
 
-## [0.15.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.1...v0.15.2) - 2022-12-10
+## [0.15.2](https://github.com/akers4238/lx-music-mobile/compare/v0.15.1...v0.15.2) - 2022-12-10
 
 ### 修复
 
 - 修复潜在的歌词解析导致应用崩溃问题
 
-## [0.15.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.15.0...v0.15.1) - 2022-12-10
+## [0.15.1](https://github.com/akers4238/lx-music-mobile/compare/v0.15.0...v0.15.1) - 2022-12-10
 
 ### 修复
 
 - 修复某些歌曲的桌面歌词翻译或罗马音没有显示的问题
 - 修复kg某些歌单链接无法打开的问题
 
-## [0.15.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.14.3...v0.15.0) - 2022-11-20
+## [0.15.0](https://github.com/akers4238/lx-music-mobile/compare/v0.14.3...v0.15.0) - 2022-11-20
 
 ### 新增
 
@@ -571,13 +571,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级react-native到 v0.68.5
 
-## [0.14.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.14.2...v0.14.3) - 2022-09-03
+## [0.14.3](https://github.com/akers4238/lx-music-mobile/compare/v0.14.2...v0.14.3) - 2022-09-03
 
 ### 修复
 
 - 修复因音源的域名到期导致的音源失效的问题
 
-## [0.14.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.14.1...v0.14.2) - 2022-08-18
+## [0.14.2](https://github.com/akers4238/lx-music-mobile/compare/v0.14.1...v0.14.2) - 2022-08-18
 
 ### 优化
 
@@ -588,7 +588,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复排行榜在旋转屏幕后，选中的榜单被重置回第一个的问题
 - 修复企鹅音乐搜索失效的问题
 
-## [0.14.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.14.0...v0.14.1) - 2022-07-09
+## [0.14.1](https://github.com/akers4238/lx-music-mobile/compare/v0.14.0...v0.14.1) - 2022-07-09
 
 ### 优化
 
@@ -601,7 +601,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复tx源搜索失效的问题
 
-## [0.14.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.13.0...v0.14.0) - 2022-06-17
+## [0.14.0](https://github.com/akers4238/lx-music-mobile/compare/v0.13.0...v0.14.0) - 2022-06-17
 
 ### 新增
 
@@ -624,9 +624,9 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### 文档
 
-移动版文档已迁移到：<https://lyswhut.github.io/lx-music-doc/mobile>
+移动版文档已迁移到：<https://akers4238.github.io/lx-music-doc/mobile>
 
-## [0.13.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.12.0...v0.13.0) - 2022-05-22
+## [0.13.0](https://github.com/akers4238/lx-music-mobile/compare/v0.12.0...v0.13.0) - 2022-05-22
 
 从这个版本起，你可以将桌面歌词拖动到状态栏上，然后将歌词字体调小后配合新增的歌词窗口宽度、行数设置，模拟出类似状态栏歌词的效果。
 
@@ -659,7 +659,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级React native到v0.68.2
 
-## [0.12.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.11.1...v0.12.0) - 2022-04-16
+## [0.12.0](https://github.com/akers4238/lx-music-mobile/compare/v0.11.1...v0.12.0) - 2022-04-16
 
 ### 新增
 
@@ -692,13 +692,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级react-native到 v0.68.1
 
-## [0.11.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.11.0...v0.11.1) - 2022-03-20
+## [0.11.1](https://github.com/akers4238/lx-music-mobile/compare/v0.11.0...v0.11.1) - 2022-03-20
 
 ### 修复
 
 - 修复播放栏在某些设备不显示的问题
 
-## [0.11.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.10.3...v0.11.0) - 2022-03-19
+## [0.11.0](https://github.com/akers4238/lx-music-mobile/compare/v0.10.3...v0.11.0) - 2022-03-19
 
 ### 新增
 
@@ -719,7 +719,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级React native到v0.67.4
 
-## [0.10.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.10.2...v0.10.3) - 2022-01-28
+## [0.10.3](https://github.com/akers4238/lx-music-mobile/compare/v0.10.2...v0.10.3) - 2022-01-28
 
 ### 优化
 
@@ -729,7 +729,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复桌面歌词播放器会导致应用崩溃的问题
 
-## [0.10.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.10.1...v0.10.2) - 2022-01-22
+## [0.10.2](https://github.com/akers4238/lx-music-mobile/compare/v0.10.1...v0.10.2) - 2022-01-22
 
 ### 修复
 
@@ -739,7 +739,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 降级react-native到 v0.66.4
 
-## [0.10.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.10.0...v0.10.1) - 2022-01-22
+## [0.10.1](https://github.com/akers4238/lx-music-mobile/compare/v0.10.0...v0.10.1) - 2022-01-22
 
 ### 优化
 
@@ -755,7 +755,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级React native到v0.67.1
 
-## [0.10.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.9.2...v0.10.0) - 2021-12-30
+## [0.10.0](https://github.com/akers4238/lx-music-mobile/compare/v0.9.2...v0.10.0) - 2021-12-30
 
 ### 新增
 
@@ -782,7 +782,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 升级react-native到v0.66.4
 
-## [0.9.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.9.1...v0.9.2) - 2021-11-28
+## [0.9.2](https://github.com/akers4238/lx-music-mobile/compare/v0.9.1...v0.9.2) - 2021-11-28
 
 ### 优化
 
@@ -798,14 +798,14 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 更新react-native到v0.66.3
 - 更新Exoplayer到v2.16.0
 
-## [0.9.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.9.0...v0.9.1) - 2021-10-23
+## [0.9.1](https://github.com/akers4238/lx-music-mobile/compare/v0.9.0...v0.9.1) - 2021-10-23
 
 ### 修复
 
 - 修复删除列表时会导致应用崩溃的问题
 - 修复原生代码导致的错误日志记录
 
-## [0.9.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.8.3...v0.9.0) - 2021-10-22
+## [0.9.0](https://github.com/akers4238/lx-music-mobile/compare/v0.8.3...v0.9.0) - 2021-10-22
 
 ### 新增
 
@@ -828,7 +828,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新react-native到v0.66.1
 
-## [0.8.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.8.2...v0.8.3) - 2021-10-07
+## [0.8.3](https://github.com/akers4238/lx-music-mobile/compare/v0.8.2...v0.8.3) - 2021-10-07
 
 ### 修复
 
@@ -839,7 +839,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 更新React native到v0.66.0
 
-## [0.8.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.8.1...v0.8.2) - 2021-10-02
+## [0.8.2](https://github.com/akers4238/lx-music-mobile/compare/v0.8.1...v0.8.2) - 2021-10-02
 
 ### 优化
 
@@ -851,7 +851,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复随机播放模式下在同列表切其他歌曲不会清空已播放列表的问题
 - 修复歌曲播放出错时的URL刷新问题
 
-## [0.8.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.8.0...v0.8.1) - 2021-09-16
+## [0.8.1](https://github.com/akers4238/lx-music-mobile/compare/v0.8.0...v0.8.1) - 2021-09-16
 
 ### 优化
 
@@ -865,7 +865,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复 Android 11 导入列表时，不显示备份文件的问题
 - 修复其他应用播放声音时，软件临时暂停播放后通知栏的状态仍显示正在播放的问题
 
-## [0.8.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.7.1...v0.8.0) - 2021-09-06
+## [0.8.0](https://github.com/akers4238/lx-music-mobile/compare/v0.7.1...v0.8.0) - 2021-09-06
 
 ### 新增
 
@@ -881,13 +881,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 升级React native到v0.65.1
 - 升级播放模块`react-native-track-player`到v2版本，优化通知栏歌曲信息显示逻辑
 
-## [0.7.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.7.0...v0.7.1) - 2021-08-23
+## [0.7.1](https://github.com/akers4238/lx-music-mobile/compare/v0.7.0...v0.7.1) - 2021-08-23
 
 ### 修复
 
 - 修复无法从歌单界面打开网易歌单详情的问题
 
-## [0.7.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.6.2...v0.7.0) - 2021-08-22
+## [0.7.0](https://github.com/akers4238/lx-music-mobile/compare/v0.6.2...v0.7.0) - 2021-08-22
 
 如果你喜欢并经常使用洛雪音乐，并想要第一时间尝鲜洛雪的新功能，可以加入测试企鹅群768786588，
 注意：测试版的功可能会不稳定，打算潜水的勿加。
@@ -909,7 +909,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复随机播放模式下使用稍后播放功能会导致歌曲单曲循环的问题
 - 修复某些情况下桌面歌词会导致APP崩溃的问题
 
-## [0.6.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.6.1...v0.6.2) - 2021-08-11
+## [0.6.2](https://github.com/akers4238/lx-music-mobile/compare/v0.6.1...v0.6.2) - 2021-08-11
 
 ### 优化
 
@@ -925,13 +925,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复启用桌面歌词时的权限提示弹窗会导致应用报错的问题
 - 修复我的列表无法更新从收藏的排行榜的问题
 
-## [0.6.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.6.0...v0.6.1) - 2021-08-08
+## [0.6.1](https://github.com/akers4238/lx-music-mobile/compare/v0.6.0...v0.6.1) - 2021-08-08
 
 ### 修复
 
 - 修复随机播放下无法切歌的问题
 
-## [0.6.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.5.3...v0.6.0) - 2021-08-08
+## [0.6.0](https://github.com/akers4238/lx-music-mobile/compare/v0.5.3...v0.6.0) - 2021-08-08
 
 ### 新增
 
@@ -948,13 +948,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复删除列表中正在播放的歌曲时会自动跳到第一首的问题
 - 修复因其他应用需要播放声音而暂停播放音乐时歌词不会暂停播放导致恢复播放后歌词与播放进度不一致的问题
 
-## [0.5.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.5.2...v0.5.3) - 2021-07-23
+## [0.5.3](https://github.com/akers4238/lx-music-mobile/compare/v0.5.2...v0.5.3) - 2021-07-23
 
 ### 修复
 
 - 修复歌曲缓存失效的问题
 
-## [0.5.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.5.1...v0.5.2) - 2021-07-22
+## [0.5.2](https://github.com/akers4238/lx-music-mobile/compare/v0.5.1...v0.5.2) - 2021-07-22
 
 ### 优化
 
@@ -966,7 +966,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 添加针对进入歌词界面时某些情况下会弹出`scrollToIndex out of range: requested index ...`崩溃错误弹窗的处理
 - 修复导入kg歌单最多只能加载100、500首歌曲的问题。注：现在可以加载1000+首歌曲的歌单，但出于未知原因会导致部分歌曲无法加载（可能是无版权导致的），目前酷狗码仍然最多只能加载500首歌
 
-## [0.5.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.5.0...v0.5.1) - 2021-07-05
+## [0.5.1](https://github.com/akers4238/lx-music-mobile/compare/v0.5.0...v0.5.1) - 2021-07-05
 
 ### 优化
 
@@ -981,7 +981,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 因wy源的歌单列表已没有“最新”排序的选项，所以现跟随移除wy源歌单列表按“最新”排序的按钮
 
-## [0.5.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.4.2...v0.5.0) - 2021-06-13
+## [0.5.0](https://github.com/akers4238/lx-music-mobile/compare/v0.4.2...v0.5.0) - 2021-06-13
 
 ### 新增
 
@@ -993,7 +993,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 添加歌曲到列表时从原来的底部改为顶部，若想要恢复原来的行为则可以去更改“添加歌曲到列表时的位置”设置项
 
-## [0.4.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.4.1...v0.4.2) - 2021-06-06
+## [0.4.2](https://github.com/akers4238/lx-music-mobile/compare/v0.4.1...v0.4.2) - 2021-06-06
 
 ### 优化
 
@@ -1009,13 +1009,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 尝试修复有时候进入播放详情歌词界面时会导致应用UI被冻结的问题
 - 修复有时候进入播放详情页时歌曲封面大小显示不正确的问题
 
-## [0.4.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.4.0...v0.4.1) - 2021-05-30
+## [0.4.1](https://github.com/akers4238/lx-music-mobile/compare/v0.4.0...v0.4.1) - 2021-05-30
 
 ### 修复
 
 - 修复定时播放开启歌曲播放完毕再停止时，若倒计时已结束会导致无法播放歌曲的问题
 
-## [0.4.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.3.3...v0.4.0) - 2021-05-30
+## [0.4.0](https://github.com/akers4238/lx-music-mobile/compare/v0.3.3...v0.4.0) - 2021-05-30
 
 ### 新增
 
@@ -1033,7 +1033,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 尝试修复某些情况下进播放详情歌词界面时报错的问题
 
-## [0.3.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.3.2...v0.3.3) - 2021-05-25
+## [0.3.3](https://github.com/akers4238/lx-music-mobile/compare/v0.3.2...v0.3.3) - 2021-05-25
 
 ### 修复
 
@@ -1046,7 +1046,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 整合日志记录
 - 更新 exoPlayer 到 2.14.0
 
-## [0.3.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.3.1...v0.3.2) - 2021-05-23
+## [0.3.2](https://github.com/akers4238/lx-music-mobile/compare/v0.3.1...v0.3.2) - 2021-05-23
 
 ### 修复
 
@@ -1054,13 +1054,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复打开空的歌单时，点击播放全部会导致应用崩溃的问题
 - 修复企鹅音乐搜索歌曲没有结果的问题
 
-## [0.3.1](https://github.com/lyswhut/lx-music-mobile/compare/v0.3.0...v0.3.1) - 2021-05-22
+## [0.3.1](https://github.com/akers4238/lx-music-mobile/compare/v0.3.0...v0.3.1) - 2021-05-22
 
 ### 修复
 
 - 修复进入播放详情歌词界面后的屏幕常亮不会被取消的问题
 
-## [0.3.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.2.0...v0.3.0) - 2021-05-22
+## [0.3.0](https://github.com/akers4238/lx-music-mobile/compare/v0.2.0...v0.3.0) - 2021-05-22
 
 ### 新增
 
@@ -1074,13 +1074,13 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复一个导致崩溃日志写入文件前会导致APP崩溃的莫名其妙问题
 
-## [0.2.0](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.7...v0.2.0) - 2021-05-21
+## [0.2.0](https://github.com/akers4238/lx-music-mobile/compare/v0.1.7...v0.2.0) - 2021-05-21
 
 ### 新增
 
 - 新增竖屏下的播放详情页
 
-## [0.1.7](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.6...v0.1.7) - 2021-05-20
+## [0.1.7](https://github.com/akers4238/lx-music-mobile/compare/v0.1.6...v0.1.7) - 2021-05-20
 
 ### 优化
 
@@ -1090,7 +1090,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复在系统暗主题下，应用内文字输入框的字体会变成白色的问题
 
-## [0.1.6](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.5...v0.1.6) - 2021-05-18
+## [0.1.6](https://github.com/akers4238/lx-music-mobile/compare/v0.1.5...v0.1.6) - 2021-05-18
 
 ### 优化
 
@@ -1100,7 +1100,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 修复显示版本更新弹窗会导致应用崩溃的问题
 
-## [0.1.5](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.4...v0.1.5) - 2021-05-18
+## [0.1.5](https://github.com/akers4238/lx-music-mobile/compare/v0.1.4...v0.1.5) - 2021-05-18
 
 ### 修复
 
@@ -1108,20 +1108,20 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 修复从在线列表使用稍后播放功能播放歌曲时，歌曲封面不显示的问题
 - 修复正在播放“稍后播放”的歌曲时，对“稍后播放”前播放的列表进行添加、删除操作会导致切歌的问题
 
-## [0.1.4](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.3...v0.1.4) - 2021-05-16
+## [0.1.4](https://github.com/akers4238/lx-music-mobile/compare/v0.1.3...v0.1.4) - 2021-05-16
 
 ### 修复
 
 - 修复获取在线列表时快速切换会导致APP闪退的问题
 
-## [0.1.3](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.2...v0.1.3) - 2021-05-16
+## [0.1.3](https://github.com/akers4238/lx-music-mobile/compare/v0.1.2...v0.1.3) - 2021-05-16
 
 ### 优化
 
 - 添加导入提示，兼容从PC端“全部数据”类型的备份文件中导入歌单
 - 添加全局异常错误捕获，现在一般情况下APP崩溃前会弹窗提示错误信息。
 
-## [0.1.2](https://github.com/lyswhut/lx-music-mobile/compare/v0.1.1...v0.1.2) - 2021-05-16
+## [0.1.2](https://github.com/akers4238/lx-music-mobile/compare/v0.1.1...v0.1.2) - 2021-05-16
 
 ### 优化
 
