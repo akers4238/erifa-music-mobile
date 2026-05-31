@@ -63,9 +63,83 @@ export const wrapPlusPluginScript = (script: string) => {
   }
   axios.get = (url, config = {}) => request(url, { ...config, method: 'get' })
   axios.post = (url, data, config = {}) => request(url, { ...config, method: 'post', data })
+  axios.default = axios
+
+  const pad2 = value => String(value).padStart(2, '0')
+  const formatDate = (date, format = 'YYYY-MM-DD HH:mm:ss') => {
+    const values = {
+      YYYY: String(date.getFullYear()),
+      MM: pad2(date.getMonth() + 1),
+      DD: pad2(date.getDate()),
+      HH: pad2(date.getHours()),
+      mm: pad2(date.getMinutes()),
+      ss: pad2(date.getSeconds()),
+    }
+    return format.replace(/YYYY|MM|DD|HH|mm|ss/g, key => values[key])
+  }
+  const dayjs = (value) => {
+    const date = value == null ? new Date() : new Date(value)
+    return {
+      format(format) {
+        return formatDate(date, format)
+      },
+      valueOf() {
+        return date.getTime()
+      },
+      toDate() {
+        return date
+      },
+    }
+  }
+  dayjs.unix = (value) => dayjs(Number(value || 0) * 1000)
+
+  const he = {
+    decode(value = '') {
+      return String(value)
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+        .replace(/&#(\\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+    },
+  }
+  const cheerio = {
+    load(html = '') {
+      return (selector) => ({
+        text() {
+          if (selector === '#__RENDER_DATA__') {
+            const match = String(html).match(/<script[^>]+id=["']__RENDER_DATA__["'][^>]*>([\\s\\S]*?)<\\/script>/i)
+            return match ? match[1] : ''
+          }
+          return ''
+        },
+      })
+    },
+  }
+  const cryptoJs = {
+    enc: {
+      Hex: 'hex',
+    },
+    MD5(value) {
+      return {
+        toString() {
+          return lx.utils.crypto.md5(String(value))
+        },
+      }
+    },
+    HmacSHA256() {
+      throw new Error('Unsupported Plus crypto-js HmacSHA256')
+    },
+  }
 
   const require = (name) => {
     if (name === 'axios') return axios
+    if (name === 'dayjs') return dayjs
+    if (name === 'he') return he
+    if (name === 'cheerio') return cheerio
+    if (name === 'crypto-js') return cryptoJs
     throw new Error('Unsupported Plus require: ' + name)
   }
   const env = {
