@@ -149,7 +149,7 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
   const events = {
     request: null,
   }
-  const allSources = ['kw', 'kg', 'tx', 'wy', 'mg', 'local']
+  const defaultSources = ['kw', 'kg', 'tx', 'wy', 'mg', 'local']
   const supportQualitys = {
     kw: ['128k', '320k', 'flac', 'flac24bit'],
     kg: ['128k', '320k', 'flac', 'flac24bit'],
@@ -316,11 +316,13 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
       sources: {},
     }
     try {
-      for (const source of allSources) {
+      const sources = Array.from(new Set([...defaultSources, ...Object.keys(info.sources || {})]))
+      for (const source of sources) {
+        if (!/^[\w.-]{1,64}$/.test(source)) continue
         const userSource = info.sources[source]
         if (!userSource || userSource.type !== 'music') continue
-        const qualitys = supportQualitys[source]
-        const actions = supportActions[source]
+        const qualitys = supportQualitys[source] || ['128k', '320k', 'flac', 'flac24bit']
+        const actions = supportActions[source] || ['musicUrl', 'lyric', 'pic']
         sourceInfo.sources[source] = {
           type: 'music',
           actions: actions.filter(a => userSource.actions.includes(a)),
