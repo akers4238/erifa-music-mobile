@@ -151,9 +151,18 @@ export default async(setting: LX.AppSetting) => {
             query: text,
             page,
             limit,
-            searchType: 'sheet',
+            searchType: 'album',
           }).then(res => res.data)
         },
+      }
+      if (sourceInfo.actions.includes('musicSheetInfo') || sourceInfo.actions.includes('albumInfo')) {
+        sdkSource.songList.getListDetail = (id: string, page = 1) => {
+          return request('musicSheetInfo', {
+            id,
+            page,
+            limit: 30,
+          }).then(res => res.data)
+        }
       }
     }
 

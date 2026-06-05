@@ -330,7 +330,21 @@ globalThis.lx_setup = (key, id, name, description, version, author, homepage, ra
         const userSource = info.sources[source]
         if (!userSource || userSource.type !== 'music') continue
         const qualitys = supportQualitys[source] || ['128k', '320k', 'flac', 'flac24bit']
-        const actions = supportActions[source] || ['musicUrl', 'lyric', 'pic', 'search']
+        const actions = supportActions[source] || [
+          'musicUrl',
+          'lyric',
+          'pic',
+          'search',
+          'albumInfo',
+          'artistWorks',
+          'musicSheetInfo',
+          'importMusicSheet',
+          'recommendSheetTags',
+          'recommendSheetsByTag',
+          'topLists',
+          'topListDetail',
+          'musicComments',
+        ]
         sourceInfo.sources[source] = {
           name: typeof userSource.name === 'string' ? userSource.name : source,
           type: 'music',
