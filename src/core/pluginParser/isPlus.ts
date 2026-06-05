@@ -224,7 +224,7 @@ export const wrapPlusPluginScript = (script: string) => {
     },
   }
 
-  const require = (name) => {
+  const __plusRequire = (name) => {
     if (name === 'axios') return axios
     if (name === 'dayjs') return dayjs
     if (name === 'he') return he
@@ -232,7 +232,7 @@ export const wrapPlusPluginScript = (script: string) => {
     if (name === 'crypto-js') return cryptoJs
     throw new Error('Unsupported Plus require: ' + name)
   }
-  const env = {
+  const __plusEnv = {
     appVersion: lx.currentScriptInfo.version || '',
     os: 'android',
     lang: 'zh-CN',
@@ -243,13 +243,15 @@ export const wrapPlusPluginScript = (script: string) => {
       return {}
     },
   }
-  const process = {
+  const __plusProcess = {
     platform: 'android',
-    version: env.appVersion,
-    env,
+    version: __plusEnv.appVersion,
+    env: __plusEnv,
   }
 
+;((require, module, exports, process) => {
 ${pluginCode}
+})(__plusRequire, module, exports, __plusProcess)
 
   const plugin = module.exports && module.exports.default ? module.exports.default : module.exports
   if (!plugin || typeof plugin !== 'object') throw new Error('Invalid Plus plugin')
