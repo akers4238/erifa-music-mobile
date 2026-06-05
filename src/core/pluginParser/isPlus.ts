@@ -10,6 +10,7 @@ const normalizePlusPluginScript = (script: string) => {
 
 export const wrapPlusPluginScript = (script: string) => {
   const pluginCode = normalizePlusPluginScript(script)
+  const pluginCodeLiteral = JSON.stringify(pluginCode)
   return `/*
  * @name Is Plus Plugin Adapter
  * @description MusicFree/Plus plugin compatibility wrapper
@@ -17,9 +18,6 @@ export const wrapPlusPluginScript = (script: string) => {
  * @version 1.0.0
  */
 (() => {
-  const module = { exports: {} }
-  const exports = module.exports
-
   const appendParams = (url, params) => {
     if (!params || typeof params !== 'object') return url
     const query = Object.entries(params)
@@ -248,12 +246,29 @@ export const wrapPlusPluginScript = (script: string) => {
     version: __plusEnv.appVersion,
     env: __plusEnv,
   }
+  const __plusModule = { exports: {} }
+  const __plusUrl = typeof URL === 'function' ? URL : undefined
+  const __plusPluginCode = ${pluginCodeLiteral}
+  const __plusMount = Function(
+    "'use strict';\\n" +
+    "return function(require, __musicfree_require, module, exports, console, env, URL, process) {\\n" +
+    __plusPluginCode +
+    "\\n}"
+  )
+  const __plusResult = __plusMount()(
+    __plusRequire,
+    __plusRequire,
+    __plusModule,
+    __plusModule.exports,
+    console,
+    __plusEnv,
+    __plusUrl,
+    __plusProcess
+  )
 
-;((require, module, exports, process) => {
-${pluginCode}
-})(__plusRequire, module, exports, __plusProcess)
-
-  const plugin = module.exports && module.exports.default ? module.exports.default : module.exports
+  const plugin = __plusModule.exports && __plusModule.exports.default
+    ? __plusModule.exports.default
+    : (__plusModule.exports && Object.keys(__plusModule.exports).length ? __plusModule.exports : __plusResult)
   if (!plugin || typeof plugin !== 'object') throw new Error('Invalid Plus plugin')
 
   const platform = String(plugin.platform || lx.currentScriptInfo.name || 'isplus')
