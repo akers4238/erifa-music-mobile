@@ -903,20 +903,20 @@ const getAlternativeMediaPlugin = async(info: LX.UserApi.UserApiInfo, fallbackPl
 }
 
 let activePlugin: MusicFreePlugin | null = null
+const mountedPluginNames = new Set<string>()
 
 export const destroyMusicFreePlugin = () => {
-  if (activePlugin) delete (musicSdk as any)[activePlugin.name]
+  for (const name of mountedPluginNames) delete (musicSdk as any)[name]
+  mountedPluginNames.clear()
   activePlugin = null
 }
 
 export const getActiveMusicFreePlugin = () => activePlugin
 
-export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: string) => {
-  destroyMusicFreePlugin()
-  activePlugin = mountMusicFreePlugin(script, info)
-  const platform = activePlugin.name as LX.OnlineSource
-  const sourceName = activePlugin.info.name || activePlugin.name
-  const plugin = activePlugin.instance
+const createSdkSource = (mounted: MusicFreePlugin) => {
+  const platform = mounted.name as LX.OnlineSource
+  const sourceName = mounted.info.name || mounted.name
+  const plugin = mounted.instance
   const actions = getActions(plugin)
 
   const sdkSource: any = {
@@ -925,7 +925,7 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     getMusicUrl(songInfo: LX.Music.MusicInfo, type: LX.Quality) {
       return {
         canceleFn() {},
-        promise: getAlternativeMediaPlugin(info, plugin).then(parserPlugin => {
+        promise: getAlternativeMediaPlugin(mounted.info, plugin).then(parserPlugin => {
           return parserPlugin.getMediaSource
             ? parserPlugin.getMediaSource(getRawMusicFreeItem(songInfo), normalizeQuality(type))
               .then(result => ({ type, ...normalizeMediaSource(result) }))
@@ -954,20 +954,20 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
   if (actions.includes('search')) {
     sdkSource.musicSearch = {
       search(text: string, page: number, limit = 30) {
-        return plugin.search!(text, page, getMusicSearchType(plugin)).then(result => normalizeSearch(activePlugin!.name, result, page, limit))
+        return plugin.search!(text, page, getMusicSearchType(plugin)).then(result => normalizeSearch(mounted.name, result, page, limit))
       },
     }
     sdkSource.tipSearch = {
       search(text: string) {
         return plugin.search!(text, 1, getMusicSearchType(plugin)).then(result => {
-          const list = normalizeSearch(activePlugin!.name, result, 1, 10).list
+          const list = normalizeSearch(mounted.name, result, 1, 10).list
           return Array.from(new Set(list.map((item: LX.Music.MusicInfoOnline) => item.name).filter(Boolean))).slice(0, 10)
         })
       },
     }
     sdkSource.songList = {
       search(text: string, page: number, limit = 18) {
-        return plugin.search!(text, page, getSheetSearchType(plugin)).then(result => normalizeSheetSearch(activePlugin!.name, result, page, limit))
+        return plugin.search!(text, page, getSheetSearchType(plugin)).then(result => normalizeSheetSearch(mounted.name, result, page, limit))
       },
     }
   }
@@ -976,23 +976,23 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     sdkSource.songList.sortList = [{ name: 'Default', tid: 'recommend', id: 'default' }]
     sdkSource.songList.getTags = () => {
       return plugin.getRecommendSheetTags
-        ? plugin.getRecommendSheetTags().then(result => normalizeTags(activePlugin!.name, result))
+        ? plugin.getRecommendSheetTags().then(result => normalizeTags(mounted.name, result))
         : Promise.resolve({
-          source: activePlugin!.name,
+          source: mounted.name,
           tags: [{
             name: 'Default',
             list: [{
               parent_id: 'default',
               parent_name: 'Default',
-              id: `${activePlugin!.name}__mf__default`,
+              id: `${mounted.name}__mf__default`,
               name: 'Default',
-              source: activePlugin!.name,
+              source: mounted.name,
             }],
           }],
           hotTag: [],
         })
     }
-    sdkSource.songList.getList = (sortId = 'default', tagId = `${activePlugin!.name}__mf__default`, page = 1, limit = 30) => {
+    sdkSource.songList.getList = (sortId = 'default', tagId = `${mounted.name}__mf__default`, page = 1, limit = 30) => {
       if (!plugin.getRecommendSheetsByTag) {
         return Promise.resolve({
           list: [],
@@ -1001,32 +1001,32 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
           limit,
           maxPage: 1,
           key: null,
-          source: activePlugin!.name,
+          source: mounted.name,
           tagId,
           sortId,
         })
       }
-      const tag = decodePluginItem(activePlugin!.name, tagId)
+      const tag = decodePluginItem(mounted.name, tagId)
       return plugin.getRecommendSheetsByTag(tag, page)
-        .then(result => normalizeRecommendSheets(activePlugin!.name, result, page, limit, tagId, sortId))
+        .then(result => normalizeRecommendSheets(mounted.name, result, page, limit, tagId, sortId))
     }
   }
   if (sdkSource.songList && (typeof plugin.getMusicSheetInfo === 'function' || typeof plugin.getAlbumInfo === 'function')) {
     sdkSource.songList.getListDetail = (id: string, page = 1) => {
-      const item = decodePluginItem(activePlugin!.name, id)
+      const item = decodePluginItem(mounted.name, id)
       const getter = plugin.getMusicSheetInfo || plugin.getAlbumInfo!
-      return getter(item, page).then(result => normalizeMusicSheetInfo(activePlugin!.name, result, page, 30, id))
+      return getter(item, page).then(result => normalizeMusicSheetInfo(mounted.name, result, page, 30, id))
     }
   }
   if (typeof plugin.getTopLists === 'function' && typeof plugin.getTopListDetail === 'function') {
     sdkSource.leaderboard = {
       getBoards() {
-        return plugin.getTopLists!().then(result => normalizeTopLists(activePlugin!.name, result))
+        return plugin.getTopLists!().then(result => normalizeTopLists(mounted.name, result))
       },
       getList(bangId: string, page = 1) {
-        const item = decodePluginItem(activePlugin!.name, bangId)
+        const item = decodePluginItem(mounted.name, bangId)
         return plugin.getTopListDetail!(item, page)
-          .then(result => normalizeMusicSheetInfo(activePlugin!.name, result, page, 30, bangId))
+          .then(result => normalizeMusicSheetInfo(mounted.name, result, page, 30, bangId))
       },
     }
   }
@@ -1034,52 +1034,86 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     sdkSource.comment = {
       getComment(songInfo: LX.Music.MusicInfo, page = 1, limit = 20) {
         return plugin.getMusicComments!(getRawMusicFreeItem(songInfo), page)
-          .then(result => normalizeComments(activePlugin!.name, result, page, limit))
+          .then(result => normalizeComments(mounted.name, result, page, limit))
       },
       getHotComment(songInfo: LX.Music.MusicInfo, page = 1, limit = 20) {
         return plugin.getMusicComments!(getRawMusicFreeItem(songInfo), page)
-          .then(result => normalizeComments(activePlugin!.name, result, page, limit))
+          .then(result => normalizeComments(mounted.name, result, page, limit))
       },
     }
   }
 
-  ;(musicSdk as any).sources = [{ name: sourceName, id: platform }]
   ;(musicSdk as any)[platform] = sdkSource
+  mountedPluginNames.add(mounted.name)
+  return { platform, sourceName, sdkSource }
+}
+
+export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, script: string) => {
+  destroyMusicFreePlugin()
+  activePlugin = mountMusicFreePlugin(script, info)
+  const active = createSdkSource(activePlugin)
+
+  const allPlugins: MusicFreePlugin[] = [activePlugin]
+  const apiList = await getUserApiList()
+  for (const apiInfo of apiList) {
+    if (apiInfo.id == info.id) continue
+    try {
+      const apiScript = await getUserApiScript(apiInfo.id)
+      allPlugins.push(mountMusicFreePlugin(apiScript, apiInfo))
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const registered = new Map<string, ReturnType<typeof createSdkSource>>([[active.platform, active]])
+  for (const pluginInfo of allPlugins) {
+    if (registered.has(pluginInfo.name)) continue
+    registered.set(pluginInfo.name, createSdkSource(pluginInfo))
+  }
+
+  const sourceEntries = Array.from(registered.values())
+  const searchableSources = sourceEntries.filter(entry => entry.sdkSource.musicSearch).map(entry => entry.platform)
+  const songListSources = sourceEntries.filter(entry => entry.sdkSource.songList?.search || entry.sdkSource.songList?.getList).map(entry => entry.platform)
+  const leaderboardSources = sourceEntries.filter(entry => entry.sdkSource.leaderboard).map(entry => entry.platform)
+  const sourceNames = sourceEntries.reduce<Record<string, string>>((names, entry) => {
+    names[entry.platform] = entry.sourceName
+    return names
+  }, {})
+
+  ;(musicSdk as any).sources = sourceEntries.map(({ platform, sourceName }) => ({ name: sourceName, id: platform }))
   global.lx.qualityList = {
-    [platform]: ['128k', '320k', 'flac', 'flac24bit'],
+    ...Object.fromEntries(sourceEntries.map(({ platform }) => [platform, ['128k', '320k', 'flac', 'flac24bit']])),
   } as any
   global.lx.apis = {
-    [platform]: {
+    ...Object.fromEntries(sourceEntries.map(({ platform, sdkSource }) => [platform, {
       getMusicUrl: sdkSource.getMusicUrl,
       getLyric: sdkSource.getLyric,
       getPic: sdkSource.getPic,
-    },
+    }])),
   } as any
   commonActions.setSourceNames({
-    [platform]: sourceName,
-    all: sourceName,
+    ...sourceNames,
+    all: '\u5168\u90e8',
   } as any)
 
-  searchMusicState.source = platform
-  searchMusicState.sources = [platform]
+  searchMusicState.source = searchableSources.includes(active.platform) ? active.platform : searchableSources[0] ?? ''
+  searchMusicState.sources = searchableSources.length > 1 ? ['all', ...searchableSources] : searchableSources
   searchMusicState.listInfos = {
     all: { page: 1, maxPage: 0, limit: 30, total: 0, list: [], key: null },
-    [platform]: { page: 1, maxPage: 0, limit: 30, total: 0, list: [], key: '' },
+    ...Object.fromEntries(searchableSources.map(platform => [platform, { page: 1, maxPage: 0, limit: 30, total: 0, list: [], key: '' }])),
   } as any
-  searchMusicState.maxPages = { [platform]: 0 } as any
-  searchState.temp_source = platform
+  searchMusicState.maxPages = Object.fromEntries(searchableSources.map(platform => [platform, 0])) as any
+  searchState.temp_source = searchMusicState.source
 
-  searchSonglistState.source = platform
-  searchSonglistState.sources = [platform]
+  searchSonglistState.source = songListSources.includes(active.platform) ? active.platform : songListSources[0] ?? ''
+  searchSonglistState.sources = songListSources.length > 1 ? ['all', ...songListSources] : songListSources
   searchSonglistState.listInfos = {
     all: { page: 1, limit: 15, total: 0, list: [], key: null, tagId: '', sortId: '' },
-    [platform]: { page: 1, limit: 18, total: 0, list: [], key: null, tagId: '', sortId: '' },
+    ...Object.fromEntries(songListSources.map(platform => [platform, { page: 1, limit: 18, total: 0, list: [], key: null, tagId: '', sortId: '' }])),
   } as any
-  searchSonglistState.maxPages = { [platform]: 0 } as any
-  songlistState.sources = sdkSource.songList?.getList ? [platform] : []
-  songlistState.sortList = sdkSource.songList?.getList
-    ? { [platform]: sdkSource.songList.sortList }
-    : {}
+  searchSonglistState.maxPages = Object.fromEntries(songListSources.map(platform => [platform, 0])) as any
+  songlistState.sources = sourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => entry.platform)
+  songlistState.sortList = Object.fromEntries(sourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => [entry.platform, entry.sdkSource.songList.sortList])) as any
   songlistState.tags = {}
   songlistState.listInfo = {
     list: [],
@@ -1088,7 +1122,7 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     limit: 30,
     maxPage: 1,
     key: null,
-    source: platform,
+    source: songlistState.sources[0] ?? '',
     tagId: '',
     sortId: 'default',
   }
@@ -1099,11 +1133,11 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     maxPage: 1,
     limit: 30,
     key: null,
-    source: platform,
+    source: songlistState.sources[0] ?? '',
     id: '',
     info: {},
   }
-  leaderboardState.sources = sdkSource.leaderboard ? [platform] : []
+  leaderboardState.sources = leaderboardSources
   leaderboardState.boards = {}
   leaderboardState.listDetailInfo = {
     list: [],

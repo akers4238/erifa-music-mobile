@@ -12,7 +12,7 @@ export const setUserApi = async(apiId: string) => {
   const target = state.list.find(api => api.id === apiId)
   if (!target) throw new Error('api not found')
   const script = await getUserApiScript(target.id)
-  activateMusicFreePlugin(target, script)
+  await activateMusicFreePlugin(target, script)
   setUserApiStatus(true, undefined)
   if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](true)
 }
