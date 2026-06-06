@@ -13,6 +13,8 @@ import { getUserApiList, getUserApiScript } from '@/utils/data'
 
 type MusicFreeSearchType = 'music' | 'album' | 'sheet' | 'artist'
 type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
+const musicFreeQualityFallbacks: MusicFreeQuality[] = ['standard', 'high', 'super', 'low', '320k', 'flac', 'flac24bit', '128k']
+const youtubeUserAgent = 'com.google.android.apps.youtube.music/6.14.50 (Linux; U; Android 13) gzip'
 type MusicFreeCacheControl = 'cache' | 'no-cache' | 'no-store'
 
 interface MusicFreeUserVariable {
@@ -851,8 +853,24 @@ const normalizeUrl = (result: any) => {
   if (result && typeof result.url === 'string') return result.url
   return ''
 }
-const normalizeMediaSource = (result: any, fallbackUrl = ''): LX.Player.MusicResource => {
-  if (typeof result === 'string') return { url: result }
+const isYoutubeSource = (platform: string, sourceName = '') => /youtube/i.test(platform) || /youtube/i.test(sourceName)
+
+const withYoutubeHeaders = (resource: LX.Player.MusicResource, enable: boolean): LX.Player.MusicResource => {
+  if (!enable || !resource.url) return resource
+  return {
+    ...resource,
+    userAgent: resource.userAgent || youtubeUserAgent,
+    headers: {
+      Referer: 'https://music.youtube.com/',
+      Origin: 'https://music.youtube.com',
+      Range: 'bytes=0-',
+      ...(resource.headers ?? {}),
+    },
+  }
+}
+
+const normalizeMediaSource = (result: any, fallbackUrl = '', youtube = false): LX.Player.MusicResource => {
+  if (typeof result === 'string') return withYoutubeHeaders({ url: result }, youtube)
   const url = typeof result?.url === 'string' ? result.url : fallbackUrl
   const headers = result?.headers && typeof result.headers === 'object'
     ? Object.fromEntries(Object.entries(result.headers).map(([key, value]) => [key, String(value)]))
@@ -860,11 +878,11 @@ const normalizeMediaSource = (result: any, fallbackUrl = ''): LX.Player.MusicRes
   const userAgent = typeof result?.userAgent === 'string'
     ? result.userAgent
     : headers?.['user-agent'] || headers?.['User-Agent']
-  return {
+  return withYoutubeHeaders({
     url,
     headers,
     userAgent,
-  }
+  }, youtube)
 }
 
 const getFallbackUrl = (item: any, mfQuality: MusicFreeQuality, lxQuality: LX.Quality) => {
@@ -874,6 +892,43 @@ const getFallbackUrl = (item: any, mfQuality: MusicFreeQuality, lxQuality: LX.Qu
     item?.qualitys?.[lxQuality]?.url ||
     item?.url ||
     ''
+}
+
+const getPluginMediaSource = async(
+  plugin: MusicFreePluginDefine,
+  item: any,
+  quality: LX.Quality,
+  youtube = false,
+): Promise<LX.Player.MusicResource> => {
+  if (!plugin.getMediaSource) {
+    return normalizeMediaSource(getFallbackUrl(item, normalizeQuality(quality), quality), '', youtube)
+  }
+
+  const firstQuality = normalizeQuality(quality)
+  const qualities = [firstQuality, ...musicFreeQualityFallbacks.filter(q => q != firstQuality)]
+  let lastResult: any
+  for (const targetQuality of qualities) {
+    try {
+      const result = await plugin.getMediaSource(item, targetQuality)
+      lastResult = result
+      const resource = normalizeMediaSource(
+        result,
+        getFallbackUrl(item, targetQuality, quality),
+        youtube,
+      )
+      if (resource.url) return resource
+    } catch (err) {
+      lastResult = err
+    }
+  }
+
+  const fallback = normalizeMediaSource(
+    lastResult,
+    getFallbackUrl(item, firstQuality, quality),
+    youtube,
+  )
+  if (fallback.url) return fallback
+  throw new Error('Plugin did not return playable url')
 }
 
 const getRawMusicFreeItem = (musicInfo: any) => {
@@ -918,6 +973,7 @@ const createSdkSource = (mounted: MusicFreePlugin) => {
   const sourceName = mounted.info.name || mounted.name
   const plugin = mounted.instance
   const actions = getActions(plugin)
+  const youtube = isYoutubeSource(mounted.name, sourceName)
 
   const sdkSource: any = {
     name: sourceName,
@@ -926,10 +982,8 @@ const createSdkSource = (mounted: MusicFreePlugin) => {
       return {
         canceleFn() {},
         promise: getAlternativeMediaPlugin(mounted.info, plugin).then(parserPlugin => {
-          return parserPlugin.getMediaSource
-            ? parserPlugin.getMediaSource(getRawMusicFreeItem(songInfo), normalizeQuality(type))
-              .then(result => ({ type, ...normalizeMediaSource(result) }))
-            : { type, url: getFallbackUrl(getRawMusicFreeItem(songInfo), normalizeQuality(type), type) }
+          return getPluginMediaSource(parserPlugin, getRawMusicFreeItem(songInfo), type, youtube)
+            .then(resource => ({ type, ...resource }))
         }),
       }
     },
