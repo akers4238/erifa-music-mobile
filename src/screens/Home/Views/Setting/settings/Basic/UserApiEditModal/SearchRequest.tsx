@@ -8,6 +8,29 @@ import { useTheme } from '@/store/theme/hook'
 import musicSdk from '@/utils/musicSdk'
 import searchMusicState from '@/store/search/music/state'
 import { createStyle, tipDialog } from '@/utils/tools'
+import settingState from '@/store/setting/state'
+import { state as userApiState } from '@/store/userApi'
+import { setUserApi } from '@/core/userApi'
+
+const getPluginSearchApi = () => {
+  const source = searchMusicState.sources.find(source => source != 'all')
+  const searchApi = source ? (musicSdk as any)[source]?.musicSearch?.search : null
+  return searchApi ? { source, searchApi } : null
+}
+
+const ensurePluginSearchApi = async() => {
+  const current = getPluginSearchApi()
+  if (current) return current
+
+  const settingApiId = settingState.setting['common.apiSource']
+  const target = /^user_api/.test(settingApiId)
+    ? userApiState.list.find(api => api.id == settingApiId)
+    : userApiState.list[0]
+  if (!target) return null
+
+  await setUserApi(target.id)
+  return getPluginSearchApi()
+}
 
 export default () => {
   const theme = useTheme()
@@ -19,27 +42,30 @@ export default () => {
     const text = keyword.trim()
     if (!text) {
       void tipDialog({
-        message: 'Please enter a search keyword',
+        message: '请输入搜索关键词',
         btnText: global.i18n.t('ok'),
       })
       return
     }
 
-    const source = searchMusicState.sources.find(source => source != 'all')
-    const searchApi = source ? (musicSdk as any)[source]?.musicSearch?.search : null
-    if (!source || !searchApi) {
-      setResultText('No active plugin')
+    setSearching(true)
+    setResultText('')
+    const pluginSearchApi = await ensurePluginSearchApi().catch((err: any) => {
+      setResultText(`插件激活失败：${err.message || 'unknown error'}`)
+      return null
+    })
+    if (!pluginSearchApi) {
+      setSearching(false)
+      setResultText('没有可用于搜索的 MusicFree 插件，请先导入或启用插件')
       return
     }
 
-    setSearching(true)
-    setResultText('')
     try {
-      const result = await searchApi(text, 1, 30)
+      const result = await pluginSearchApi.searchApi(text, 1, 30)
       const count = Array.isArray(result?.list) ? result.list.length : 0
-      setResultText(`Found ${count} result${count == 1 ? '' : 's'}`)
+      setResultText(`找到 ${count} 条结果`)
     } catch (err: any) {
-      setResultText(`Search failed: ${err.message || 'unknown error'}`)
+      setResultText(`搜索失败：${err.message || 'unknown error'}`)
     } finally {
       setSearching(false)
     }
@@ -48,19 +74,19 @@ export default () => {
   return (
     <View style={styles.content}>
       <View style={styles.header}>
-        <Text size={14}>Plugin search request</Text>
+        <Text size={14}>插件搜索测试</Text>
         <Button
           style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }}
           onPress={handleSearch}
           disabled={searching}
         >
-          <Text size={13} color={theme['c-button-font']}>{searching ? 'Searching' : 'Confirm'}</Text>
+          <Text size={13} color={theme['c-button-font']}>{searching ? '搜索中' : global.i18n.t('confirm')}</Text>
         </Button>
       </View>
       <Input
         value={keyword}
         onChangeText={setKeyword}
-        placeholder="Search keyword"
+        placeholder="输入搜索关键词"
         size={12}
         style={{ ...styles.input, backgroundColor: theme['c-primary-input-background'] }}
         returnKeyType="search"
