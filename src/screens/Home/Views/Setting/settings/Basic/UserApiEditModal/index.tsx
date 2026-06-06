@@ -106,12 +106,12 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
           <Dialog ref={dialogRef} bgHide={false}>
             <View style={styles.content}>
               {/* <UrlInput ref={inputRef} /> */}
-              <Text size={16} style={styles.title}>Is Plus Plugin Manager</Text>
+              <Text size={16} style={styles.title}>MusicFree Plugin Manager</Text>
               <SearchRequest />
               <List />
               <View style={styles.tips}>
                 <Text style={styles.tipsText} size={12}>
-                  Only Is Plus/MusicFree plugins are supported. Import, enable, remove, and manage plugins here.
+                  Only MusicFree-style plugins are supported. Import, enable, remove, and manage plugins here.
                 </Text>
                 <TouchableOpacity onPress={openFAQPage}>
                   <Text style={{ ...styles.tipsText, textDecorationLine: 'underline' }} size={12} color={theme['c-primary-font']}>FAQ</Text>

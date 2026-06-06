@@ -1,8 +1,7 @@
 import { action, state } from '@/store/userApi'
-import { addUserApi, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore } from '@/utils/data'
-import { destroy, loadScript } from '@/utils/nativeModules/userApi'
+import { addUserApiWithInfo, getUserApiList, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore } from '@/utils/data'
 import { log as writeLog } from '@/utils/log'
-import { parseIsPlusScript } from './pluginParser/isPlus'
+import { activateMusicFreePlugin, destroyMusicFreePlugin, getMusicFreePluginInfo } from './musicFreePlugin'
 
 
 export const setUserApi = async(apiId: string) => {
@@ -12,11 +11,13 @@ export const setUserApi = async(apiId: string) => {
   const target = state.list.find(api => api.id === apiId)
   if (!target) throw new Error('api not found')
   const script = await getUserApiScript(target.id)
-  loadScript({ ...target, script })
+  activateMusicFreePlugin(target, script)
+  setUserApiStatus(true, undefined)
+  if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](true)
 }
 
 export const destroyUserApi = () => {
-  destroy()
+  destroyMusicFreePlugin()
 }
 
 
@@ -29,8 +30,9 @@ export const setUserApiList: typeof action['setUserApiList'] = (list) => {
 }
 
 export const importUserApi = async(script: string) => {
-  const info = await addUserApi(parseIsPlusScript(script))
-  action.addUserApi(info)
+  const pluginInfo = getMusicFreePluginInfo(script)
+  await addUserApiWithInfo(script, pluginInfo)
+  action.setUserApiList(await getUserApiList())
 }
 
 export const removeUserApi = async(ids: string[]) => {

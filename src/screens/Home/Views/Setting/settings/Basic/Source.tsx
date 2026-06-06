@@ -18,7 +18,7 @@ export default memo(() => {
   return (
     <SubTitle title={t('setting_basic_source')}>
       <View style={styles.btn}>
-        <Button onPress={handleShow}>Is Plus Plugin Manager</Button>
+        <Button onPress={handleShow}>MusicFree Plugin Manager</Button>
       </View>
       <UserApiEditModal ref={modalRef} />
     </SubTitle>

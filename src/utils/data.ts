@@ -562,6 +562,20 @@ export const addUserApi = async(script: string): Promise<LX.UserApi.UserApiInfo>
   ])
   return apiInfo
 }
+export const addUserApiWithInfo = async(script: string, info: LX.UserApi.UserApiInfo): Promise<LX.UserApi.UserApiInfo> => {
+  if (!userApis.length) await getUserApiList()
+  const targetIndex = userApis.findIndex(api => api.id == info.id)
+  if (targetIndex < 0) {
+    userApis.push(info)
+  } else {
+    userApis.splice(targetIndex, 1, info)
+  }
+  await saveDataMultiple([
+    [userApiPrefix, userApis],
+    [`${userApiPrefix}${info.id}`, script],
+  ])
+  return info
+}
 export const removeUserApi = async(ids: string[]) => {
   if (!userApis) return []
   const _ids: string[] = []

@@ -3,11 +3,13 @@ import musicSdk from '@/utils/musicSdk'
 // import apiSourceInfo from '@renderer/utils/musicSdk/api-source-info'
 import { updateSetting } from './common'
 import settingState from '@/store/setting/state'
-import { destroyUserApi, setUserApi } from './userApi'
+import { destroyUserApi, setUserApi, setUserApiStatus } from './userApi'
 import searchMusicState from '@/store/search/music/state'
 import searchSonglistState from '@/store/search/songlist/state'
 import searchState from '@/store/search/state'
 import hotSearchState from '@/store/hotSearch/state'
+import songlistState from '@/store/songlist/state'
+import leaderboardState from '@/store/leaderboard/state'
 import commonActions from '@/store/common/action'
 
 
@@ -23,6 +25,7 @@ export const setApiSource = (apiId: string) => {
   }
   if (/^user_api/.test(apiId)) {
     setUserApi(apiId).catch(err => {
+      setUserApiStatus(false, err.message)
       if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](false)
       console.log(err)
     })
@@ -36,6 +39,11 @@ export const setApiSource = (apiId: string) => {
     searchMusicState.sources = []
     searchSonglistState.source = ''
     searchSonglistState.sources = []
+    songlistState.sources = []
+    songlistState.sortList = {}
+    songlistState.tags = {}
+    leaderboardState.sources = []
+    leaderboardState.boards = {}
     hotSearchState.sources = []
     commonActions.setSourceNames({})
     if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](true)
