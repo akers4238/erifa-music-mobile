@@ -568,6 +568,12 @@ export const addUserApiWithInfo = async(script: string, info: LX.UserApi.UserApi
   if (targetIndex < 0) {
     userApis.push(info)
   } else {
+    const oldInfo = userApis[targetIndex]
+    info = {
+      ...info,
+      allowShowUpdateAlert: oldInfo.allowShowUpdateAlert,
+      userVariablesValue: oldInfo.userVariablesValue,
+    }
     userApis.splice(targetIndex, 1, info)
   }
   await saveDataMultiple([
@@ -594,5 +600,12 @@ export const setUserApiAllowShowUpdateAlert = async(id: string, enable: boolean)
   const targetApi = userApis?.find(api => api.id == id)
   if (!targetApi) return
   targetApi.allowShowUpdateAlert = enable
+  await saveData(userApiPrefix, userApis)
+}
+
+export const setUserApiUserVariables = async(id: string, values: Record<string, string>) => {
+  const targetApi = userApis?.find(api => api.id == id)
+  if (!targetApi) return
+  targetApi.userVariablesValue = values
   await saveData(userApiPrefix, userApis)
 }

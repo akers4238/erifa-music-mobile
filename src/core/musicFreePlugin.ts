@@ -12,6 +12,13 @@ import commonActions from '@/store/common/action'
 
 type MusicFreeSearchType = 'music' | 'album' | 'sheet' | 'artist'
 type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
+type MusicFreeCacheControl = 'cache' | 'no-cache' | 'no-store'
+
+interface MusicFreeUserVariable {
+  key: string
+  name?: string
+  hint?: string
+}
 
 interface MusicFreePluginDefine {
   platform: string
@@ -20,6 +27,10 @@ interface MusicFreePluginDefine {
   srcUrl?: string
   author?: string
   description?: string
+  primaryKey?: string[]
+  cacheControl?: MusicFreeCacheControl
+  userVariables?: MusicFreeUserVariable[]
+  hints?: Record<string, string[]>
   supportedSearchType?: MusicFreeSearchType[]
   defaultSearchType?: MusicFreeSearchType
   search?: (query: string, page: number, type: MusicFreeSearchType) => Promise<any>
@@ -288,17 +299,30 @@ const normalizeModuleSyntax = (script: string) => {
   return script.replace(/\bexport\s+default\b/, 'module.exports.default =')
 }
 
+const normalizeUserVariables = (variables: any): MusicFreeUserVariable[] | undefined => {
+  if (!Array.isArray(variables)) return undefined
+  const normalized = variables
+    .filter(item => item && typeof item === 'object' && typeof item.key === 'string' && item.key.trim())
+    .map(item => ({
+      key: item.key.trim(),
+      name: typeof item.name === 'string' ? item.name : undefined,
+      hint: typeof item.hint === 'string' ? item.hint : undefined,
+    }))
+  return normalized.length ? normalized : undefined
+}
+
 export const mountMusicFreePlugin = (script: string, info?: Partial<LX.UserApi.UserApiInfo>): MusicFreePlugin => {
   const module = { exports: {} as any }
+  const userVariablesValue = info?.userVariablesValue ?? {}
   const env = {
     appVersion: version,
     os: 'android',
     lang: 'zh-CN',
     getUserVariables() {
-      return {}
+      return { ...userVariablesValue }
     },
     get userVariables() {
-      return {}
+      return { ...userVariablesValue }
     },
   }
   const processShim = {
@@ -351,6 +375,9 @@ export const mountMusicFreePlugin = (script: string, info?: Partial<LX.UserApi.U
       author: info?.author ?? instance.author ?? '',
       homepage: info?.homepage ?? instance.srcUrl ?? '',
       version: info?.version ?? instance.version ?? '',
+      userVariables: normalizeUserVariables(instance.userVariables) ?? info?.userVariables,
+      userVariablesValue,
+      hints: instance.hints ?? info?.hints,
       sources: {
         [name]: {
           name,

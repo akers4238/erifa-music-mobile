@@ -25,6 +25,13 @@ declare namespace LX {
       author: string
       homepage: string
       version: string
+      userVariables?: Array<{
+        key: string
+        name?: string
+        hint?: string
+      }>
+      userVariablesValue?: Record<string, string>
+      hints?: Record<string, string[]>
       sources?: UserApiSources
     }
 
@@ -55,6 +62,11 @@ declare namespace LX {
     interface UserApiSetAllowUpdateAlertParams {
       id: string
       enable: boolean
+    }
+
+    interface UserApiSetUserVariablesParams {
+      id: string
+      values: Record<string, string>
     }
 
     interface ImportUserApi {

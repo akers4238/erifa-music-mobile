@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Text from '@/components/common/Text'
 import { View, TouchableOpacity, ScrollView } from 'react-native'
 import { confirmDialog, createStyle } from '@/utils/tools'
@@ -6,25 +6,31 @@ import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { useUserApiList, state as userApiState } from '@/store/userApi'
 import { useSettingValue } from '@/store/setting/hook'
-import { removeUserApi, setUserApiAllowShowUpdateAlert } from '@/core/userApi'
+import { removeUserApi, setUserApiAllowShowUpdateAlert, setUserApiUserVariables } from '@/core/userApi'
 import { BorderRadius } from '@/theme'
 import CheckBox from '@/components/common/CheckBox'
 import { Icon } from '@/components/common/Icon'
 import settingState from '@/store/setting/state'
 import { setApiSource } from '@/core/apiSource'
+import Input from '@/components/common/Input'
 
 const formatVersionName = (version: string) => {
   return /^\d/.test(version) ? `v${version}` : version
 }
-const ListItem = ({ item, activeId, onActive, onRemove, onChangeAllowShowUpdateAlert }: {
+const ListItem = ({ item, activeId, onActive, onRemove, onChangeAllowShowUpdateAlert, onSaveUserVariables }: {
   item: LX.UserApi.UserApiInfo
   activeId: string
   onActive: (id: string) => void
   onRemove: (id: string, name: string) => void
   onChangeAllowShowUpdateAlert: (id: string, enabled: boolean) => void
+  onSaveUserVariables: (id: string, values: Record<string, string>) => void
 }) => {
   const theme = useTheme()
   const t = useI18n()
+  const [userVariablesValue, setUserVariablesValue] = useState<Record<string, string>>(item.userVariablesValue ?? {})
+  useEffect(() => {
+    setUserVariablesValue(item.userVariablesValue ?? {})
+  }, [item.id, item.userVariablesValue])
   const changeAllowShowUpdateAlert = (check: boolean) => {
     onChangeAllowShowUpdateAlert(item.id, check)
   }
@@ -33,6 +39,15 @@ const ListItem = ({ item, activeId, onActive, onRemove, onChangeAllowShowUpdateA
   }
   const handleRemove = () => {
     onRemove(item.id, item.name)
+  }
+  const handleChangeUserVariable = (key: string, value: string) => {
+    setUserVariablesValue({
+      ...userVariablesValue,
+      [key]: value,
+    })
+  }
+  const handleSaveUserVariables = () => {
+    onSaveUserVariables(item.id, userVariablesValue)
   }
 
   return (
@@ -57,6 +72,32 @@ const ListItem = ({ item, activeId, onActive, onRemove, onChangeAllowShowUpdateA
           ) : null
         }
         <CheckBox check={item.allowShowUpdateAlert} label={t('user_api_allow_show_update_alert')} onChange={changeAllowShowUpdateAlert} size={0.86} />
+        {
+          item.userVariables?.length
+            ? (
+              <View style={styles.variableBlock}>
+                {
+                  item.userVariables.map(variable => (
+                    <View key={variable.key} style={styles.variableRow}>
+                      <Text style={styles.variableLabel} size={12} color={theme['c-font-label']}>{variable.name || variable.key}</Text>
+                      <Input
+                        value={userVariablesValue[variable.key] ?? ''}
+                        placeholder={variable.hint}
+                        clearBtn
+                        size={12}
+                        style={{ ...styles.variableInput, borderColor: theme['c-border-background'] }}
+                        onChangeText={(value) => { handleChangeUserVariable(variable.key, value) }}
+                      />
+                    </View>
+                  ))
+                }
+                <TouchableOpacity style={styles.variableSaveBtn} onPress={handleSaveUserVariables}>
+                  <Text size={12} color={theme['c-primary-font']}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            )
+            : null
+        }
       </View>
       <View style={styles.listItemRight}>
         <TouchableOpacity style={styles.btn} onPress={handleActive} disabled={activeId == item.id}>
@@ -103,6 +144,9 @@ export default () => {
   const handleChangeAllowShowUpdateAlert = useCallback((id: string, enabled: boolean) => {
     void setUserApiAllowShowUpdateAlert(id, enabled)
   }, [])
+  const handleSaveUserVariables = useCallback((id: string, values: Record<string, string>) => {
+    void setUserApiUserVariables(id, values)
+  }, [])
   const handleActive = useCallback((id: string) => {
     setApiSource(id)
   }, [])
@@ -121,6 +165,7 @@ export default () => {
                 onActive={handleActive}
                 onRemove={handleRemove}
                 onChangeAllowShowUpdateAlert={handleChangeAllowShowUpdateAlert}
+                onSaveUserVariables={handleSaveUserVariables}
               />
               )
             })
@@ -145,7 +190,7 @@ const styles = createStyle({
     padding: 10,
     borderRadius: BorderRadius.normal,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   listItemLeft: {
@@ -165,6 +210,30 @@ const styles = createStyle({
   btn: {
     padding: 10,
     // backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  variableBlock: {
+    marginTop: 4,
+    gap: 5,
+  },
+  variableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  variableLabel: {
+    width: 76,
+  },
+  variableInput: {
+    height: 30,
+    borderWidth: 1,
+    borderRadius: BorderRadius.normal,
+    paddingLeft: 8,
+    paddingRight: 4,
+  },
+  variableSaveBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
   },
   tipText: {
     textAlign: 'center',

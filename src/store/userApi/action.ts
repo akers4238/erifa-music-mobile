@@ -30,3 +30,12 @@ export const setUserApiAllowShowUpdateAlert = (id: string, enable: boolean) => {
 
   event.list_changed([...state.list])
 }
+
+export const setUserApiUserVariables = (id: string, values: Record<string, string>) => {
+  const targetIndex = state.list.findIndex(api => api.id == id)
+  if (targetIndex < 0) return
+  state.list[targetIndex].userVariablesValue = values
+  state.list.splice(targetIndex, 1, { ...state.list[targetIndex] })
+
+  event.list_changed([...state.list])
+}

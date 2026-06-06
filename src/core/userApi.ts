@@ -1,5 +1,6 @@
 import { action, state } from '@/store/userApi'
-import { addUserApiWithInfo, getUserApiList, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore } from '@/utils/data'
+import settingState from '@/store/setting/state'
+import { addUserApiWithInfo, getUserApiList, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore, setUserApiUserVariables as setUserApiUserVariablesFromStore } from '@/utils/data'
 import { log as writeLog } from '@/utils/log'
 import { activateMusicFreePlugin, destroyMusicFreePlugin, getMusicFreePluginInfo } from './musicFreePlugin'
 
@@ -43,6 +44,12 @@ export const removeUserApi = async(ids: string[]) => {
 export const setUserApiAllowShowUpdateAlert = async(id: string, enable: boolean) => {
   await setUserApiAllowShowUpdateAlertFromStore(id, enable)
   action.setUserApiAllowShowUpdateAlert(id, enable)
+}
+
+export const setUserApiUserVariables = async(id: string, values: Record<string, string>) => {
+  await setUserApiUserVariablesFromStore(id, values)
+  action.setUserApiUserVariables(id, values)
+  if (settingState.setting['common.apiSource'] == id) await setUserApi(id)
 }
 
 export const log = {
