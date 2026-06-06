@@ -237,6 +237,8 @@ export const getOnlineOtherSourceMusicUrl = async({ musicInfos, quality, onToggl
   retryedSource?: LX.OnlineSource[]
 }): Promise<{
   url: string
+  headers?: Record<string, string>
+  userAgent?: string
   musicInfo: LX.Music.MusicInfoOnline
   quality: LX.Quality
   isFromCache: boolean
@@ -270,8 +272,8 @@ export const getOnlineOtherSourceMusicUrl = async({ musicInfos, quality, onToggl
   }
   // retryedSource.includes(musicInfo.source)
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  return reqPromise.then(({ url, type }: { url: string, type: LX.Quality }) => {
-    return { musicInfo, url, quality: type, isFromCache: false }
+  return reqPromise.then(({ url, type, headers, userAgent }: { url: string, type: LX.Quality, headers?: Record<string, string>, userAgent?: string }) => {
+    return { musicInfo, url, headers, userAgent, quality: type, isFromCache: false }
     // eslint-disable-next-line @typescript-eslint/promise-function-async
   }).catch((err: any) => {
     if (err.message == requestMsg.tooManyRequests) throw err
@@ -291,6 +293,8 @@ export const handleGetOnlineMusicUrl = async({ musicInfo, quality, onToggleSourc
   onToggleSource: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<{
   url: string
+  headers?: Record<string, string>
+  userAgent?: string
   musicInfo: LX.Music.MusicInfoOnline
   quality: LX.Quality
   isFromCache: boolean
@@ -305,8 +309,8 @@ export const handleGetOnlineMusicUrl = async({ musicInfo, quality, onToggleSourc
   } catch (err: any) {
     reqPromise = Promise.reject(err)
   }
-  return reqPromise.then(({ url, type }: { url: string, type: LX.Quality }) => {
-    return { musicInfo, url, quality: type, isFromCache: false }
+  return reqPromise.then(({ url, type, headers, userAgent }: { url: string, type: LX.Quality, headers?: Record<string, string>, userAgent?: string }) => {
+    return { musicInfo, url, headers, userAgent, quality: type, isFromCache: false }
   }).catch(async(err: any) => {
     console.log(err)
     if (!allowToggleSource || err.message == requestMsg.tooManyRequests) throw err

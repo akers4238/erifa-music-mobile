@@ -106,16 +106,16 @@ export const isTempId = (trackId = global.lx.playerTrackId) => !trackId || tempI
 //   },
 // }
 
-const playMusic = ((fn: (musicInfo: LX.Player.PlayMusic, url: string, time: number) => void, delay = 800) => {
+const playMusic = ((fn: (musicInfo: LX.Player.PlayMusic, resource: LX.Player.MusicResource | string, time: number) => void, delay = 800) => {
   let delayTimer: number | null = null
   let isDelayRun = false
   let timer: number | null = null
   let _musicInfo: LX.Player.PlayMusic | null = null
-  let _url = ''
+  let _resource: LX.Player.MusicResource | string = ''
   let _time = 0
-  return (musicInfo: LX.Player.PlayMusic, url: string, time: number) => {
+  return (musicInfo: LX.Player.PlayMusic, resource: LX.Player.MusicResource | string, time: number) => {
     _musicInfo = musicInfo
-    _url = url
+    _resource = resource
     _time = time
     if (timer) {
       BackgroundTimer.clearTimeout(timer)
@@ -129,17 +129,17 @@ const playMusic = ((fn: (musicInfo: LX.Player.PlayMusic, url: string, time: numb
       timer = BackgroundTimer.setTimeout(() => {
         timer = null
         let musicInfo = _musicInfo
-        let url = _url
+        let resource = _resource
         let time = _time
         _musicInfo = null
-        _url = ''
+        _resource = ''
         _time = 0
         isDelayRun = false
-        fn(musicInfo!, url, time)
+        fn(musicInfo!, resource, time)
       }, delay)
     } else {
       isDelayRun = true
-      fn(musicInfo, url, time)
+      fn(musicInfo, resource, time)
       delayTimer = BackgroundTimer.setTimeout(() => {
         delayTimer = null
         isDelayRun = false
@@ -150,8 +150,8 @@ const playMusic = ((fn: (musicInfo: LX.Player.PlayMusic, url: string, time: numb
   handlePlayMusic(musicInfo, url, time)
 })
 
-export const setResource = (musicInfo: LX.Player.PlayMusic, url: string, duration?: number) => {
-  playMusic(musicInfo, url, duration ?? 0)
+export const setResource = (musicInfo: LX.Player.PlayMusic, resource: LX.Player.MusicResource | string, duration?: number) => {
+  playMusic(musicInfo, resource, duration ?? 0)
 }
 
 export const setPlay = async() => TrackPlayer.play()

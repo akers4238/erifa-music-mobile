@@ -39,22 +39,23 @@ const getCurrentFullLyric = (targetId: string | null) => {
     : undefined
 }
 
-const buildTracks = (musicInfo: LX.Player.PlayMusic, url?: LX.Player.Track['url'], duration?: LX.Player.Track['duration']): LX.Player.Track[] => {
+const buildTracks = (musicInfo: LX.Player.PlayMusic, resource?: LX.Player.MusicResource, duration?: LX.Player.Track['duration']): LX.Player.Track[] => {
   const mInfo = formatMusicInfo(musicInfo)
   const track = [] as LX.Player.Track[]
   const isShowNotificationImage = settingState.setting['player.isShowNotificationImage']
   const album = mInfo.album || undefined
   const artwork = isShowNotificationImage && mInfo.pic && httpRxp.test(mInfo.pic) ? mInfo.pic : undefined
   const lyric = getCurrentFullLyric(mInfo.id)
-  if (url) {
+  if (resource?.url) {
     track.push({
-      id: `${mInfo.id}__//${Math.random()}__//${url}`,
-      url,
+      id: `${mInfo.id}__//${Math.random()}__//${resource.url}`,
+      url: resource.url,
       title: mInfo.name || 'Unknow',
       artist: mInfo.singer || 'Unknow',
       album,
       artwork,
-      userAgent: defaultUserAgent,
+      userAgent: resource.userAgent || defaultUserAgent,
+      headers: resource.headers,
       musicId: mInfo.id,
       lyric,
       // original: { ...musicInfo },
@@ -74,7 +75,7 @@ const buildTracks = (musicInfo: LX.Player.PlayMusic, url?: LX.Player.Track['url'
     duration: 0,
   })
   return track
-  // console.log('buildTrack', musicInfo.name, url)
+  // console.log('buildTrack', musicInfo.name, resource?.url)
 }
 // const buildTrack = (musicInfo: LX.Player.PlayMusic, url: LX.Player.Track['url'], duration?: LX.Player.Track['duration']): LX.Player.Track => {
 //   const mInfo = formatMusicInfo(musicInfo)
@@ -147,9 +148,9 @@ export const initTrackInfo = async(musicInfo: LX.Player.PlayMusic, mInfo: LX.Pla
 }
 
 
-const handlePlayMusic = async(musicInfo: LX.Player.PlayMusic, url: string, time: number) => {
+const handlePlayMusic = async(musicInfo: LX.Player.PlayMusic, resource: LX.Player.MusicResource, time: number) => {
 // console.log(tracks, time)
-  const tracks = buildTracks(musicInfo, url)
+  const tracks = buildTracks(musicInfo, resource)
   const track = tracks[0]
   // await updateMusicInfo(track)
   const currentTrackIndex = await TrackPlayer.getCurrentTrack()
@@ -185,11 +186,12 @@ const handlePlayMusic = async(musicInfo: LX.Player.PlayMusic, url: string, time:
 }
 let playPromise = Promise.resolve()
 let actionId = Math.random()
-export const playMusic = (musicInfo: LX.Player.PlayMusic, url: string, time: number) => {
+export const playMusic = (musicInfo: LX.Player.PlayMusic, resource: LX.Player.MusicResource | string, time: number) => {
   const id = actionId = Math.random()
+  const musicResource = typeof resource === 'string' ? { url: resource } : resource
   void playPromise.finally(() => {
     if (id != actionId) return
-    playPromise = handlePlayMusic(musicInfo, url, time)
+    playPromise = handlePlayMusic(musicInfo, musicResource, time)
   })
 }
 

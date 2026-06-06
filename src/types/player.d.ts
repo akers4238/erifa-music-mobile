@@ -23,6 +23,12 @@ declare global {
 
       type PlayMusic = LX.Music.MusicInfo | LX.Download.ListItem
 
+      interface MusicResource {
+        url: string
+        headers?: Record<string, string>
+        userAgent?: string
+      }
+
       type PlayMusicInfo = Readonly<{
         /**
          * 当前播放歌曲的列表 id

@@ -265,6 +265,114 @@ const qs = {
   },
 }
 
+const compareParts = (current: string, target: string) => {
+  const left = String(current).split(/[.-]/)
+  const right = String(target).split(/[.-]/)
+  const length = Math.max(left.length, right.length)
+  for (let i = 0; i < length; i++) {
+    const l = Number(left[i] || 0)
+    const r = Number(right[i] || 0)
+    if (Number.isNaN(l) || Number.isNaN(r)) {
+      const result = String(left[i] || '').localeCompare(String(right[i] || ''))
+      if (result) return result > 0 ? 1 : -1
+    } else if (l !== r) {
+      return l > r ? 1 : -1
+    }
+  }
+  return 0
+}
+const compareVersions = {
+  compare(current: string, target: string, operator = '=') {
+    const result = compareParts(current, target)
+    switch (operator) {
+      case '>': return result > 0
+      case '>=': return result >= 0
+      case '<': return result < 0
+      case '<=': return result <= 0
+      case '!=':
+      case '!==': return result !== 0
+      default: return result === 0
+    }
+  },
+  satisfies(versionValue: string, range = '') {
+    const match = String(range).trim().match(/^(>=|<=|>|<|=|\^|~)?\s*(.+)$/)
+    if (!match) return true
+    const operator = match[1] || '>='
+    return compareVersions.compare(versionValue, match[2], operator === '^' || operator === '~' ? '>=' : operator)
+  },
+  compareVersions: compareParts,
+}
+
+const getPathParts = (path: string | Array<string | number>) => Array.isArray(path) ? path : String(path).split('.').filter(Boolean)
+const objectPath = {
+  get(target: any, path: string | Array<string | number>, defaultValue?: any) {
+    let current = target
+    for (const key of getPathParts(path)) {
+      if (current == null || current[key as keyof typeof current] == null) return defaultValue
+      current = current[key as keyof typeof current]
+    }
+    return current
+  },
+  set(target: any, path: string | Array<string | number>, value: any) {
+    const parts = getPathParts(path)
+    let current = target
+    parts.forEach((key, index) => {
+      if (index === parts.length - 1) {
+        current[key as keyof typeof current] = value
+      } else {
+        current[key as keyof typeof current] ??= {}
+        current = current[key as keyof typeof current]
+      }
+    })
+    return target
+  },
+  has(target: any, path: string | Array<string | number>) {
+    return objectPath.get(target, path) !== undefined
+  },
+  del(target: any, path: string | Array<string | number>) {
+    const parts = getPathParts(path)
+    const last = parts.pop()
+    const parent = parts.length ? objectPath.get(target, parts) : target
+    if (parent && last != null) delete parent[last as keyof typeof parent]
+  },
+}
+
+const bigInteger = (value: any = 0) => {
+  const current = BigInt(String(value || 0))
+  const wrap = (next: bigint) => bigInteger(next.toString())
+  return {
+    add: (next: any) => wrap(current + BigInt(String(next || 0))),
+    subtract: (next: any) => wrap(current - BigInt(String(next || 0))),
+    minus: (next: any) => wrap(current - BigInt(String(next || 0))),
+    multiply: (next: any) => wrap(current * BigInt(String(next || 0))),
+    divide: (next: any) => wrap(current / BigInt(String(next || 1))),
+    mod: (next: any) => wrap(current % BigInt(String(next || 1))),
+    equals: (next: any) => current === BigInt(String(next || 0)),
+    compare: (next: any) => current > BigInt(String(next || 0)) ? 1 : current < BigInt(String(next || 0)) ? -1 : 0,
+    greater: (next: any) => current > BigInt(String(next || 0)),
+    lesser: (next: any) => current < BigInt(String(next || 0)),
+    toJSNumber: () => Number(current),
+    toString: (radix?: number) => current.toString(radix),
+    valueOf: () => Number(current),
+  }
+}
+
+const nanoid = {
+  nanoid(size = 21) {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-'
+    let id = ''
+    for (let i = 0; i < size; i++) id += chars[Math.floor(Math.random() * chars.length)]
+    return id
+  },
+}
+
+const cookieManager = {
+  get: async() => ({}),
+  set: async() => true,
+  clearAll: async() => true,
+  flush: async() => true,
+}
+
 const withDefault = <T>(pkg: T): T => {
   if (pkg && (typeof pkg === 'object' || typeof pkg === 'function') && !(pkg as any).default) {
     try {
@@ -290,6 +398,16 @@ const pluginRequire = (name: string) => {
       return withDefault(cryptoJs)
     case 'qs':
       return withDefault(qs)
+    case 'compare-versions':
+      return withDefault(compareVersions)
+    case 'object-path':
+      return withDefault(objectPath)
+    case 'big-integer':
+      return withDefault(bigInteger)
+    case 'nanoid':
+      return withDefault(nanoid)
+    case '@react-native-cookies/cookies':
+      return withDefault(cookieManager)
     default:
       throw new Error(`Unsupported plugin require: ${name}`)
   }
@@ -698,6 +816,21 @@ const normalizeUrl = (result: any) => {
   if (result && typeof result.url === 'string') return result.url
   return ''
 }
+const normalizeMediaSource = (result: any, fallbackUrl = ''): LX.Player.MusicResource => {
+  if (typeof result === 'string') return { url: result }
+  const url = typeof result?.url === 'string' ? result.url : fallbackUrl
+  const headers = result?.headers && typeof result.headers === 'object'
+    ? Object.fromEntries(Object.entries(result.headers).map(([key, value]) => [key, String(value)]))
+    : undefined
+  const userAgent = typeof result?.userAgent === 'string'
+    ? result.userAgent
+    : headers?.['user-agent'] || headers?.['User-Agent']
+  return {
+    url,
+    headers,
+    userAgent,
+  }
+}
 
 const getFallbackUrl = (item: any, mfQuality: MusicFreeQuality, lxQuality: LX.Quality) => {
   return item?.qualities?.[mfQuality]?.url ||
@@ -748,7 +881,7 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
         canceleFn() {},
         promise: plugin.getMediaSource
           ? plugin.getMediaSource(getRawMusicFreeItem(songInfo), normalizeQuality(type))
-            .then(result => ({ type, url: normalizeUrl(result) }))
+            .then(result => ({ type, ...normalizeMediaSource(result) }))
           : Promise.resolve({ type, url: getFallbackUrl(getRawMusicFreeItem(songInfo), normalizeQuality(type), type) }),
       }
     },
