@@ -71,13 +71,32 @@ const appendParams = (url: string, params?: Record<string, any>) => {
   return `${url}${url.includes('?') ? '&' : '?'}${query}`
 }
 
+const getHeaderValue = (headers: Record<string, any> = {}, name: string) => {
+  const target = name.toLowerCase()
+  const key = Object.keys(headers).find(header => header.toLowerCase() == target)
+  return key ? headers[key] : undefined
+}
+
+const normalizeRequestHeaders = (headers: Record<string, any> = {}, data?: any) => {
+  const normalized = { ...headers }
+  if (!getHeaderValue(normalized, 'User-Agent')) {
+    try {
+      const body = typeof data === 'string' ? JSON.parse(data) : data
+      const userAgent = body?.context?.client?.userAgent
+      if (typeof userAgent === 'string' && userAgent) normalized['User-Agent'] = userAgent
+    } catch {}
+  }
+  return normalized
+}
+
 const request = async(url: string, options: Record<string, any> = {}) => {
   const targetUrl = appendParams(url, options.params)
+  const body = options.data ?? options.body
   const resp = await fetchData(targetUrl, {
     method: options.method ?? 'get',
     timeout: options.timeout,
-    headers: options.headers,
-    body: options.data ?? options.body,
+    headers: normalizeRequestHeaders(options.headers, body),
+    body,
     form: options.form,
     formData: options.formData,
     binary: options.responseType === 'arraybuffer' || options.binary === true,

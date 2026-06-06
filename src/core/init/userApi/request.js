@@ -5,6 +5,11 @@ import BackgroundTimer from 'react-native-background-timer'
 const defaultHeaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
 }
+const getHeaderValue = (headers, name) => {
+  const target = name.toLowerCase()
+  const key = Object.keys(headers).find(header => header.toLowerCase() == target)
+  return key ? headers[key] : undefined
+}
 // var proxyUrl = "http://" + user + ":" + password + "@" + host + ":" + port;
 // var proxiedRequest = request.defaults({'proxy': proxyUrl});
 
@@ -20,7 +25,7 @@ const handleRequestData = async({
   headers = Object.assign({
     Accept: 'application/json',
   }, headers)
-  if (method.toLocaleLowerCase() === 'post' && !headers['Content-Type']) {
+  if (method.toLocaleLowerCase() === 'post' && !getHeaderValue(headers, 'Content-Type')) {
     if (options.form) {
       headers['Content-Type'] = 'application/x-www-form-urlencoded'
       const formBody = []
@@ -45,7 +50,7 @@ const handleRequestData = async({
       headers['Content-Type'] = 'application/json'
     }
   }
-  if (headers['Content-Type'] === 'application/json' && options.body && typeof options.body !== 'string') {
+  if (getHeaderValue(headers, 'Content-Type') === 'application/json' && options.body && typeof options.body !== 'string') {
     options.body = JSON.stringify(options.body)
   }
 
