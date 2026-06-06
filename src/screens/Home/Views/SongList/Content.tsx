@@ -14,6 +14,16 @@ interface SonglistInfo {
   tagId: string
 }
 
+const fallbackSortList: SortInfo[] = [{ name: 'Default', tid: 'recommend', id: 'default' }]
+
+const getAvailableSource = (source: InitState['sources'][number]) => {
+  return songlistState.sources.includes(source) ? source : songlistState.sources[0]
+}
+
+const getSourceSortList = (source: InitState['sources'][number]) => {
+  return songlistState.sortList[source]?.length ? songlistState.sortList[source]! : fallbackSortList
+}
+
 export default () => {
   const headerBarRef = useRef<HeaderBarType>(null)
   const listRef = useRef<ListType>(null)
@@ -21,11 +31,21 @@ export default () => {
 
   useEffect(() => {
     void getSongListSetting().then(info => {
-      songlistInfo.current.source = info.source
-      songlistInfo.current.sortId = info.sortId
-      songlistInfo.current.tagId = info.tagId
-      headerBarRef.current?.setSource(info.source, info.sortId, info.tagName, info.tagId)
-      listRef.current?.loadList(info.source, info.sortId, info.tagId)
+      const source = getAvailableSource(info.source)
+      if (!source) return
+      const sortList = getSourceSortList(source)
+      const sortId = sortList.some(sort => sort.id == info.sortId) ? info.sortId : sortList[0].id
+      const tagId = sortId == info.sortId ? info.tagId : ''
+      const tagName = tagId ? info.tagName : ''
+
+      songlistInfo.current.source = source
+      songlistInfo.current.sortId = sortId
+      songlistInfo.current.tagId = tagId
+      if (source != info.source || sortId != info.sortId || tagId != info.tagId) {
+        void saveSongListSetting({ source, sortId, tagId, tagName })
+      }
+      headerBarRef.current?.setSource(source, sortId, tagName, tagId)
+      listRef.current?.loadList(source, sortId, tagId)
     })
   }, [])
 
@@ -44,7 +64,7 @@ export default () => {
   const handleSourceChange: HeaderBarProps['onSourceChange'] = (source) => {
     songlistInfo.current.source = source
     songlistInfo.current.tagId = ''
-    songlistInfo.current.sortId = songlistState.sortList[source]![0].id
+    songlistInfo.current.sortId = getSourceSortList(source)[0].id
     void saveSongListSetting({ sortId: songlistInfo.current.sortId, source, tagId: '', tagName: '' })
     headerBarRef.current?.setSource(source, songlistInfo.current.sortId, '', songlistInfo.current.tagId)
     listRef.current?.loadList(source, songlistInfo.current.sortId, songlistInfo.current.tagId)
@@ -69,4 +89,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 })
-

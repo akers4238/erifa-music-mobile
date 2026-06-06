@@ -18,7 +18,7 @@ const LIST_LOAD_LIMIT = 30
  * @returns
  */
 export const getSortList = (source: LX.OnlineSource) => {
-  return songlistState.sortList[source]!
+  return songlistState.sortList[source] ?? []
 }
 
 /**
@@ -28,7 +28,8 @@ export const getSortList = (source: LX.OnlineSource) => {
  */
 export const getTags = async<T extends LX.OnlineSource>(source: T) => {
   if (songlistState.tags[source]) return songlistState.tags[source] as TagInfo<T>
-  const info = await (musicSdk[source]?.songList.getTags() as Promise<TagInfo<T>>)
+  if (!musicSdk[source]?.songList?.getTags) return Promise.reject(new Error('source not found: ' + source))
+  const info = await (musicSdk[source].songList.getTags() as Promise<TagInfo<T>>)
   songlistActions.setTags(info, source)
   return info
 }
@@ -69,6 +70,7 @@ export const clearList = () => {
  * @returns
  */
 export const getList = async(source: LX.OnlineSource, tabId: string, sortId: string, page: number, isRefresh = false): Promise<ListInfo> => {
+  if (!musicSdk[source]?.songList?.getList) return Promise.reject(new Error('source not found: ' + source))
   let pageKey = `slist__${source}__${sortId}__${tabId}__${page}`
 
   let listCache = cache.get(pageKey) as ListInfo
@@ -77,7 +79,7 @@ export const getList = async(source: LX.OnlineSource, tabId: string, sortId: str
     else return listCache
   }
 
-  return musicSdk[source]?.songList.getList(sortId, tabId, page).then((result: ListInfo) => {
+  return musicSdk[source].songList.getList(sortId, tabId, page).then((result: ListInfo) => {
     cache.set(pageKey, result)
     return result
     // if (pageKey != listInfo.key) return
