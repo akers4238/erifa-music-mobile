@@ -25,7 +25,7 @@ const ensurePluginSearchApi = async() => {
   const settingApiId = settingState.setting['common.apiSource']
   const target = /^user_api/.test(settingApiId)
     ? userApiState.list.find(api => api.id == settingApiId)
-    : userApiState.list[0]
+    : userApiState.list.find(api => api.sources && Object.values(api.sources).some(source => source.actions.includes('search')))
   if (!target) return null
 
   await setUserApi(target.id)
@@ -43,7 +43,7 @@ export default () => {
     if (!text) {
       void tipDialog({
         message: '请输入搜索关键词',
-        btnText: global.i18n.t('ok'),
+        btnText: '知道了',
       })
       return
     }
@@ -51,19 +51,19 @@ export default () => {
     setSearching(true)
     setResultText('')
     const pluginSearchApi = await ensurePluginSearchApi().catch((err: any) => {
-      setResultText(`插件激活失败：${err.message || 'unknown error'}`)
+      setResultText(`插件启用失败：${err.message || 'unknown error'}`)
       return null
     })
     if (!pluginSearchApi) {
       setSearching(false)
-      setResultText('没有可用于搜索的 MusicFree 插件，请先导入或启用插件')
+      setResultText('没有可用于搜索的 MusicFree 插件，请先导入并启用一个支持搜索的插件')
       return
     }
 
     try {
       const result = await pluginSearchApi.searchApi(text, 1, 30)
       const count = Array.isArray(result?.list) ? result.list.length : 0
-      setResultText(`找到 ${count} 条结果`)
+      setResultText(`当前音源 ${pluginSearchApi.source} 找到 ${count} 条结果`)
     } catch (err: any) {
       setResultText(`搜索失败：${err.message || 'unknown error'}`)
     } finally {
@@ -80,7 +80,7 @@ export default () => {
           onPress={handleSearch}
           disabled={searching}
         >
-          <Text size={13} color={theme['c-button-font']}>{searching ? '搜索中' : global.i18n.t('confirm')}</Text>
+          <Text size={13} color={theme['c-button-font']}>{searching ? '搜索中' : '确认'}</Text>
         </Button>
       </View>
       <Input

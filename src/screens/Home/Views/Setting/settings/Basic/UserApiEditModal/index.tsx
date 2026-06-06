@@ -3,7 +3,6 @@ import Text from '@/components/common/Text'
 import { View, TouchableOpacity } from 'react-native'
 import { createStyle, openUrl } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
-import { useI18n } from '@/lang'
 import Dialog, { type DialogType } from '@/components/common/Dialog'
 import Button from '@/components/common/Button'
 import List from './List'
@@ -68,7 +67,6 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
   // const inputRef = useRef<UrlInputType>(null)
   const [visible, setVisible] = useState(false)
   const theme = useTheme()
-  const t = useI18n()
 
   const handleShow = () => {
     dialogRef.current?.setVisible(true)
@@ -106,24 +104,24 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
           <Dialog ref={dialogRef} bgHide={false}>
             <View style={styles.content}>
               {/* <UrlInput ref={inputRef} /> */}
-              <Text size={16} style={styles.title}>{t('user_api_musicfree_title')}</Text>
+              <Text size={16} style={styles.title}>MusicFree 插件管理</Text>
               <SearchRequest />
               <List />
               <View style={styles.tips}>
                 <Text style={styles.tipsText} size={12}>
-                  {t('user_api_musicfree_tip')}
+                  仅支持 MusicFree 风格插件，可在这里导入、启用、卸载和管理插件。
                 </Text>
                 <TouchableOpacity onPress={openFAQPage}>
                   <Text style={{ ...styles.tipsText, textDecorationLine: 'underline' }} size={12} color={theme['c-primary-font']}>FAQ</Text>
                 </TouchableOpacity>
                 <View>
-                  <Text style={styles.tipsText} size={12}>{t('user_api_note')}</Text>
+                  <Text style={styles.tipsText} size={12}>提示：导入脚本前请确认来源可信，插件脚本仍可能影响你的运行环境。</Text>
                 </View>
               </View>
             </View>
             <View style={styles.btns}>
               <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={handleCancel}>
-                <Text size={14} color={theme['c-button-font']}>{t('close')}</Text>
+                <Text size={14} color={theme['c-button-font']}>关闭</Text>
               </Button>
               <ImportBtn btnStyle={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} />
             </View>

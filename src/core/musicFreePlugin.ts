@@ -520,6 +520,7 @@ const getActions = (plugin: MusicFreePluginDefine): LX.UserApi.UserApiSourceInfo
   if (typeof plugin.getAlbumInfo === 'function') actions.push('albumInfo', 'musicSheetInfo')
   if (typeof plugin.getArtistWorks === 'function') actions.push('artistWorks')
   if (typeof plugin.getMusicSheetInfo === 'function') actions.push('musicSheetInfo')
+  if (typeof plugin.importMusicItem === 'function') actions.push('importMusicItem')
   if (typeof plugin.importMusicSheet === 'function') actions.push('importMusicSheet')
   if (typeof plugin.getRecommendSheetTags === 'function') actions.push('recommendSheetTags')
   if (typeof plugin.getRecommendSheetsByTag === 'function') actions.push('recommendSheetsByTag')
@@ -765,6 +766,12 @@ const getSheetSearchType = (plugin: MusicFreePluginDefine): MusicFreeSearchType 
   return 'album'
 }
 
+const getMusicSearchType = (plugin: MusicFreePluginDefine): MusicFreeSearchType => {
+  if (plugin.defaultSearchType && plugin.supportedSearchType?.includes(plugin.defaultSearchType)) return plugin.defaultSearchType
+  if (!plugin.supportedSearchType?.length || plugin.supportedSearchType.includes('music')) return 'music'
+  return plugin.supportedSearchType[0]
+}
+
 const normalizeLyric = (result: any) => {
   if (typeof result === 'string') return { lyric: result }
   if (!result || typeof result !== 'object') return { lyric: '' }
@@ -906,12 +913,12 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
   if (actions.includes('search')) {
     sdkSource.musicSearch = {
       search(text: string, page: number, limit = 30) {
-        return plugin.search!(text, page, 'music').then(result => normalizeSearch(activePlugin!.name, result, page, limit))
+        return plugin.search!(text, page, getMusicSearchType(plugin)).then(result => normalizeSearch(activePlugin!.name, result, page, limit))
       },
     }
     sdkSource.tipSearch = {
       search(text: string) {
-        return plugin.search!(text, 1, 'music').then(result => {
+        return plugin.search!(text, 1, getMusicSearchType(plugin)).then(result => {
           const list = normalizeSearch(activePlugin!.name, result, 1, 10).list
           return Array.from(new Set(list.map((item: LX.Music.MusicInfoOnline) => item.name).filter(Boolean))).slice(0, 10)
         })

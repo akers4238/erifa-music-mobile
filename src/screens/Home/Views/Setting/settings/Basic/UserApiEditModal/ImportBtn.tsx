@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react'
 
 import DorpDownMenu, { type DorpDownMenuProps as _DorpDownMenuProps } from '@/components/common/DorpDownMenu'
 import Text from '@/components/common/Text'
-import { useI18n } from '@/lang'
 import ScriptImportExport, { type ScriptImportExportType } from './ScriptImportExport'
 import ScriptImportOnline, { type ScriptImportOnlineType } from './ScriptImportOnline'
 import { state } from '@/store/userApi'
@@ -16,25 +15,24 @@ interface BtnProps {
 
 
 export default ({ btnStyle }: BtnProps) => {
-  const t = useI18n()
   const theme = useTheme()
   const scriptImportExportRef = useRef<ScriptImportExportType>(null)
   const scriptImportOnlineRef = useRef<ScriptImportOnlineType>(null)
 
   const importTypes = useMemo(() => {
     return [
-      { action: 'local', label: t('user_api_btn_import_local') },
-      { action: 'online', label: t('user_api_btn_import_online') },
+      { action: 'local', label: '本地导入' },
+      { action: 'online', label: '在线导入' },
     ] as const
-  }, [t])
+  }, [])
 
   type DorpDownMenuProps = _DorpDownMenuProps<typeof importTypes>
 
   const handleAction: DorpDownMenuProps['onPress'] = ({ action }) => {
     if (state.list.length > 20) {
       void tipDialog({
-        message: t('user_api_max_tip'),
-        btnText: t('ok'),
+        message: '最多只能同时存在 20 个插件，请先卸载一些旧插件再继续导入。',
+        btnText: '知道了',
       })
       return
     }
@@ -54,7 +52,7 @@ export default ({ btnStyle }: BtnProps) => {
       center
       onPress={handleAction}
     >
-      <Text size={14} color={theme['c-button-font']}>{t('user_api_btn_import')}</Text>
+      <Text size={14} color={theme['c-button-font']}>导入</Text>
       <ScriptImportExport ref={scriptImportExportRef} />
       <ScriptImportOnline ref={scriptImportOnlineRef} />
     </DorpDownMenu>

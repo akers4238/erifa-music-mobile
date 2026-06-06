@@ -5,7 +5,6 @@ import { View } from 'react-native'
 import Input, { type InputType } from '@/components/common/Input'
 import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
-import { useI18n } from '@/lang'
 import { httpFetch } from '@/utils/request'
 import { handleImportScript } from './action'
 
@@ -26,7 +25,7 @@ const UrlInput = forwardRef<UrlInputType, {}>((props, ref) => {
     },
     setText(text) {
       setText(text)
-      setPlaceholder(global.i18n.t('user_api_btn_import_online_input_tip'))
+      setPlaceholder('请输入 HTTP 插件地址或 MusicFree 插件列表地址')
     },
     focus() {
       inputRef.current?.focus()
@@ -51,15 +50,14 @@ export interface ScriptImportOnlineType {
 
 
 export default forwardRef<ScriptImportOnlineType, {}>((props, ref) => {
-  const t = useI18n()
   const alertRef = useRef<ConfirmAlertType>(null)
   const urlInputRef = useRef<UrlInputType>(null)
   const [visible, setVisible] = useState(false)
-  const [btn, setBtn] = useState({ disabled: false, text: t('user_api_btn_import_online_input_confirm') })
+  const [btn, setBtn] = useState({ disabled: false, text: '导入' })
 
   const handleShow = () => {
     alertRef.current?.setVisible(true)
-    setBtn({ disabled: false, text: t('user_api_btn_import_online_input_confirm') })
+    setBtn({ disabled: false, text: '导入' })
     requestAnimationFrame(() => {
       urlInputRef.current?.setText('')
       setTimeout(() => {
@@ -86,18 +84,18 @@ export default forwardRef<ScriptImportOnlineType, {}>((props, ref) => {
       urlInputRef.current?.setText('')
     }
     if (!url.length) return
-    setBtn({ disabled: true, text: t('user_api_btn_import_online_input_loading') })
+    setBtn({ disabled: true, text: '导入中' })
     let script: string
     try {
       script = await httpFetch(url).promise.then(resp => resp.body) as string
     } catch (err: any) {
-      toast(t('user_api_import_failed_tip', { message: err.message }), 'long')
+      toast(`插件导入失败：${err.message}`, 'long')
       return
     } finally {
-      setBtn({ disabled: false, text: t('user_api_btn_import_online_input_confirm') })
+      setBtn({ disabled: false, text: '导入' })
     }
     if (script.length > 9_000_000) {
-      toast(t('user_api_import_failed_tip', { message: 'Too large script' }), 'long')
+      toast('插件导入失败：脚本过大', 'long')
       return
     }
     void handleImportScript(script)
@@ -114,7 +112,7 @@ export default forwardRef<ScriptImportOnlineType, {}>((props, ref) => {
           confirmText={btn.text}
         >
           <View style={styles.reurlContent}>
-            <Text style={{ marginBottom: 5 }}>{ t('user_api_btn_import_online')}</Text>
+            <Text style={{ marginBottom: 5 }}>在线导入 MusicFree 插件</Text>
             <UrlInput ref={urlInputRef} />
           </View>
         </ConfirmAlert>
@@ -138,5 +136,4 @@ const styles = createStyle({
     // paddingBottom: 2,
   },
 })
-
 

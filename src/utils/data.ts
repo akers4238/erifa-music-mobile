@@ -495,6 +495,20 @@ export const removeSyncHostHistory = async(index: number) => {
 }
 
 let userApis: LX.UserApi.UserApiInfo[] = []
+const getUserApiUniqueKey = (api: LX.UserApi.UserApiInfo) => {
+  const sourceName = api.sources ? Object.keys(api.sources)[0] : ''
+  return api.homepage || `${sourceName || api.name}_${api.author || ''}_${api.version || ''}`
+}
+
+const dedupeUserApis = () => {
+  const latestMap = new Map<string, LX.UserApi.UserApiInfo>()
+  for (const api of userApis) latestMap.set(getUserApiUniqueKey(api), api)
+  const nextList = Array.from(latestMap.values())
+  const changed = nextList.length != userApis.length
+  userApis = nextList
+  return changed
+}
+
 export const getUserApiList = async(): Promise<LX.UserApi.UserApiInfo[]> => {
   userApis = await getData<LX.UserApi.UserApiInfo[]>(userApiPrefix) ?? []
 
@@ -506,6 +520,7 @@ export const getUserApiList = async(): Promise<LX.UserApi.UserApiInfo[]> => {
       updated = true
     }
   }
+  if (dedupeUserApis()) updated = true
   if (updated) void saveData(userApiPrefix, userApis)
 
   return [...userApis]
@@ -564,7 +579,8 @@ export const addUserApi = async(script: string): Promise<LX.UserApi.UserApiInfo>
 }
 export const addUserApiWithInfo = async(script: string, info: LX.UserApi.UserApiInfo): Promise<LX.UserApi.UserApiInfo> => {
   if (!userApis.length) await getUserApiList()
-  const targetIndex = userApis.findIndex(api => api.id == info.id)
+  const uniqueKey = getUserApiUniqueKey(info)
+  const targetIndex = userApis.findIndex(api => api.id == info.id || getUserApiUniqueKey(api) == uniqueKey)
   if (targetIndex < 0) {
     userApis.push(info)
   } else {

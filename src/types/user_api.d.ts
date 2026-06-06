@@ -1,10 +1,21 @@
 declare namespace LX {
   namespace UserApi {
     type UserApiSourceInfoType = 'music'
-    type UserApiSourceInfoActions = 'musicUrl' | 'lyric' | 'pic' | 'search'
-    | 'albumInfo' | 'artistWorks' | 'musicSheetInfo' | 'importMusicSheet'
-    | 'recommendSheetTags' | 'recommendSheetsByTag' | 'topLists' | 'topListDetail'
-    | 'musicComments'
+    type UserApiSourceInfoActions =
+      | 'musicUrl'
+      | 'lyric'
+      | 'pic'
+      | 'search'
+      | 'albumInfo'
+      | 'artistWorks'
+      | 'musicSheetInfo'
+      | 'importMusicSheet'
+      | 'importMusicItem'
+      | 'recommendSheetTags'
+      | 'recommendSheetsByTag'
+      | 'topLists'
+      | 'topListDetail'
+      | 'musicComments'
 
     interface UserApiSourceInfo {
       name: string
