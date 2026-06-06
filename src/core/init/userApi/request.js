@@ -45,7 +45,7 @@ const handleRequestData = async({
       headers['Content-Type'] = 'application/json'
     }
   }
-  if (headers['Content-Type'] === 'application/json' && options.body) {
+  if (headers['Content-Type'] === 'application/json' && options.body && typeof options.body !== 'string') {
     options.body = JSON.stringify(options.body)
   }
 
