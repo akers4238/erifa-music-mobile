@@ -42,6 +42,7 @@ declare namespace LX {
         hint?: string
       }>
       userVariablesValue?: Record<string, string>
+      alternativePluginId?: string | null
       hints?: Record<string, string[]>
       sources?: UserApiSources
     }
@@ -78,6 +79,11 @@ declare namespace LX {
     interface UserApiSetUserVariablesParams {
       id: string
       values: Record<string, string>
+    }
+
+    interface UserApiSetAlternativePluginParams {
+      id: string
+      alternativePluginId: string | null
     }
 
     interface ImportUserApi {

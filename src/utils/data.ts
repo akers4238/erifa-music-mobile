@@ -589,6 +589,7 @@ export const addUserApiWithInfo = async(script: string, info: LX.UserApi.UserApi
       ...info,
       allowShowUpdateAlert: oldInfo.allowShowUpdateAlert,
       userVariablesValue: oldInfo.userVariablesValue,
+      alternativePluginId: oldInfo.alternativePluginId,
     }
     userApis.splice(targetIndex, 1, info)
   }
@@ -623,5 +624,12 @@ export const setUserApiUserVariables = async(id: string, values: Record<string, 
   const targetApi = userApis?.find(api => api.id == id)
   if (!targetApi) return
   targetApi.userVariablesValue = values
+  await saveData(userApiPrefix, userApis)
+}
+
+export const setUserApiAlternativePlugin = async(id: string, alternativePluginId: string | null) => {
+  const targetApi = userApis?.find(api => api.id == id)
+  if (!targetApi) return
+  targetApi.alternativePluginId = alternativePluginId
   await saveData(userApiPrefix, userApis)
 }

@@ -9,6 +9,7 @@ import searchState from '@/store/search/state'
 import leaderboardState from '@/store/leaderboard/state'
 import songlistState from '@/store/songlist/state'
 import commonActions from '@/store/common/action'
+import { getUserApiList, getUserApiScript } from '@/utils/data'
 
 type MusicFreeSearchType = 'music' | 'album' | 'sheet' | 'artist'
 type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
@@ -512,6 +513,20 @@ export const getMusicFreePluginInfo = (script: string): LX.UserApi.UserApiInfo =
   return mountMusicFreePlugin(script).info
 }
 
+export const importMusicFreeItem = async(info: LX.UserApi.UserApiInfo, script: string, urlLike: string) => {
+  const plugin = mountMusicFreePlugin(script, info)
+  if (typeof plugin.instance.importMusicItem !== 'function') return null
+  const result = await plugin.instance.importMusicItem(urlLike)
+  return normalizeImportedMusicList(plugin.name, result)[0] ?? null
+}
+
+export const importMusicFreeSheet = async(info: LX.UserApi.UserApiInfo, script: string, urlLike: string) => {
+  const plugin = mountMusicFreePlugin(script, info)
+  if (typeof plugin.instance.importMusicSheet !== 'function') return []
+  const result = await plugin.instance.importMusicSheet(urlLike)
+  return normalizeImportedMusicList(plugin.name, result)
+}
+
 const getActions = (plugin: MusicFreePluginDefine): LX.UserApi.UserApiSourceInfoActions[] => {
   const actions: LX.UserApi.UserApiSourceInfoActions[] = ['musicUrl']
   if (typeof plugin.search === 'function') actions.push('search')
@@ -634,6 +649,19 @@ const normalizeSearch = (platform: string, result: any, page: number, limit: num
     allPage: result?.isEnd ? page : Math.max(page + 1, Math.ceil(total / limit)),
     source: platform,
   }
+}
+
+const normalizeImportedMusicList = (platform: string, result: any): LX.Music.MusicInfoOnline[] => {
+  const rawList = Array.isArray(result)
+    ? result
+    : Array.isArray(result?.musicList)
+      ? result.musicList
+      : Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.list)
+          ? result.list
+          : result ? [result] : []
+  return rawList.map((item: any, index: number) => normalizeMusicInfo(platform, item, index))
 }
 
 const normalizeSheetItem = (platform: string, item: any, index: number) => {
@@ -863,6 +891,17 @@ const getRawMusicFreeItem = (musicInfo: any) => {
   }
 }
 
+const getAlternativeMediaPlugin = async(info: LX.UserApi.UserApiInfo, fallbackPlugin: MusicFreePluginDefine) => {
+  if (!info.alternativePluginId || info.alternativePluginId == info.id) return fallbackPlugin
+  const alternativeInfo = (await getUserApiList()).find(api => api.id == info.alternativePluginId)
+  if (!alternativeInfo) return fallbackPlugin
+  const alternativeScript = await getUserApiScript(alternativeInfo.id)
+  const alternativePlugin = mountMusicFreePlugin(alternativeScript, alternativeInfo)
+  return typeof alternativePlugin.instance.getMediaSource === 'function'
+    ? alternativePlugin.instance
+    : fallbackPlugin
+}
+
 let activePlugin: MusicFreePlugin | null = null
 
 export const destroyMusicFreePlugin = () => {
@@ -886,10 +925,12 @@ export const activateMusicFreePlugin = (info: LX.UserApi.UserApiInfo, script: st
     getMusicUrl(songInfo: LX.Music.MusicInfo, type: LX.Quality) {
       return {
         canceleFn() {},
-        promise: plugin.getMediaSource
-          ? plugin.getMediaSource(getRawMusicFreeItem(songInfo), normalizeQuality(type))
-            .then(result => ({ type, ...normalizeMediaSource(result) }))
-          : Promise.resolve({ type, url: getFallbackUrl(getRawMusicFreeItem(songInfo), normalizeQuality(type), type) }),
+        promise: getAlternativeMediaPlugin(info, plugin).then(parserPlugin => {
+          return parserPlugin.getMediaSource
+            ? parserPlugin.getMediaSource(getRawMusicFreeItem(songInfo), normalizeQuality(type))
+              .then(result => ({ type, ...normalizeMediaSource(result) }))
+            : { type, url: getFallbackUrl(getRawMusicFreeItem(songInfo), normalizeQuality(type), type) }
+        }),
       }
     },
   }

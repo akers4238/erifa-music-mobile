@@ -1,8 +1,8 @@
 import { action, state } from '@/store/userApi'
 import settingState from '@/store/setting/state'
-import { addUserApiWithInfo, getUserApiList, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore, setUserApiUserVariables as setUserApiUserVariablesFromStore } from '@/utils/data'
+import { addUserApiWithInfo, getUserApiList, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore, setUserApiAlternativePlugin as setUserApiAlternativePluginFromStore, setUserApiUserVariables as setUserApiUserVariablesFromStore } from '@/utils/data'
 import { log as writeLog } from '@/utils/log'
-import { activateMusicFreePlugin, destroyMusicFreePlugin, getMusicFreePluginInfo } from './musicFreePlugin'
+import { activateMusicFreePlugin, destroyMusicFreePlugin, getMusicFreePluginInfo, importMusicFreeItem, importMusicFreeSheet } from './musicFreePlugin'
 
 
 export const setUserApi = async(apiId: string) => {
@@ -50,6 +50,29 @@ export const setUserApiUserVariables = async(id: string, values: Record<string, 
   await setUserApiUserVariablesFromStore(id, values)
   action.setUserApiUserVariables(id, values)
   if (settingState.setting['common.apiSource'] == id) await setUserApi(id)
+}
+
+export const setUserApiAlternativePlugin = async(id: string, alternativePluginId: string | null) => {
+  await setUserApiAlternativePluginFromStore(id, alternativePluginId)
+  action.setUserApiAlternativePlugin(id, alternativePluginId)
+  if (settingState.setting['common.apiSource'] == id) await setUserApi(id)
+}
+
+const getUserApiInfoAndScript = async(id: string) => {
+  const target = (await getUserApiList()).find(api => api.id == id)
+  if (!target) throw new Error('Plugin not found')
+  const script = await getUserApiScript(target.id)
+  return { target, script }
+}
+
+export const importMusicFreePluginItem = async(id: string, urlLike: string) => {
+  const { target, script } = await getUserApiInfoAndScript(id)
+  return importMusicFreeItem(target, script, urlLike)
+}
+
+export const importMusicFreePluginSheet = async(id: string, urlLike: string) => {
+  const { target, script } = await getUserApiInfoAndScript(id)
+  return importMusicFreeSheet(target, script, urlLike)
 }
 
 export const log = {

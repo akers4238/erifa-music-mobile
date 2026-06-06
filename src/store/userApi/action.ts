@@ -39,3 +39,12 @@ export const setUserApiUserVariables = (id: string, values: Record<string, strin
 
   event.list_changed([...state.list])
 }
+
+export const setUserApiAlternativePlugin = (id: string, alternativePluginId: string | null) => {
+  const targetIndex = state.list.findIndex(api => api.id == id)
+  if (targetIndex < 0) return
+  state.list[targetIndex].alternativePluginId = alternativePluginId
+  state.list.splice(targetIndex, 1, { ...state.list[targetIndex] })
+
+  event.list_changed([...state.list])
+}
