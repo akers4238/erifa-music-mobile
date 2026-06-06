@@ -18,7 +18,7 @@ export default memo(() => {
   return (
     <SubTitle title={t('setting_basic_source')}>
       <View style={styles.btn}>
-        <Button onPress={handleShow}>MusicFree Plugin Manager</Button>
+        <Button onPress={handleShow}>{t('setting_basic_source_musicfree_btn')}</Button>
       </View>
       <UserApiEditModal ref={modalRef} />
     </SubTitle>
