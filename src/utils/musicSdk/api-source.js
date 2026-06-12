@@ -13,10 +13,12 @@ import apiSourceInfo from './api-source-info'
 // import direct_api_wy from './wy/api-direct'
 // import direct_api_mg from './mg/api-direct'
 
+import is_plus_api_wy from './wy/api-is-plus'
 import settingState from '@/store/setting/state'
 
 
 const apiList = {
+  is_plus_api_wy,
   // temp_api_kw,
   // // test_api_bd: require('./bd/api-test'),
   // test_api_kg,

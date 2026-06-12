@@ -45,5 +45,9 @@ export default (setting: any): Partial<LX.AppSetting> => {
     setting['theme.id'] = setting.themeId
   }
 
+  if (!setting['common.apiSource']) {
+    setting['common.apiSource'] = 'is_plus'
+  }
+
   return setting
 }

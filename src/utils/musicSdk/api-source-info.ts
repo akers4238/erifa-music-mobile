@@ -6,6 +6,14 @@ const sources: Array<{
   disabled: boolean
   supportQualitys: Partial<Record<LX.OnlineSource, LX.Quality[]>>
 }> = [
+  {
+    id: 'is_plus',
+    name: 'is-plus',
+    disabled: false,
+    supportQualitys: {
+      wy: ['128k', '320k', 'flac', 'flac24bit'],
+    },
+  },
 ]
 
 export default sources
