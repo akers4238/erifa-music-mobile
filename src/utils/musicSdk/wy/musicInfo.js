@@ -1,19 +1,10 @@
 // https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/module/song_detail.js
-import { httpFetch } from '../../request'
-import { weapi } from './utils/crypto'
+import { eapiRequest } from './utils/index'
 
 export default songmid => {
-  const requestObj = httpFetch('https://music.163.com/weapi/v3/song/detail', {
-    method: 'post',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-      Referer: 'https://music.163.com/song?id=' + songmid,
-      origin: 'https://music.163.com',
-    },
-    form: weapi({
-      c: `[{"id":${songmid}}]`,
-      ids: `[${songmid}]`,
-    }),
+  const requestObj = eapiRequest('/api/v3/song/detail', {
+    c: `[{"id":${songmid}}]`,
+    ids: `[${songmid}]`,
   })
   requestObj.promise = requestObj.promise.then(({ body }) => {
     // console.log(body)
@@ -22,4 +13,3 @@ export default songmid => {
   })
   return requestObj
 }
-

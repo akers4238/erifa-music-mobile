@@ -1,6 +1,6 @@
-import { weapi } from './utils/crypto'
-import { httpFetch } from '../../request'
 import musicDetailApi from './musicDetail'
+import { eapiRequest } from './utils/index'
+import { weapiRequest } from './utils/api-enhanced'
 
 const topList = [{ id: 'wy__19723756', name: '飙升榜', bangid: '19723756' },
   { id: 'wy__3779629', name: '新歌榜', bangid: '3779629' },
@@ -109,20 +109,15 @@ export default {
   _requestBoardsObj: null,
   getBoardsData() {
     if (this._requestBoardsObj) this._requestBoardsObj.cancelHttp()
-    this._requestBoardsObj = httpFetch('https://music.163.com/weapi/toplist', {
-      method: 'post',
-      form: weapi({}),
-    })
+    this._requestBoardsObj = weapiRequest('/api/toplist/detail', {})
     return this._requestBoardsObj.promise
   },
   getData(id) {
-    const requestBoardsDetailObj = httpFetch('https://music.163.com/weapi/v3/playlist/detail', {
-      method: 'post',
-      form: weapi({
-        id,
-        n: 100000,
-        p: 1,
-      }),
+    const requestBoardsDetailObj = eapiRequest('/api/v6/playlist/detail', {
+      id,
+      n: 100000,
+      p: 1,
+      s: 8,
     })
     return requestBoardsDetailObj.promise
   },
@@ -142,26 +137,24 @@ export default {
     return list
   },
   async getBoards(retryNum = 0) {
-    // if (++retryNum > 3) return Promise.reject(new Error('try max num'))
-    // let response
-    // try {
-    //   response = await this.getBoardsData()
-    // } catch (error) {
-    //   return this.getBoards(retryNum)
-    // }
-    // console.log(response.body)
-    // if (response.statusCode !== 200 || response.body.code !== 200) return this.getBoards(retryNum)
-    // const list = this.filterBoardsData(response.body.list)
-    // console.log(list)
-    // console.log(JSON.stringify(list))
-    // this.list = list
-    // return {
-    //   list,
-    //   source: 'wy',
-    // }
-    this.list = topList
+    if (++retryNum > 3) {
+      this.list = topList
+      return {
+        list: topList,
+        source: 'wy',
+      }
+    }
+    let response
+    try {
+      response = await this.getBoardsData()
+    } catch (error) {
+      return this.getBoards(retryNum)
+    }
+    if (response.statusCode !== 200 || response.body.code !== 200) return this.getBoards(retryNum)
+    const list = this.filterBoardsData(response.body.list)
+    this.list = list.length ? list : topList
     return {
-      list: topList,
+      list: this.list,
       source: 'wy',
     }
   },

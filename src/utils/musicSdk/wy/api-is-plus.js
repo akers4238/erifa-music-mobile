@@ -1,5 +1,4 @@
-import { httpFetch } from '../../request'
-import { eapi } from './utils/crypto'
+import { eapiRequest, normalizeEnhancedUrl } from './utils/api-enhanced'
 
 const qualityMap = {
   '128k': {
@@ -20,49 +19,23 @@ const qualityMap = {
   },
 }
 
-const userAgent = 'NeteaseMusic/9.2.30.240910161425(9002030);Dalvik/2.1.0'
-
-const eapiDirectRequest = (path, data) => httpFetch(`https://interface.music.163.com/eapi${path.replace(/^\/api/, '')}`, {
-  method: 'post',
-  headers: {
-    'User-Agent': userAgent,
-    origin: 'https://music.163.com',
-    referer: 'https://music.163.com/',
-    cookie: 'os=android; appver=9.2.30; channel=netease;',
-  },
-  form: eapi(path, data),
-})
-
-const normalizeUrl = (body, type) => {
-  const item = Array.isArray(body?.data) ? body.data[0] : body?.data
-  if (!item?.url) throw new Error('Get music url failed')
-  return {
-    type,
-    url: item.url,
-    headers: {
-      Referer: 'https://music.163.com/',
-      'User-Agent': userAgent,
-    },
-  }
-}
-
 const requestPlayerUrlV1 = (songmid, type) => {
   const quality = qualityMap[type] || qualityMap['320k']
-  const requestObj = eapiDirectRequest('/api/song/enhance/player/url/v1', {
+  const requestObj = eapiRequest('/api/song/enhance/player/url/v1', {
     ids: `[${songmid}]`,
     level: quality.level,
     encodeType: 'flac',
   })
-  return requestObj.promise.then(({ body }) => normalizeUrl(body, type))
+  return requestObj.promise.then(({ body }) => normalizeEnhancedUrl(body, type))
 }
 
 const requestPlayerUrl = (songmid, type) => {
   const quality = qualityMap[type] || qualityMap['320k']
-  const requestObj = eapiDirectRequest('/api/song/enhance/player/url', {
+  const requestObj = eapiRequest('/api/song/enhance/player/url', {
     ids: JSON.stringify([String(songmid)]),
     br: quality.br,
   })
-  return requestObj.promise.then(({ body }) => normalizeUrl(body, type))
+  return requestObj.promise.then(({ body }) => normalizeEnhancedUrl(body, type))
 }
 
 export default {

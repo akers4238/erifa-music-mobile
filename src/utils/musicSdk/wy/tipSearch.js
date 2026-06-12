@@ -1,6 +1,5 @@
-import { httpFetch } from '../../request'
-import { weapi } from './utils/crypto'
 import { formatSingerName } from '../utils'
+import { weapiRequest } from './utils/api-enhanced'
 
 export default {
   requestObj: null,
@@ -9,15 +8,8 @@ export default {
   },
   tipSearchBySong(str) {
     this.cancelTipSearch()
-    this.requestObj = httpFetch('https://music.163.com/weapi/search/suggest/web', {
-      method: 'POST',
-      headers: {
-        referer: 'https://music.163.com/',
-        origin: 'https://music.163.com/',
-      },
-      form: weapi({
-        s: str,
-      }),
+    this.requestObj = weapiRequest('/api/search/suggest/web', {
+      s: str,
     })
     return this.requestObj.promise.then(({ statusCode, body }) => {
       if (statusCode != 200 || body.code != 200) return Promise.reject(new Error('请求失败'))
