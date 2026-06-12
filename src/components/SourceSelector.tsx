@@ -9,7 +9,7 @@ import { useSettingValue } from '@/store/setting/hook'
 import { useSourceNames } from '@/store/common/hook'
 import { createStyle } from '@/utils/tools'
 
-type Sources = Readonly<Array<string>>
+type Sources = readonly string[]
 
 export interface SourceSelectorProps<S extends Sources> {
   fontSize?: number

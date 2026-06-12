@@ -60,8 +60,8 @@ const formatVersionName = (version?: string) => {
   return /^\d/.test(version) ? `v${version}` : version
 }
 
-const hasAction = (item: LX.UserApi.UserApiInfo, action: string) => {
-  return !!item.sources && Object.values(item.sources).some(source => source.actions.includes(action as any))
+const hasAction = (item: LX.UserApi.UserApiInfo, action: LX.UserApi.UserApiSourceInfoActions) => {
+  return !!item.sources && Object.values(item.sources).some(source => source.actions.includes(action))
 }
 
 const ActionButton = ({ icon, label, onPress, disabled = false }: {
@@ -104,7 +104,7 @@ const UserVariables = ({ item, onSaveUserVariables }: {
       {
         item.userVariables.map(variable => (
           <View key={variable.key} style={styles.variableRow}>
-            <Text style={styles.variableLabel} size={12} color={theme['c-font-label']}>{variable.name || variable.key}</Text>
+            <Text style={styles.variableLabel} size={12} color={theme['c-font-label']}>{variable.name ?? variable.key}</Text>
             <Input
               value={userVariablesValue[variable.key] ?? ''}
               placeholder={variable.hint}
@@ -229,7 +229,7 @@ const ListItem = ({ item, activeId, plugins, onActive, onDisable, onRemove, onSa
                   }}>
                     <Icon name="help" size={14} color={theme['c-font-label']} />
                   </TouchableOpacity>
-                )
+                  )
                 : null
             }
           </View>
@@ -295,7 +295,7 @@ const ListItem = ({ item, activeId, plugins, onActive, onDisable, onRemove, onSa
               <Input
                 value={importText}
                 onChangeText={setImportText}
-                placeholder={openPanel == 'importSheet' ? item.hints?.importMusicSheet?.[0] || z.sheetPlaceholder : item.hints?.importMusicItem?.[0] || z.musicPlaceholder}
+                placeholder={openPanel == 'importSheet' ? item.hints?.importMusicSheet?.[0] ?? z.sheetPlaceholder : item.hints?.importMusicItem?.[0] ?? z.musicPlaceholder}
                 clearBtn
                 size={12}
                 style={{ ...styles.importInput, backgroundColor: theme['c-primary-input-background'] }}

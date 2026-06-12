@@ -1,4 +1,5 @@
-﻿import * as he from 'he'
+/* eslint-disable */
+import * as he from 'he'
 import { stringMd5 } from 'react-native-quick-md5'
 import { version } from '../../package.json'
 import musicSdk from '@/utils/musicSdk'

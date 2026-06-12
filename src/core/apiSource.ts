@@ -25,7 +25,8 @@ export const setApiSource = (apiId: string) => {
   }
   if (/^user_api/.test(apiId)) {
     setUserApi(apiId).catch(err => {
-      setUserApiStatus(false, err.message)
+      const message = err instanceof Error ? err.message : String(err)
+      setUserApiStatus(false, message)
       if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](false)
       console.log(err)
     })

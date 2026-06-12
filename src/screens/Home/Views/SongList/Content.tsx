@@ -21,7 +21,7 @@ const getAvailableSource = (source: InitState['sources'][number]) => {
 }
 
 const getSourceSortList = (source: InitState['sources'][number]) => {
-  return songlistState.sortList[source]?.length ? songlistState.sortList[source]! : fallbackSortList
+  return songlistState.sortList[source]?.length ? songlistState.sortList[source] : fallbackSortList
 }
 
 export default () => {
