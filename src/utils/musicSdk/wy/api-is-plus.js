@@ -41,8 +41,8 @@ const requestPlayerUrl = (songmid, type) => {
 export default {
   getMusicUrl(songInfo, type) {
     const targetType = type || '320k'
-    let requestObj = requestPlayerUrlV1(songInfo.songmid, targetType)
-      .catch(() => requestPlayerUrl(songInfo.songmid, targetType))
+    let requestObj = requestPlayerUrl(songInfo.songmid, targetType)
+      .catch(() => requestPlayerUrlV1(songInfo.songmid, targetType))
 
     return {
       promise: requestObj,

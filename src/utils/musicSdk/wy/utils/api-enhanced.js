@@ -91,7 +91,7 @@ const createEapiHeader = cookie => {
     deviceId: cookie.deviceId || '',
     os: cookie.os || 'android',
     appver: cookie.appver || '9.2.30',
-    versioncode: cookie.versioncode || '9002030',
+    versioncode: cookie.versioncode || '140',
     mobilename: cookie.mobilename || '',
     buildver: cookie.buildver || Math.floor(Date.now() / 1000).toString(),
     resolution: cookie.resolution || '1920x1080',
