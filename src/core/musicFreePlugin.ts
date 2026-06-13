@@ -16,7 +16,7 @@ type MusicFreeSearchType = 'music' | 'album' | 'sheet' | 'artist'
 type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
 const musicFreeQualityFallbacks: MusicFreeQuality[] = ['standard', 'high', 'super', 'low', '320k', 'flac', 'flac24bit', '128k']
 const youtubeUserAgent = 'com.google.android.apps.youtube.music/6.14.50 (Linux; U; Android 13) gzip'
-const builtinSourceEntries = [...musicSdk.sources]
+const builtinSourceEntries = musicSdk.sources.filter(source => source.id == 'wy')
 type MusicFreeCacheControl = 'cache' | 'no-cache' | 'no-store'
 
 interface MusicFreeUserVariable {
