@@ -119,7 +119,6 @@ export const eapiRequest = (path, data, headers = {}) => {
   return httpFetch(`https://interface.music.163.com/eapi${apiPath(path)}`, {
     method: 'post',
     headers: {
-      ...commonHeaders,
       'User-Agent': apiUserAgent,
       Cookie: createHeaderCookie(header),
       ...headers,
