@@ -1,6 +1,7 @@
 // https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/util/crypto.js
 import { btoa } from 'react-native-quick-base64'
 import { aesEncryptSync, aesDecryptSync, rsaEncryptSync, AES_MODE, RSA_PADDING } from '@/utils/nativeModules/crypto'
+import CryptoJS from 'crypto-js'
 import { toMD5 } from '../../utils'
 const iv = btoa('0102030405060708')
 const presetKey = btoa('0CoJUm6Qyw8W8jud')
@@ -50,8 +51,17 @@ export const eapi = (url, object) => {
   const message = `nobody${url}use${text}md5forencrypt`
   const digest = toMD5(message)
   const data = `${url}-36cd479b6b5-${text}-36cd479b6b5-${digest}`
+  const encrypted = CryptoJS.AES.encrypt(
+    CryptoJS.enc.Utf8.parse(data),
+    CryptoJS.enc.Utf8.parse('e82ckenh8dichen8'),
+    {
+      iv: CryptoJS.enc.Utf8.parse(''),
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7,
+    },
+  )
   return {
-    params: Buffer.from(aesEncrypt(Buffer.from(data).toString('base64'), AES_MODE.ECB_128_NoPadding, eapiKey, ''), 'base64').toString('hex').toUpperCase(),
+    params: encrypted.ciphertext.toString().toUpperCase(),
   }
 }
 
