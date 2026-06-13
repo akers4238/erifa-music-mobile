@@ -3,8 +3,7 @@ name: Android 15 Build
 on:
   push:
     branches:
-      - main
-      - is-plus
+      - yotube
   workflow_dispatch:
 
 permissions:
