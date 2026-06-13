@@ -286,6 +286,8 @@
   "setting_basic_source_title": "選取自訂來源 API",
   "setting_basic_source_user_api_btn": "自訂來源 API 管理",
   "setting_basic_source_musicfree_btn": "MusicFree 插件管理",
+  "setting_basic_netease_cookie": "網易雲 Cookie",
+  "setting_basic_netease_cookie_placeholder": "可選，填入 MUSIC_U=... 等 Cookie",
   "setting_basic_sourcename": "音樂串流平台名稱",
   "setting_basic_sourcename_alias": "別名",
   "setting_basic_sourcename_real": "原名",

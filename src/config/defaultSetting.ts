@@ -3,6 +3,7 @@ const defaultSetting: LX.AppSetting = {
   'common.isAutoTheme': false,
   'common.langId': null,
   'common.apiSource': 'is_plus',
+  'common.neteaseCookie': '',
   'common.sourceNameType': 'alias',
   'common.shareType': 'system',
   'common.isAgreePact': false,

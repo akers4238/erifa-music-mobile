@@ -21,6 +21,8 @@ declare global {
        */
       'common.apiSource': string
 
+      'common.neteaseCookie': string
+
       /**
        * 音源名称类型，原名、别名
        */
@@ -358,4 +360,3 @@ declare global {
     }
   }
 }
-

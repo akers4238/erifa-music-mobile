@@ -286,6 +286,8 @@
   "setting_basic_source_title": "Choose a Music API",
   "setting_basic_source_user_api_btn": "Music API Management",
   "setting_basic_source_musicfree_btn": "MusicFree Plugin Manager",
+  "setting_basic_netease_cookie": "NetEase Cookie",
+  "setting_basic_netease_cookie_placeholder": "Optional, e.g. MUSIC_U=...",
   "setting_basic_sourcename": "Music Streaming Service Name",
   "setting_basic_sourcename_alias": "Alias",
   "setting_basic_sourcename_real": "Original",

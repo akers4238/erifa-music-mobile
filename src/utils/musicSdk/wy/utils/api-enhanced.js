@@ -1,9 +1,21 @@
 import { httpFetch } from '../../../request'
+import settingState from '@/store/setting/state'
 import { eapi, weapi } from './crypto'
 
 export const enhancedUserAgent = 'NeteaseMusic/9.2.30.240910161425(9002030);Dalvik/2.1.0'
 
+const baseCookie = 'os=android; appver=9.2.30; channel=netease;'
 const apiPath = path => path.replace(/^\/api/, '')
+const normalizeCookie = cookie => (cookie || '')
+  .replace(/^\s*cookie:\s*/i, '')
+  .replace(/[\r\n]+/g, '; ')
+  .split(';')
+  .map(item => item.trim())
+  .filter(Boolean)
+  .join('; ')
+const getCookie = () => [baseCookie, normalizeCookie(settingState.setting['common.neteaseCookie'])]
+  .filter(Boolean)
+  .join('; ')
 
 const commonHeaders = {
   'User-Agent': enhancedUserAgent,
@@ -16,7 +28,7 @@ export const eapiRequest = (path, data, headers = {}) => {
     method: 'post',
     headers: {
       ...commonHeaders,
-      cookie: 'os=android; appver=9.2.30; channel=netease;',
+      cookie: getCookie(),
       ...headers,
     },
     form: eapi(path, data),
@@ -28,6 +40,7 @@ export const weapiRequest = (path, data, headers = {}) => {
     method: 'post',
     headers: {
       ...commonHeaders,
+      cookie: getCookie(),
       ...headers,
     },
     form: weapi(data),
