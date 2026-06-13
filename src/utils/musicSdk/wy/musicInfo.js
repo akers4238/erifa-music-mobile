@@ -1,10 +1,9 @@
 // https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/module/song_detail.js
-import { eapiRequest } from './utils/index'
+import { weapiRequest } from './utils/api-enhanced'
 
 export default songmid => {
-  const requestObj = eapiRequest('/api/v3/song/detail', {
+  const requestObj = weapiRequest('/api/v3/song/detail', {
     c: `[{"id":${songmid}}]`,
-    ids: `[${songmid}]`,
   })
   requestObj.promise = requestObj.promise.then(({ body }) => {
     // console.log(body)
