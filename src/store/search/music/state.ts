@@ -1,3 +1,5 @@
+import musicSdk from '@/utils/musicSdk'
+
 export declare interface ListInfo {
   list: LX.Music.MusicInfoOnline[]
   total: number
@@ -21,19 +23,27 @@ export interface InitState {
   maxPages: Partial<Record<string, number>>
 }
 
+const createListInfo = (): ListInfo => ({
+  page: 1,
+  maxPage: 0,
+  limit: 30,
+  total: 0,
+  list: [],
+  key: null,
+})
+
+const builtinSources = musicSdk.sources
+  .map(source => source.id)
+  .filter(source => !!musicSdk[source as LX.OnlineSource]?.musicSearch)
+const sources = builtinSources.length > 1 ? ['all', ...builtinSources] : builtinSources
+
 const state: InitState = {
   searchText: '',
   source: '',
-  sources: [],
+  sources,
   listInfos: {
-    all: {
-      page: 1,
-      maxPage: 0,
-      limit: 30,
-      total: 0,
-      list: [],
-      key: null,
-    },
+    all: createListInfo(),
+    ...Object.fromEntries(builtinSources.map(source => [source, createListInfo()])),
   },
   maxPages: {},
 }

@@ -1,5 +1,6 @@
 // import { deduplicationList } from '@common/utils/renderer'
 
+import musicSdk from '@/utils/musicSdk'
 import { type ListInfo } from '@/store/songlist/state'
 export type { ListInfoItem } from '@/store/songlist/state'
 
@@ -20,20 +21,28 @@ export interface InitState {
   maxPages: Partial<Record<string, number>>
 }
 
+const createListInfo = (): SearchListInfo => ({
+  page: 1,
+  limit: 15,
+  total: 0,
+  list: [],
+  key: null,
+  tagId: '',
+  sortId: '',
+})
+
+const builtinSources = musicSdk.sources
+  .map(source => source.id)
+  .filter(source => !!musicSdk[source as LX.OnlineSource]?.songList?.search)
+const sources = builtinSources.length > 1 ? ['all', ...builtinSources] : builtinSources
+
 const state: InitState = {
   searchText: '',
   source: '',
-  sources: [],
+  sources,
   listInfos: {
-    all: {
-      page: 1,
-      limit: 15,
-      total: 0,
-      list: [],
-      key: null,
-      tagId: '',
-      sortId: '',
-    },
+    all: createListInfo(),
+    ...Object.fromEntries(builtinSources.map(source => [source, createListInfo()])),
   },
   maxPages: {},
 }
