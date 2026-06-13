@@ -11,29 +11,9 @@ import { supportQuality } from './api-source'
 const sources = {
   sources: [
     {
-      name: '酷我音乐',
-      id: 'kw',
-    },
-    {
-      name: '酷狗音乐',
-      id: 'kg',
-    },
-    {
-      name: 'QQ音乐',
-      id: 'tx',
-    },
-    {
-      name: '网易音乐',
+      name: '网易云',
       id: 'wy',
     },
-    {
-      name: '咪咕音乐',
-      id: 'mg',
-    },
-    // {
-    //   name: '百度音乐',
-    //   id: 'bd',
-    // },
   ],
   kw,
   kg,
@@ -75,9 +55,9 @@ export const findMusic = async(musicInfo) => {
 
   const lists = await searchMusic({ name, singer, source: s, limit: 25 })
 
-  const singersRxp = /、|&|;|；|\/|,|，|\|/
+  const singersRxp = /\s*[、&;，,|/]\s*/
   const sortSingle = singer => singersRxp.test(singer)
-    ? singer.split(singersRxp).sort((a, b) => a.localeCompare(b)).join('、')
+    ? singer.split(singersRxp).sort((a, b) => a.localeCompare(b)).join(' / ')
     : (singer || '')
   const sortMusic = (arr, callback) => {
     const tempResult = []
@@ -97,7 +77,6 @@ export const findMusic = async(musicInfo) => {
   }
   const getIntv = (interval) => {
     if (!interval) return 0
-    // if (musicInfo._interval) return musicInfo._interval
     let intvArr = interval.split(':')
     let intv = 0
     let unit = 1
@@ -108,15 +87,15 @@ export const findMusic = async(musicInfo) => {
     return intv
   }
   const trimStr = str => typeof str == 'string' ? str.trim() : (str || '')
-  const filterStr = str => typeof str == 'string' ? str.replace(/\s|'|\.|,|，|&|"|、|\(|\)|（|）|`|~|-|<|>|\||\/|\]|\[|!|！/g, '') : String(str || '')
+  const filterStr = str => typeof str == 'string' ? str.replace(/[\s'".,，&、()（）`~\-<>|/[\]!！]/g, '') : String(str || '')
   const fMusicName = filterStr(name).toLowerCase()
   const fSinger = filterStr(sortSingle(singer)).toLowerCase()
   const fAlbumName = filterStr(albumName).toLowerCase()
   const fInterval = getIntv(interval)
   const isEqualsInterval = (intv) => Math.abs((fInterval || intv) - (intv || fInterval)) < 5
-  const isIncludesName = (name) => (fMusicName.includes(name) || name.includes(fMusicName))
-  const isIncludesSinger = (singer) => fSinger ? (fSinger.includes(singer) || singer.includes(fSinger)) : true
-  const isEqualsAlbum = (album) => fAlbumName ? fAlbumName == album : true
+  const isIncludesName = (targetName) => fMusicName.includes(targetName) || targetName.includes(fMusicName)
+  const isIncludesSinger = (targetSinger) => fSinger ? fSinger.includes(targetSinger) || targetSinger.includes(fSinger) : true
+  const isEqualsAlbum = (targetAlbum) => fAlbumName ? fAlbumName == targetAlbum : true
 
   const result = lists.map(source => {
     for (const item of source.list) {
@@ -126,7 +105,6 @@ export const findMusic = async(musicInfo) => {
       item.fMusicName = filterStr(String(item.name ?? '').toLowerCase())
       item.fAlbumName = filterStr(String(item.albumName ?? '').toLowerCase())
       item.fInterval = getIntv(item.interval)
-      // console.log(fMusicName, item.fMusicName, item.source)
       if (!isEqualsInterval(item.fInterval)) {
         item.name = null
         continue
@@ -162,6 +140,5 @@ export const findMusic = async(musicInfo) => {
     }
     newResult.push(...result)
   }
-  // console.log(newResult)
   return newResult
 }

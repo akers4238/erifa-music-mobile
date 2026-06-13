@@ -94,7 +94,7 @@ const state: InitState = {
     limit: 30,
     maxPage: 1,
     key: null,
-    source: 'kw',
+    source: 'wy',
     tagId: '',
     sortId: '',
   },
@@ -107,7 +107,7 @@ const state: InitState = {
     limit: 30,
     maxPage: 1,
     key: null,
-    source: 'kw',
+    source: 'wy',
     info: {},
   },
 }
@@ -122,4 +122,3 @@ for (const source of music.sources) {
 
 
 export default state
-

@@ -50,7 +50,7 @@ export default {
   clearListDetail() {
     state.listDetailInfo.list = []
     state.listDetailInfo.id = ''
-    state.listDetailInfo.source = 'kw'
+    state.listDetailInfo.source = 'wy'
     state.listDetailInfo.total = 0
     state.listDetailInfo.limit = 30
     state.listDetailInfo.page = 1
