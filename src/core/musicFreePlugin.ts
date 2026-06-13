@@ -16,6 +16,7 @@ type MusicFreeSearchType = 'music' | 'album' | 'sheet' | 'artist'
 type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
 const musicFreeQualityFallbacks: MusicFreeQuality[] = ['standard', 'high', 'super', 'low', '320k', 'flac', 'flac24bit', '128k']
 const youtubeUserAgent = 'com.google.android.apps.youtube.music/6.14.50 (Linux; U; Android 13) gzip'
+const builtinSourceEntries = [...musicSdk.sources]
 type MusicFreeCacheControl = 'cache' | 'no-cache' | 'no-store'
 
 interface MusicFreeUserVariable {
@@ -1145,21 +1146,36 @@ export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, scrip
     registered.set(pluginInfo.name, createSdkSource(pluginInfo))
   }
 
-  const sourceEntries = Array.from(registered.values())
-  const searchableSources = sourceEntries.filter(entry => entry.sdkSource.musicSearch).map(entry => entry.platform)
-  const songListSources = sourceEntries.filter(entry => entry.sdkSource.songList?.search || entry.sdkSource.songList?.getList).map(entry => entry.platform)
-  const leaderboardSources = sourceEntries.filter(entry => entry.sdkSource.leaderboard).map(entry => entry.platform)
-  const sourceNames = sourceEntries.reduce<Record<string, string>>((names, entry) => {
+  const pluginSourceEntries = Array.from(registered.values())
+  const pluginSourceIds = new Set(pluginSourceEntries.map(entry => entry.platform))
+  const mergedSourceEntries = [
+    ...builtinSourceEntries.filter(source => !pluginSourceIds.has(source.id as LX.OnlineSource)),
+    ...pluginSourceEntries.map(({ platform, sourceName }) => ({ name: sourceName, id: platform })),
+  ]
+  const builtinSearchableSources = builtinSourceEntries.filter(source => !!musicSdk[source.id as LX.OnlineSource]?.musicSearch).map(source => source.id as LX.OnlineSource)
+  const builtinSongListSearchSources = builtinSourceEntries.filter(source => !!musicSdk[source.id as LX.OnlineSource]?.songList?.search).map(source => source.id as LX.OnlineSource)
+  const builtinSongListSources = builtinSourceEntries.filter(source => !!musicSdk[source.id as LX.OnlineSource]?.songList?.getList).map(source => source.id as LX.OnlineSource)
+  const builtinLeaderboardSources = builtinSourceEntries.filter(source => !!musicSdk[source.id as LX.OnlineSource]?.leaderboard?.getBoards).map(source => source.id as LX.OnlineSource)
+  const pluginSearchableSources = pluginSourceEntries.filter(entry => entry.sdkSource.musicSearch).map(entry => entry.platform)
+  const pluginSongListSearchSources = pluginSourceEntries.filter(entry => entry.sdkSource.songList?.search || entry.sdkSource.songList?.getList).map(entry => entry.platform)
+  const pluginSongListSources = pluginSourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => entry.platform)
+  const pluginLeaderboardSources = pluginSourceEntries.filter(entry => entry.sdkSource.leaderboard).map(entry => entry.platform)
+  const searchableSources = [...builtinSearchableSources, ...pluginSearchableSources]
+  const songListSearchSources = [...builtinSongListSearchSources, ...pluginSongListSearchSources]
+  const songListSources = [...builtinSongListSources, ...pluginSongListSources]
+  const leaderboardSources = [...builtinLeaderboardSources, ...pluginLeaderboardSources]
+  const sourceNames = pluginSourceEntries.reduce<Record<string, string>>((names, entry) => {
     names[entry.platform] = entry.sourceName
     return names
   }, {})
 
-  ;(musicSdk as any).sources = sourceEntries.map(({ platform, sourceName }) => ({ name: sourceName, id: platform }))
+  ;(musicSdk as any).sources = mergedSourceEntries
   global.lx.qualityList = {
-    ...Object.fromEntries(sourceEntries.map(({ platform }) => [platform, ['128k', '320k', 'flac', 'flac24bit']])),
+    ...(musicSdk.supportQuality.is_plus ?? {}),
+    ...Object.fromEntries(pluginSourceEntries.map(({ platform }) => [platform, ['128k', '320k', 'flac', 'flac24bit']])),
   } as any
   global.lx.apis = {
-    ...Object.fromEntries(sourceEntries.map(({ platform, sdkSource }) => [platform, {
+    ...Object.fromEntries(pluginSourceEntries.map(({ platform, sdkSource }) => [platform, {
       getMusicUrl: sdkSource.getMusicUrl,
       getLyric: sdkSource.getLyric,
       getPic: sdkSource.getPic,
@@ -1186,8 +1202,11 @@ export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, scrip
     ...Object.fromEntries(songListSources.map(platform => [platform, { page: 1, limit: 18, total: 0, list: [], key: null, tagId: '', sortId: '' }])),
   } as any
   searchSonglistState.maxPages = Object.fromEntries(songListSources.map(platform => [platform, 0])) as any
-  songlistState.sources = sourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => entry.platform)
-  songlistState.sortList = Object.fromEntries(sourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => [entry.platform, entry.sdkSource.songList.sortList])) as any
+  songlistState.sources = songListSources
+  songlistState.sortList = {
+    ...Object.fromEntries(builtinSongListSources.map(source => [source, musicSdk[source].songList.sortList ?? []])),
+    ...Object.fromEntries(pluginSourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => [entry.platform, entry.sdkSource.songList.sortList])),
+  } as any
   songlistState.tags = {}
   songlistState.listInfo = {
     list: [],
