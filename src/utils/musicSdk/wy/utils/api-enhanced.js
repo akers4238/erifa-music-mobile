@@ -4,6 +4,36 @@ import { eapi, weapi } from './crypto'
 
 export const enhancedUserAgent = 'NeteaseMusic/9.2.30.240910161425(9002030);Dalvik/2.1.0'
 
+const apiUserAgent = 'NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)'
+const osMap = {
+  pc: {
+    os: 'pc',
+    appver: '3.1.17.204416',
+    osver: 'Microsoft-Windows-10-Professional-build-19045-64bit',
+    channel: 'netease',
+  },
+  android: {
+    os: 'android',
+    appver: '8.20.20.231215173437',
+    osver: '14',
+    channel: 'xiaomi',
+  },
+  iphone: {
+    os: 'iPhone OS',
+    appver: '9.0.90',
+    osver: '16.2',
+    channel: 'distribution',
+  },
+}
+const hexChars = '0123456789ABCDEF'
+const randomHex = length => {
+  const chars = []
+  for (let i = 0; i < length; i++) chars.push(hexChars.charAt(Math.floor(Math.random() * hexChars.length)))
+  return chars.join('')
+}
+const deviceId = randomHex(52)
+const WNMCID = `${Array.from({ length: 6 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('')}.${Date.now()}.01.0`
+
 const apiPath = path => path.replace(/^\/api/, '')
 const normalizeCookie = cookie => (cookie || '')
   .replace(/^\s*cookie:\s*/i, '')
@@ -32,13 +62,27 @@ const createHeaderCookie = cookieObj => Object.entries(cookieObj)
 
 const generateRequestId = () => `${Date.now()}_${Math.floor(Math.random() * 1000).toString().padStart(4, '0')}`
 
-const getCookieObj = () => ({
-  os: 'android',
-  appver: '9.2.30',
-  versioncode: '9002030',
-  channel: 'netease',
-  ...parseCookie(settingState.setting['common.neteaseCookie']),
-})
+const getCookieObj = () => {
+  const cookie = parseCookie(settingState.setting['common.neteaseCookie'])
+  const os = osMap[cookie.os] || osMap.pc
+  const nuid = cookie._ntes_nuid || randomHex(32)
+
+  return {
+    ...cookie,
+    __remember_me: cookie.__remember_me || 'true',
+    ntes_kaola_ad: cookie.ntes_kaola_ad || '1',
+    _ntes_nuid: nuid,
+    _ntes_nnid: cookie._ntes_nnid || `${nuid},${Date.now()}`,
+    WNMCID: cookie.WNMCID || WNMCID,
+    WEVNSM: cookie.WEVNSM || '1.0.0',
+    NMTID: cookie.NMTID || randomHex(16),
+    osver: cookie.osver || os.osver,
+    deviceId: cookie.deviceId || deviceId,
+    os: cookie.os || os.os,
+    channel: cookie.channel || os.channel,
+    appver: cookie.appver || os.appver,
+  }
+}
 
 const createEapiHeader = cookie => {
   const csrfToken = cookie.__csrf || ''
@@ -65,7 +109,6 @@ const createEapiHeader = cookie => {
 const getWeapiCookie = () => createHeaderCookie(getCookieObj())
 
 const commonHeaders = {
-  'User-Agent': enhancedUserAgent,
   origin: 'https://music.163.com',
   referer: 'https://music.163.com/',
 }
@@ -77,6 +120,7 @@ export const eapiRequest = (path, data, headers = {}) => {
     method: 'post',
     headers: {
       ...commonHeaders,
+      'User-Agent': apiUserAgent,
       Cookie: createHeaderCookie(header),
       ...headers,
     },
@@ -90,6 +134,7 @@ export const weapiRequest = (path, data, headers = {}) => {
     method: 'post',
     headers: {
       ...commonHeaders,
+      'User-Agent': enhancedUserAgent,
       Cookie: getWeapiCookie(),
       ...headers,
     },
