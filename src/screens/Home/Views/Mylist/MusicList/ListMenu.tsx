@@ -1,8 +1,9 @@
 import { useRef, useImperativeHandle, forwardRef, useState } from 'react'
 import { useI18n } from '@/lang'
 import Menu, { type Menus, type MenuType, type Position } from '@/components/common/Menu'
-import { hasDislike } from '@/core/dislikeList'
 import { existsFile } from '@/utils/fs'
+import { syncWyLoveMusic } from '@/core/list'
+import { toast } from '@/utils/tools'
 
 export interface SelectInfo {
   musicInfo: LX.Music.MusicInfo
@@ -38,6 +39,9 @@ const hasEditMetadata = async(musicInfo: LX.Music.MusicInfo) => {
   if (musicInfo.source != 'local') return false
   return existsFile(musicInfo.meta.filePath)
 }
+const isWyMusic = (musicInfo: LX.Music.MusicInfo) => {
+  return musicInfo.source == 'wy' || musicInfo.meta?.toggleMusicInfo?.source == 'wy'
+}
 export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
   const t = useI18n()
   const [visible, setVisible] = useState(false)
@@ -72,9 +76,14 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
       { action: 'copyName', label: t('copy_name') },
       { action: 'musicSourceDetail', disabled: musicInfo.source == 'local', label: t('music_source_detail') },
       // { action: 'musicSearch', label: t('music_search') },
-      { action: 'dislike', disabled: hasDislike(musicInfo), label: t('dislike') },
       { action: 'remove', label: t('delete') },
     ]
+    if (isWyMusic(musicInfo)) {
+      menu.splice(menu.length - 1, 0,
+        { action: 'neteaseLoveAdd', label: '添加至网易云我的喜欢' },
+        { action: 'neteaseLoveRemove', label: '取消网易云我的喜欢' },
+      )
+    }
     if (musicInfo.source == 'local') menu.splice(5, 0, { action: 'editMetadata', disabled: !edit_metadata, label: t('edit_metadata') })
     setMenus(menu)
     void Promise.all([hasEditMetadata(musicInfo)]).then(([_edit_metadata]) => {
@@ -134,8 +143,19 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
         props.onMusicSourceDetail(selectInfo)
         // setVIsibleMusicPosition(true)
         break
-      case 'dislike':
-        props.onDislikeMusic(selectInfo)
+      case 'neteaseLoveAdd':
+        void syncWyLoveMusic([selectInfo.musicInfo], true).then(() => {
+          toast('已添加至网易云我的喜欢')
+        }).catch(err => {
+          toast(`添加至网易云我的喜欢失败：${err?.message || err}`)
+        })
+        break
+      case 'neteaseLoveRemove':
+        void syncWyLoveMusic([selectInfo.musicInfo], false).then(() => {
+          toast('已取消网易云我的喜欢')
+        }).catch(err => {
+          toast(`取消网易云我的喜欢失败：${err?.message || err}`)
+        })
         break
       case 'remove':
         props.onRemove(selectInfo)

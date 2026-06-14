@@ -303,7 +303,7 @@ export default () => {
 
   const handleSelectLine = useCallback((lineNum: number) => {
     isPauseScrollRef.current = true
-    playLineRef.current?.setVisible(true)
+    playLineRef.current?.selectLine(lineNum)
     try {
       flatListRef.current?.scrollToIndex({
         index: lineNum,

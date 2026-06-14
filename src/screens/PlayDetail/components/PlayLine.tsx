@@ -13,6 +13,7 @@ export interface PlayLineType {
   updateScrollInfo: (scrollInfo: NativeSyntheticEvent<NativeScrollEvent>['nativeEvent'] | null) => void
   updateLayoutInfo: (listLayoutInfo: { spaceHeight: number, lineHeights: number[] }) => void
   updateLyricLines: (lyricLines: Lines) => void
+  selectLine: (lineNum: number) => void
   setVisible: (visible: boolean) => void
 }
 
@@ -27,6 +28,7 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   const [scrollInfo, setScrollInfo] = useState<NativeSyntheticEvent<NativeScrollEvent>['nativeEvent'] | null>(null)
   const [listLayoutInfo, setListLayoutInfo] = useState<{ spaceHeight: number, lineHeights: number[] }>({ spaceHeight: 0, lineHeights: [] })
   const [lyricLines, setLyricLines] = useState<Lines>([])
+  const [selectedLineNum, setSelectedLineNum] = useState<number | null>(null)
   const [visible, setVisible] = useState(false)
   const opsAnim = useRef<Animated.Value>(
     new Animated.Value(0),
@@ -52,9 +54,18 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     updateLyricLines(lyricLines) {
       setLyricLines(lyricLines)
     },
+    selectLine(lineNum) {
+      setSelectedLineNum(lineNum)
+      setVisible(true)
+      requestAnimationFrame(() => {
+        setShow(true)
+      })
+    },
     setVisible(visible) {
       if (visible) {
         setVisible(true)
+      } else {
+        setSelectedLineNum(null)
       }
       requestAnimationFrame(() => {
         setShow(visible)
@@ -67,17 +78,21 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     onPlayLine(time / 1000)
   }
 
-  if (!scrollInfo || !visible) return null
-  const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * 0.4
-  let lineOffset = listLayoutInfo.spaceHeight
-  let targetLineNum = -1
-  for (let line = 0; line < listLayoutInfo.lineHeights.length; line++) {
-    lineOffset += listLayoutInfo.lineHeights[line]
-    if (lineOffset < offset) continue
-    targetLineNum = line
-    break
+  if (!visible) return null
+  let targetLineNum = selectedLineNum
+  if (targetLineNum == null) {
+    if (!scrollInfo) return null
+    const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * 0.4
+    let lineOffset = listLayoutInfo.spaceHeight
+    targetLineNum = -1
+    for (let line = 0; line < listLayoutInfo.lineHeights.length; line++) {
+      lineOffset += listLayoutInfo.lineHeights[line]
+      if (lineOffset < offset) continue
+      targetLineNum = line
+      break
+    }
+    if (targetLineNum == -1) targetLineNum = listLayoutInfo.lineHeights.length - 1
   }
-  if (targetLineNum == -1) targetLineNum = listLayoutInfo.lineHeights.length - 1
   const time = lyricLines[targetLineNum]?.time ?? 0
   const timeLabel = formatPlayTime2(time / 1000)
   return (
