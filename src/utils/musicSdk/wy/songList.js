@@ -276,10 +276,34 @@ export default {
       like,
     }).promise
     if (body.code !== this.successCode) {
+      try {
+        return await this.likeMusicByPlaylist(songId, like)
+      } catch {
+        // ignore playlist fallback error and keep the original like endpoint error
+      }
       if (body.message || body.msg) throw new Error(body.message || body.msg)
       return this.likeMusic(songId, like, ++tryNum)
     }
     return body
+  },
+
+  async likeMusicByPlaylist(songId, like = true) {
+    const profile = await this.getAccountProfile()
+    const { body: listBody } = await weapiRequest('/api/user/playlist', {
+      uid: profile.userId,
+      limit: 1,
+      offset: 0,
+    }).promise
+    const playlistId = listBody?.playlist?.[0]?.id
+    if (listBody?.code !== this.successCode || !playlistId) throw new Error('Get NetEase liked playlist failed')
+
+    const { body } = await weapiRequest('/api/playlist/manipulate/tracks', {
+      op: like ? 'add' : 'del',
+      pid: playlistId,
+      trackIds: like ? `[${songId},${songId}]` : `[${songId}]`,
+    }).promise
+    if (![this.successCode, 502].includes(body.code)) throw new Error(body.message || body.msg || 'Update NetEase liked playlist failed')
+    return { ...body, playlistId }
   },
 
   getTag(tryNum = 0) {

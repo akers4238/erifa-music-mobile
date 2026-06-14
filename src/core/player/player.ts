@@ -24,9 +24,9 @@ import { requestMsg } from '@/utils/message'
 import { getRandom } from '@/utils/common'
 import { filterList } from './utils'
 import BackgroundTimer from 'react-native-background-timer'
-import { checkIgnoringBatteryOptimization, checkNotificationPermission, debounceBackgroundTimer } from '@/utils/tools'
+import { checkIgnoringBatteryOptimization, checkNotificationPermission, debounceBackgroundTimer, toast } from '@/utils/tools'
 import { LIST_IDS } from '@/config/constant'
-import { addListMusics, removeListMusics } from '@/core/list'
+import { addListMusics, removeListMusics, syncWyLoveMusic } from '@/core/list'
 import { addDislikeInfo } from '@/core/dislikeList'
 
 // import { checkMusicFileAvailable } from '@renderer/utils/music'
@@ -637,11 +637,20 @@ export const togglePlay = () => {
  */
 export const collectMusic = () => {
   if (!playerState.playMusicInfo.musicInfo) return
-  void addListMusics(LIST_IDS.LOVE, [
-    'progress' in playerState.playMusicInfo.musicInfo
-      ? playerState.playMusicInfo.musicInfo.metadata.musicInfo
-      : playerState.playMusicInfo.musicInfo,
-  ], settingState.setting['list.addMusicLocationType'])
+  const musicInfo = 'progress' in playerState.playMusicInfo.musicInfo
+    ? playerState.playMusicInfo.musicInfo.metadata.musicInfo
+    : playerState.playMusicInfo.musicInfo
+  void (async() => {
+    try {
+      await addListMusics(LIST_IDS.LOVE, [
+        musicInfo,
+      ], settingState.setting['list.addMusicLocationType'], false)
+      const synced = await syncWyLoveMusic([musicInfo], true)
+      if (synced) toast('已添加到网易云我喜欢的音乐')
+    } catch (err) {
+      toast(`网易云我喜欢同步失败：${(err as Error)?.message || err}`)
+    }
+  })()
 }
 
 /**
@@ -649,11 +658,20 @@ export const collectMusic = () => {
  */
 export const uncollectMusic = () => {
   if (!playerState.playMusicInfo.musicInfo) return
-  void removeListMusics(LIST_IDS.LOVE, [
-    'progress' in playerState.playMusicInfo.musicInfo
-      ? playerState.playMusicInfo.musicInfo.metadata.musicInfo.id
-      : playerState.playMusicInfo.musicInfo.id,
-  ])
+  const musicInfo = 'progress' in playerState.playMusicInfo.musicInfo
+    ? playerState.playMusicInfo.musicInfo.metadata.musicInfo
+    : playerState.playMusicInfo.musicInfo
+  void (async() => {
+    try {
+      await removeListMusics(LIST_IDS.LOVE, [
+        musicInfo.id,
+      ], false)
+      const synced = await syncWyLoveMusic([musicInfo], false)
+      if (synced) toast('已从网易云我喜欢的音乐移除')
+    } catch (err) {
+      toast(`网易云我喜欢同步失败：${(err as Error)?.message || err}`)
+    }
+  })()
 }
 
 /**

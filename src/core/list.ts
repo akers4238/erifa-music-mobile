@@ -13,17 +13,27 @@ const getWySongId = (musicInfo: LX.Music.MusicInfo) => {
   return songId ? String(songId) : null
 }
 
-const syncWyLoveMusicIds = (songIds: Array<number | string | null | undefined>, like: boolean) => {
-  for (const songId of songIds) {
-    if (!songId) continue
-    void wySongListApi.likeMusic(songId, like).catch(err => {
-      console.log('sync netease love failed', err?.message || err)
-    })
-  }
+export const syncWyLoveMusicIds = async(songIds: Array<number | string | null | undefined>, like: boolean) => {
+  const tasks = songIds.filter(songId => songId).map(async songId => wySongListApi.likeMusic(songId, like))
+  if (!tasks.length) return false
+  await Promise.all(tasks)
+  return true
 }
 
-const syncWyLoveMusic = (musicInfos: LX.Music.MusicInfo[], like: boolean) => {
-  syncWyLoveMusicIds(musicInfos.map(getWySongId), like)
+export const syncWyLoveMusic = async(musicInfos: LX.Music.MusicInfo[], like: boolean) => {
+  return syncWyLoveMusicIds(musicInfos.map(getWySongId), like)
+}
+
+const syncWyLoveMusicQuietly = (musicInfos: LX.Music.MusicInfo[], like: boolean) => {
+  void syncWyLoveMusic(musicInfos, like).catch(err => {
+    console.log('sync netease love failed', err?.message || err)
+  })
+}
+
+const syncWyLoveMusicIdsQuietly = (songIds: Array<number | string | null | undefined>, like: boolean) => {
+  void syncWyLoveMusicIds(songIds, like).catch(err => {
+    console.log('sync netease love failed', err?.message || err)
+  })
 }
 
 const getWySongIdFromMusicId = (id: string) => {
@@ -72,9 +82,9 @@ export const updateUserListPosition = async(position: number, ids: string[]) => 
 /**
  * 批量添加歌曲到列表
  */
-export const addListMusics = async(id: string, musicInfos: LX.Music.MusicInfo[], addMusicLocationType: LX.AddMusicLocationType) => {
+export const addListMusics = async(id: string, musicInfos: LX.Music.MusicInfo[], addMusicLocationType: LX.AddMusicLocationType, syncWyLove = true) => {
   await global.list_event.list_music_add(id, musicInfos, addMusicLocationType)
-  if (id == LIST_IDS.LOVE) syncWyLoveMusic(musicInfos, true)
+  if (syncWyLove && id == LIST_IDS.LOVE) syncWyLoveMusicQuietly(musicInfos, true)
 }
 
 /**
@@ -87,7 +97,7 @@ export const moveListMusics = async(fromId: string, toId: string, musicInfos: LX
 /**
  * 批量删除列表内歌曲
  */
-export const removeListMusics = async(listId: string, ids: string[]) => {
+export const removeListMusics = async(listId: string, ids: string[], syncWyLove = true) => {
   const removedMusics = listId == LIST_IDS.LOVE
     ? getListMusicSync(listId).filter(musicInfo => ids.includes(musicInfo.id))
     : []
@@ -96,8 +106,8 @@ export const removeListMusics = async(listId: string, ids: string[]) => {
     ? ids.filter(id => !removedMusicIds.has(id)).map(getWySongIdFromMusicId)
     : []
   await global.list_event.list_music_remove(listId, ids)
-  if (removedMusics.length) syncWyLoveMusic(removedMusics, false)
-  if (fallbackWySongIds.length) syncWyLoveMusicIds(fallbackWySongIds, false)
+  if (syncWyLove && removedMusics.length) syncWyLoveMusicQuietly(removedMusics, false)
+  if (syncWyLove && fallbackWySongIds.length) syncWyLoveMusicIdsQuietly(fallbackWySongIds, false)
 }
 
 /**
