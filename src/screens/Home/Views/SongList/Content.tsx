@@ -70,6 +70,10 @@ export default () => {
     listRef.current?.loadList(source, songlistInfo.current.sortId, songlistInfo.current.tagId)
   }
 
+  const handleRefresh = () => {
+    listRef.current?.loadList(songlistInfo.current.source, songlistInfo.current.sortId, songlistInfo.current.tagId)
+  }
+
   return (
     <View style={styles.container}>
       <HeaderBar
@@ -77,6 +81,7 @@ export default () => {
         onSortChange={handleSortChange}
         onTagChange={handleTagChange}
         onSourceChange={handleSourceChange}
+        onRefresh={handleRefresh}
       />
       <List ref={listRef} />
     </View>
