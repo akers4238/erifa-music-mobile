@@ -4,6 +4,32 @@ import listState from '@/store/list/state'
 import settingState from '@/store/setting/state'
 import { fixNewMusicInfoQuality } from '@/utils'
 import { saveListPrevSelectId } from '@/utils/data'
+import { getListMusicSync } from '@/utils/listManage'
+import wySongListApi from '@/utils/musicSdk/wy/songList'
+
+const getWySongId = (musicInfo: LX.Music.MusicInfo) => {
+  const targetInfo = musicInfo.meta?.toggleMusicInfo?.source == 'wy' ? musicInfo.meta.toggleMusicInfo : musicInfo
+  const songId = targetInfo.source == 'wy' ? targetInfo.meta.songId : null
+  return songId ? String(songId) : null
+}
+
+const syncWyLoveMusicIds = (songIds: Array<number | string | null | undefined>, like: boolean) => {
+  for (const songId of songIds) {
+    if (!songId) continue
+    void wySongListApi.likeMusic(songId, like).catch(err => {
+      console.log('sync netease love failed', err?.message || err)
+    })
+  }
+}
+
+const syncWyLoveMusic = (musicInfos: LX.Music.MusicInfo[], like: boolean) => {
+  syncWyLoveMusicIds(musicInfos.map(getWySongId), like)
+}
+
+const getWySongIdFromMusicId = (id: string) => {
+  const result = /^wy_(.+)$/.exec(id)
+  return result?.[1] ?? null
+}
 
 /**
  * 覆盖全部列表数据
@@ -48,6 +74,7 @@ export const updateUserListPosition = async(position: number, ids: string[]) => 
  */
 export const addListMusics = async(id: string, musicInfos: LX.Music.MusicInfo[], addMusicLocationType: LX.AddMusicLocationType) => {
   await global.list_event.list_music_add(id, musicInfos, addMusicLocationType)
+  if (id == LIST_IDS.LOVE) syncWyLoveMusic(musicInfos, true)
 }
 
 /**
@@ -61,7 +88,16 @@ export const moveListMusics = async(fromId: string, toId: string, musicInfos: LX
  * 批量删除列表内歌曲
  */
 export const removeListMusics = async(listId: string, ids: string[]) => {
+  const removedMusics = listId == LIST_IDS.LOVE
+    ? getListMusicSync(listId).filter(musicInfo => ids.includes(musicInfo.id))
+    : []
+  const removedMusicIds = new Set(removedMusics.map(musicInfo => musicInfo.id))
+  const fallbackWySongIds = listId == LIST_IDS.LOVE
+    ? ids.filter(id => !removedMusicIds.has(id)).map(getWySongIdFromMusicId)
+    : []
   await global.list_event.list_music_remove(listId, ids)
+  if (removedMusics.length) syncWyLoveMusic(removedMusics, false)
+  if (fallbackWySongIds.length) syncWyLoveMusicIds(fallbackWySongIds, false)
 }
 
 /**
@@ -178,4 +214,3 @@ export const setFetchingListStatus = (id: string, status: boolean) => {
 
 
 export { getUserLists, getListMusics } from '@/utils/listManage'
-

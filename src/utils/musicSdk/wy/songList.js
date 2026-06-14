@@ -267,6 +267,21 @@ export default {
     return body.playlist
   },
 
+  async likeMusic(songId, like = true, tryNum = 0) {
+    if (tryNum > 2) return Promise.reject(new Error('try max num'))
+    const profile = await this.getAccountProfile()
+    const { body } = await weapiRequest('/api/song/like', {
+      trackId: songId,
+      userid: profile.userId,
+      like,
+    }).promise
+    if (body.code !== this.successCode) {
+      if (body.message || body.msg) throw new Error(body.message || body.msg)
+      return this.likeMusic(songId, like, ++tryNum)
+    }
+    return body
+  },
+
   getTag(tryNum = 0) {
     if (this._requestObj_tags) this._requestObj_tags.cancelHttp()
     if (tryNum > 2) return Promise.reject(new Error('try max num'))
