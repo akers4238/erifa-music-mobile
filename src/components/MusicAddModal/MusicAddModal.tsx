@@ -134,6 +134,20 @@ export default forwardRef<MusicAddModalType, MusicAddModalProps>(({ onAdded }, r
     })
   }
 
+  const handleRemoveFromNeteaseLove = () => {
+    if (!musicInfo) return
+    void syncWyLoveMusic([musicInfo], false).then((synced) => {
+      if (synced) {
+        dialogRef.current?.setVisible(false)
+        toast('已取消网易云我的喜欢')
+      } else {
+        toast('当前歌曲不是网易云歌曲')
+      }
+    }).catch(err => {
+      toast(`取消网易云我的喜欢失败：${err?.message || err}`)
+    })
+  }
+
   const handleAddToNeteasePlaylist = (listInfo: ListInfoItem) => {
     if (!musicInfo) return
     const songId = getWySongId(musicInfo)
@@ -165,6 +179,12 @@ export default forwardRef<MusicAddModalType, MusicAddModalProps>(({ onAdded }, r
                       onPress={handleAddToNeteaseLove}
                     >
                       <Text numberOfLines={1} size={14} color={theme['c-button-font']}>添加至网易云我的喜欢</Text>
+                    </Button>
+                    <Button
+                      style={{ ...styles.neteaseButton, backgroundColor: theme['c-button-background'], borderColor: theme['c-primary-light-400-alpha-300'] }}
+                      onPress={handleRemoveFromNeteaseLove}
+                    >
+                      <Text numberOfLines={1} size={14} color={theme['c-button-font']}>取消网易云我的喜欢</Text>
                     </Button>
                     {
                       isLoadingNeteaseLists

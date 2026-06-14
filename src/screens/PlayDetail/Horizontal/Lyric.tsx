@@ -22,7 +22,7 @@ interface LineProps {
   lineNum: number
   activeLine: number
   onLayout: (lineNum: number, height: number, width: number) => void
-  onPress: (time: number) => void
+  onPress: (lineNum: number) => void
 }
 const LrcLine = memo(({ line, lineNum, activeLine, onLayout, onPress }: LineProps) => {
   const theme = useTheme()
@@ -49,7 +49,7 @@ const LrcLine = memo(({ line, lineNum, activeLine, onLayout, onPress }: LineProp
   }
 
   const handlePress = () => {
-    onPress(line.time / 1000)
+    onPress(lineNum)
   }
 
   // textBreakStrategy="simple" 用于解决某些设备上字体被截断的问题
@@ -262,9 +262,21 @@ export default () => {
     global.app_event.setProgress(time)
   }, [])
 
+  const handleSelectLine = useCallback((lineNum: number) => {
+    isPauseScrollRef.current = true
+    playLineRef.current?.setVisible(true)
+    try {
+      flatListRef.current?.scrollToIndex({
+        index: lineNum,
+        animated: true,
+        viewPosition: 0.4,
+      })
+    } catch {}
+  }, [])
+
   const renderItem: FlatListType['renderItem'] = ({ item, index }) => {
     return (
-      <LrcLine line={item} lineNum={index} activeLine={line} onLayout={handleLineLayout} onPress={handlePlayLine} />
+      <LrcLine line={item} lineNum={index} activeLine={line} onLayout={handleLineLayout} onPress={handleSelectLine} />
     )
   }
   const getkey: FlatListType['keyExtractor'] = (item, index) => `${index}${item.text}`
