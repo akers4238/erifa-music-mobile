@@ -26,6 +26,25 @@ export default () => {
 
   let isScreenOn = true
 
+  const saveCurrentPlayInfo = async() => {
+    if (!settingState.setting['player.isSavePlayTime']) return
+    if (playerState.playMusicInfo.isTempPlay) return
+    if (!playerState.playMusicInfo.listId || playerState.playInfo.playIndex < 0) return
+
+    let time = playerState.progress.nowPlayTime
+    if (playerState.isPlay) {
+      time = await getPosition().catch(() => time)
+      if (time) setNowPlayTime(time)
+    }
+
+    await savePlayInfo({
+      time,
+      maxTime: playerState.progress.maxPlayTime,
+      listId: playerState.playMusicInfo.listId,
+      index: playerState.playInfo.playIndex,
+    })
+  }
+
   const getCurrentTime = () => {
     let id = playerState.musicInfo.id
     void getPosition().then(position => {
@@ -77,6 +96,7 @@ export default () => {
     void setCurrentTime(time)
 
     if (maxTime != null) setMaxplayTime(maxTime)
+    void saveCurrentPlayInfo()
 
     // if (!isPlay) audio.play()
   }
@@ -93,6 +113,7 @@ export default () => {
     // handleSetTaskBarState(playProgress.progress, prevProgressStatus)
     // clearBufferTimeout()
     clearUpdateTimeout()
+    void saveCurrentPlayInfo()
   }
 
   const handleStop = () => {
@@ -117,14 +138,7 @@ export default () => {
     // void setCurrentTime(playerState.progress.nowPlayTime)
     // setMaxplayTime(playProgress.maxPlayTime)
     handlePause()
-    if (!playerState.playMusicInfo.isTempPlay) {
-      void savePlayInfo({
-        time: playerState.progress.nowPlayTime,
-        maxTime: playerState.progress.maxPlayTime,
-        listId: playerState.playMusicInfo.listId!,
-        index: playerState.playInfo.playIndex,
-      })
-    }
+    void saveCurrentPlayInfo()
   }
 
   // watch(() => playerState.progress.nowPlayTime, (newValue, oldValue) => {
@@ -162,6 +176,7 @@ export default () => {
   // 修复在某些设备上屏幕状态改变事件未触发导致的进度条未更新的问题
   AppState.addEventListener('change', (state) => {
     if (state == 'active' && !isScreenOn) handleScreenStateChanged('ON')
+    if (state == 'background' || state == 'inactive') void saveCurrentPlayInfo()
   })
 
   global.app_event.on('play', handlePlay)
