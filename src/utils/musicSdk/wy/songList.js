@@ -306,6 +306,16 @@ export default {
     return { ...body, playlistId }
   },
 
+  async addMusicToPlaylist(playlistId, songId) {
+    const { body } = await weapiRequest('/api/playlist/manipulate/tracks', {
+      op: 'add',
+      pid: playlistId,
+      trackIds: `[${songId},${songId}]`,
+    }).promise
+    if (![this.successCode, 502].includes(body.code)) throw new Error(body.message || body.msg || 'Update NetEase playlist failed')
+    return { ...body, playlistId }
+  },
+
   getTag(tryNum = 0) {
     if (this._requestObj_tags) this._requestObj_tags.cancelHttp()
     if (tryNum > 2) return Promise.reject(new Error('try max num'))
