@@ -1,55 +1,43 @@
-import { weapiRequest } from './utils/api-enhanced'
-import { toMD5 } from '../utils'
+import CookieManager from '@react-native-cookies/cookies'
 
-const parseSetCookie = headers => {
-  const rawCookie = headers?.['set-cookie'] || headers?.['Set-Cookie'] || headers?.map?.['set-cookie'] || headers?.map?.['Set-Cookie'] || ''
-  const cookieList = Array.isArray(rawCookie) ? rawCookie : String(rawCookie).split(/,(?=\s*[^;,]+=)/)
+const cookieUrls = [
+  'https://music.163.com',
+  'https://interface.music.163.com',
+]
 
-  return cookieList
-    .map(cookie => String(cookie).split(';')[0].trim())
-    .filter(Boolean)
-    .join('; ')
-}
-
-const mergeCookie = (bodyCookie, headers) => {
-  const cookies = []
-  const headerCookie = parseSetCookie(headers)
-  if (bodyCookie) cookies.push(String(bodyCookie))
-  if (headerCookie) cookies.push(headerCookie)
-  return cookies
-    .join('; ')
-    .split(';')
-    .map(cookie => cookie.trim())
-    .filter(Boolean)
-    .filter((cookie, index, list) => list.indexOf(cookie) == index)
-    .join('; ')
-}
-
-export const sendPhoneCaptcha = async({ phone, countrycode = '86' }) => {
-  const requestObj = weapiRequest('/api/sms/captcha/sent', {
-    ctcode: countrycode,
-    secrete: 'music_middleuser_pclogin',
-    cellphone: phone,
+const stringifyCookieMap = cookieMap => Object.entries(cookieMap)
+  .map(([key, cookie]) => {
+    const value = typeof cookie === 'string' ? cookie : cookie?.value
+    return value == null ? '' : `${key}=${value}`
   })
-  const { body } = await requestObj.promise
-  return body
+  .filter(Boolean)
+  .join('; ')
+
+const mergeCookies = cookieList => cookieList
+  .join('; ')
+  .split(';')
+  .map(cookie => cookie.trim())
+  .filter(Boolean)
+  .filter((cookie, index, list) => {
+    const key = cookie.split('=')[0]
+    return list.findIndex(item => item.split('=')[0] == key) == index
+  })
+  .join('; ')
+
+export const getWebLoginCookie = async() => {
+  const cookieList = await Promise.all(cookieUrls.map(async(url) => {
+    const cookieMap = await CookieManager.get(url)
+    return stringifyCookieMap(cookieMap)
+  }))
+  const cookie = mergeCookies(cookieList)
+  return cookie.includes('MUSIC_U=') || cookie.includes('MUSIC_A=') ? cookie : ''
 }
 
-export const loginByPhone = async({ phone, password, captcha, countrycode = '86' }) => {
-  const useCaptcha = !!captcha
-  const requestObj = weapiRequest('/api/w/login/cellphone', {
-    type: '1',
-    https: 'true',
-    phone,
-    countrycode,
-    captcha,
-    [useCaptcha ? 'captcha' : 'password']: useCaptcha ? captcha : toMD5(password),
-    remember: 'true',
-  })
-  const { body, headers } = await requestObj.promise
+export const clearWebLoginCookie = async() => {
+  await CookieManager.clearAll()
+  await CookieManager.flush()
+}
 
-  return {
-    ...body,
-    cookie: mergeCookie(body?.cookie, headers),
-  }
+export const flushWebLoginCookie = async() => {
+  await CookieManager.flush()
 }
