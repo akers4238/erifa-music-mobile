@@ -1,8 +1,7 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Image, View } from 'react-native'
 
 import Dialog, { type DialogType } from '@/components/common/Dialog'
-import Input from '@/components/common/Input'
 import Text from '@/components/common/Text'
 import Button from '../../components/Button'
 import SubTitle from '../../components/SubTitle'
@@ -17,16 +16,13 @@ export default memo(() => {
   const t = useI18n()
   const theme = useTheme()
   const cookie = useSettingValue('common.neteaseCookie')
-  const dialogRef = useRef<DialogType>(null)
   const loginDialogRef = useRef<DialogType>(null)
-  const [visible, setVisible] = useState(false)
   const [loginVisible, setLoginVisible] = useState(false)
-  const [text, setText] = useState(cookie)
   const [loginKey, setLoginKey] = useState('')
   const [loginUrl, setLoginUrl] = useState('')
   const [loginStatus, setLoginStatus] = useState('')
 
-  const refreshLoginQr = async() => {
+  const refreshLoginQr = useCallback(async() => {
     setLoginStatus(t('setting_basic_netease_login_loading'))
     try {
       const qr = await createLoginQr()
@@ -38,23 +34,7 @@ export default memo(() => {
       setLoginUrl('')
       setLoginStatus(t('setting_basic_netease_login_failed'))
     }
-  }
-
-  const handleShow = () => {
-    setText(cookie)
-    if (!visible) setVisible(true)
-    requestAnimationFrame(() => {
-      dialogRef.current?.setVisible(true)
-    })
-  }
-  const handleCancel = () => {
-    dialogRef.current?.setVisible(false)
-  }
-  const handleConfirm = () => {
-    const newValue = text.trim()
-    if (newValue != cookie) updateSetting({ 'common.neteaseCookie': newValue })
-    handleCancel()
-  }
+  }, [t])
   const handleShowLogin = () => {
     if (!loginVisible) setLoginVisible(true)
     requestAnimationFrame(() => {
@@ -117,36 +97,24 @@ export default memo(() => {
     }
   }, [loginKey, loginVisible, t])
 
+  useEffect(() => {
+    if (!loginVisible) return
+
+    const timer = setInterval(() => {
+      void refreshLoginQr()
+    }, 60000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [loginVisible, refreshLoginQr])
+
   return (
-    <SubTitle title={t('setting_basic_netease_cookie')}>
+    <SubTitle title={t('setting_basic_netease_login')}>
       <View style={styles.btn}>
-        <Button onPress={handleShow}>{t(cookie ? 'setting_basic_netease_cookie_btn_edit' : 'setting_basic_netease_cookie_btn_add')}</Button>
         <Button onPress={handleShowLogin}>{t('setting_basic_netease_login_btn')}</Button>
       </View>
-      {
-        visible
-          ? (
-              <Dialog title={t('setting_basic_netease_cookie')} height="56%" ref={dialogRef} bgHide={false}>
-                <View style={styles.content}>
-                  <Input
-                    value={text}
-                    onChangeText={setText}
-                    multiline
-                    textAlignVertical="top"
-                    placeholder={t('setting_basic_netease_cookie_placeholder')}
-                    size={13}
-                    style={{ ...styles.input, backgroundColor: theme['c-primary-input-background'] }}
-                  />
-                  <Text style={styles.tip} size={12} color={theme['c-600']}>{t('setting_basic_netease_cookie_tip')}</Text>
-                </View>
-                <View style={styles.dialogBtns}>
-                  <Button onPress={handleCancel}>{t('cancel')}</Button>
-                  <Button onPress={handleConfirm}>{t('confirm')}</Button>
-                </View>
-              </Dialog>
-            )
-          : null
-      }
+      <Text style={styles.loginSummary} size={12} color={theme['c-600']}>{t(cookie ? 'setting_basic_netease_login_saved' : 'setting_basic_netease_login_not_saved')}</Text>
       {
         loginVisible
           ? (
@@ -176,20 +144,7 @@ const styles = createStyle({
     marginTop: 10,
     flexDirection: 'row',
   },
-  content: {
-    flexGrow: 1,
-    flexShrink: 1,
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 8,
-  },
-  input: {
-    minWidth: 290,
-    minHeight: 120,
-    paddingTop: 5,
-    paddingBottom: 5,
-  },
-  tip: {
+  loginSummary: {
     marginTop: 8,
   },
   loginContent: {
