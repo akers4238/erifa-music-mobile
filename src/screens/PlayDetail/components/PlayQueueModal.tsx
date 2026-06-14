@@ -37,7 +37,7 @@ const MusicItem = ({
       activeOpacity={0.65}
       style={{
         ...styles.item,
-        backgroundColor: active ? theme['c-primary-light-100-alpha-100'] : 'transparent',
+        backgroundColor: active ? theme['c-primary-light-100-alpha-300'] : 'transparent',
       }}
       onPress={onPress}
     >
@@ -73,7 +73,7 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
 
   const handleClearTemp = () => {
     clearTempPlayeList()
-    toast('Queue cleared')
+    toast('已清空稍后播放')
   }
 
   const handlePlayTemp = (info: LX.Player.PlayMusicInfo, index: number) => {
@@ -90,35 +90,35 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
   }
 
   return (
-    <Dialog ref={dialogRef} title="Play queue" height="78%">
+    <Dialog ref={dialogRef} title="播放队列" height="78%">
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text size={12} color={theme['c-font-label']}>Play later {tempPlayList.length}</Text>
+          <Text size={12} color={theme['c-font-label']}>稍后播放 {tempPlayList.length}</Text>
           {tempPlayList.length
             ? <TouchableOpacity onPress={handleClearTemp}>
-                <Text size={12} color={theme['c-primary-font-active']}>Clear</Text>
+                <Text size={12} color={theme['c-primary-font-active']}>清空</Text>
               </TouchableOpacity>
             : null}
         </View>
-        <ScrollView style={styles.tempList}>
-          {tempPlayList.length
-            ? tempPlayList.map((info, index) => (
-              <MusicItem
-                key={`${info.musicInfo.id}_${index}`}
-                index={index}
-                musicInfo={info.musicInfo}
-                active={playMusicInfo.isTempPlay && playMusicInfo.musicInfo?.id == info.musicInfo.id}
-                suffix="Next"
-                onPress={() => { handlePlayTemp(info, index) }}
-                onRemove={() => { removeTempPlayList(index) }}
-              />
-            ))
-            : <Text style={styles.empty} size={12} color={theme['c-font-label']}>No play later items</Text>}
-        </ScrollView>
+        {tempPlayList.length
+          ? <ScrollView style={styles.tempList}>
+              {tempPlayList.map((info, index) => (
+                <MusicItem
+                  key={`${info.musicInfo.id}_${index}`}
+                  index={index}
+                  musicInfo={info.musicInfo}
+                  active={playMusicInfo.isTempPlay && playMusicInfo.musicInfo?.id == info.musicInfo.id}
+                  suffix="稍后"
+                  onPress={() => { handlePlayTemp(info, index) }}
+                  onRemove={() => { removeTempPlayList(index) }}
+                />
+              ))}
+            </ScrollView>
+          : <Text style={styles.emptyCompact} size={12} color={theme['c-font-label']}>暂无稍后播放</Text>}
 
         <View style={styles.header}>
-          <Text size={12} color={theme['c-font-label']}>Playlist {list.length}</Text>
-          {playInfo.playIndex > -1 ? <Text size={12} color={theme['c-font-label']}>Current #{playInfo.playIndex + 1}</Text> : null}
+          <Text size={12} color={theme['c-font-label']}>当前歌单 {list.length}</Text>
+          {playInfo.playIndex > -1 ? <Text size={12} color={theme['c-font-label']}>当前第 {playInfo.playIndex + 1} 首</Text> : null}
         </View>
         <ScrollView style={styles.list}>
           {list.length
@@ -131,7 +131,7 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
                 onPress={() => { handlePlayListMusic(index) }}
               />
             ))
-            : <Text style={styles.empty} size={12} color={theme['c-font-label']}>No playlist</Text>}
+            : <Text style={styles.empty} size={12} color={theme['c-font-label']}>暂无播放歌单</Text>}
         </ScrollView>
       </View>
     </Dialog>
@@ -152,13 +152,13 @@ const styles = createStyle({
     justifyContent: 'space-between',
   },
   tempList: {
-    maxHeight: 150,
+    maxHeight: 132,
   },
   list: {
     flex: 1,
   },
   item: {
-    minHeight: 48,
+    minHeight: 44,
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -184,6 +184,10 @@ const styles = createStyle({
   },
   empty: {
     paddingVertical: 14,
+    textAlign: 'center',
+  },
+  emptyCompact: {
+    paddingVertical: 8,
     textAlign: 'center',
   },
 })
