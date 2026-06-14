@@ -1,4 +1,5 @@
-import { eapiRequest } from './utils/api-enhanced'
+import { weapiRequest } from './utils/api-enhanced'
+import { toMD5 } from '../utils'
 
 const parseSetCookie = headers => {
   const rawCookie = headers?.['set-cookie'] || headers?.['Set-Cookie'] || headers?.map?.['set-cookie'] || headers?.map?.['Set-Cookie'] || ''
@@ -10,29 +11,45 @@ const parseSetCookie = headers => {
     .join('; ')
 }
 
-export const createLoginQr = async() => {
-  const requestObj = eapiRequest('/api/login/qrcode/unikey', {
-    type: 3,
-  })
-  const { body } = await requestObj.promise
-  const key = body?.unikey || body?.data?.unikey
-  if (!key) throw new Error('Create login QR failed')
-
-  return {
-    key,
-    url: `https://music.163.com/login?codekey=${key}`,
-  }
+const mergeCookie = (bodyCookie, headers) => {
+  const cookies = []
+  const headerCookie = parseSetCookie(headers)
+  if (bodyCookie) cookies.push(String(bodyCookie))
+  if (headerCookie) cookies.push(headerCookie)
+  return cookies
+    .join('; ')
+    .split(';')
+    .map(cookie => cookie.trim())
+    .filter(Boolean)
+    .filter((cookie, index, list) => list.indexOf(cookie) == index)
+    .join('; ')
 }
 
-export const checkLoginQr = async(key) => {
-  const requestObj = eapiRequest('/api/login/qrcode/client/login', {
-    key,
-    type: 3,
+export const sendPhoneCaptcha = async({ phone, countrycode = '86' }) => {
+  const requestObj = weapiRequest('/api/sms/captcha/sent', {
+    ctcode: countrycode,
+    secrete: 'music_middleuser_pclogin',
+    cellphone: phone,
+  })
+  const { body } = await requestObj.promise
+  return body
+}
+
+export const loginByPhone = async({ phone, password, captcha, countrycode = '86' }) => {
+  const useCaptcha = !!captcha
+  const requestObj = weapiRequest('/api/w/login/cellphone', {
+    type: '1',
+    https: 'true',
+    phone,
+    countrycode,
+    captcha,
+    [useCaptcha ? 'captcha' : 'password']: useCaptcha ? captcha : toMD5(password),
+    remember: 'true',
   })
   const { body, headers } = await requestObj.promise
 
   return {
     ...body,
-    cookie: parseSetCookie(headers),
+    cookie: mergeCookie(body?.cookie, headers),
   }
 }
