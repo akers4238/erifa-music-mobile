@@ -68,17 +68,17 @@ export default {
     if (state.playedList.some(m => m.musicInfo.id == info.musicInfo.id)) return
     state.playedList.push(info)
 
-    global.state_event.playPlayedListChanged({ ...state.playedList })
+    global.state_event.playPlayedListChanged([...state.playedList])
   },
   removePlayedList(index: number) {
     state.playedList.splice(index, 1)
 
-    global.state_event.playPlayedListChanged({ ...state.playedList })
+    global.state_event.playPlayedListChanged([...state.playedList])
   },
   clearPlayedList() {
     state.playedList = []
 
-    global.state_event.playPlayedListChanged({ ...state.playedList })
+    global.state_event.playPlayedListChanged([...state.playedList])
   },
   addTempPlayList(list: LX.Player.TempPlayListItem[]) {
     const topList: Array<{ listId: string | null, musicInfo: LX.Music.MusicInfo | LX.Download.ListItem }> = []
@@ -92,17 +92,17 @@ export default {
     if (topList.length) arrUnshift(state.tempPlayList, topList.map(({ musicInfo, listId }) => ({ musicInfo, listId, isTempPlay: true })))
     if (bottomList.length) arrPush(state.tempPlayList, bottomList.map(({ musicInfo, listId }) => ({ musicInfo, listId, isTempPlay: true })))
 
-    global.state_event.playTempPlayListChanged({ ...state.tempPlayList })
+    global.state_event.playTempPlayListChanged([...state.tempPlayList])
   },
   removeTempPlayList(index: number) {
     state.tempPlayList.splice(index, 1)
 
-    global.state_event.playTempPlayListChanged({ ...state.tempPlayList })
+    global.state_event.playTempPlayListChanged([...state.tempPlayList])
   },
   clearTempPlayeList() {
     state.tempPlayList = []
 
-    global.state_event.playTempPlayListChanged({ ...state.tempPlayList })
+    global.state_event.playTempPlayListChanged([...state.tempPlayList])
   },
   setLoadErrorPicUrl(url: string) {
     state.loadErrorPicUrl = url
