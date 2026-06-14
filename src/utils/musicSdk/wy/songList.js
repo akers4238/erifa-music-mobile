@@ -15,6 +15,11 @@ export default {
   cookie: 'MUSIC_U=',
   sortList: [
     {
+      name: 'My Playlists',
+      tid: 'my',
+      id: 'my',
+    },
+    {
       name: '最热',
       tid: 'hot',
       id: 'hot',
@@ -182,6 +187,7 @@ export default {
 
   getList(sortId, tagId, page, tryNum = 0) {
     if (tryNum > 2) return Promise.reject(new Error('try max num'))
+    if (sortId == 'my') return this.getMyList(page, tryNum)
     if (this._requestObj_list) this._requestObj_list.cancelHttp()
     this._requestObj_list = weapiRequest('/api/playlist/list', {
       cat: tagId || '全部',
@@ -206,7 +212,7 @@ export default {
     return rawData.map(item => ({
       play_count: formatPlayCount(item.playCount),
       id: String(item.id),
-      author: item.creator.nickname,
+      author: item.creator?.nickname || item.creatorName || '',
       name: item.name,
       time: item.createTime ? dateFormat(item.createTime, 'Y-M-D') : '',
       img: item.coverImgUrl,
@@ -215,6 +221,50 @@ export default {
       desc: item.description,
       source: 'wy',
     }))
+  },
+
+  async getAccountProfile() {
+    const { body } = await weapiRequest('/api/nuser/account/get', {}).promise
+    const userId = body?.profile?.userId || body?.account?.id
+    if (body?.code !== this.successCode || !userId) throw new Error('Please login NetEase first')
+    return body.profile || { userId }
+  },
+
+  async getMyList(page, tryNum = 0) {
+    if (tryNum > 2) return Promise.reject(new Error('try max num'))
+    if (this._requestObj_list) this._requestObj_list.cancelHttp()
+
+    const profile = await this.getAccountProfile()
+    this._requestObj_list = weapiRequest('/api/user/playlist', {
+      uid: profile.userId,
+      limit: this.limit_list,
+      offset: this.limit_list * (page - 1),
+      includeVideoPlaylist: true,
+    })
+    return this._requestObj_list.promise.then(({ body }) => {
+      if (body.code !== this.successCode) return this.getMyList(page, ++tryNum)
+      return {
+        list: this.filterList(body.playlist || []),
+        total: parseInt(body.more ? this.limit_list * (page + 1) : (body.playlist || []).length + this.limit_list * (page - 1)),
+        page,
+        limit: this.limit_list,
+        source: 'wy',
+      }
+    })
+  },
+
+  async createPlaylist(name, tryNum = 0) {
+    if (tryNum > 2) return Promise.reject(new Error('try max num'))
+    const { body } = await weapiRequest('/api/playlist/create', {
+      name,
+      privacy: 0,
+      type: 'NORMAL',
+    }).promise
+    if (body.code !== this.successCode) {
+      if (body.message || body.msg) throw new Error(body.message || body.msg)
+      return this.createPlaylist(name, ++tryNum)
+    }
+    return body.playlist
   },
 
   getTag(tryNum = 0) {

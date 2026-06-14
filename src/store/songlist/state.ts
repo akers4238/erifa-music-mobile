@@ -2,7 +2,7 @@ import music from '@/utils/musicSdk'
 
 export declare interface SortInfo {
   name: string
-  tid: 'recommend' | 'hot' | 'new' | 'hot_collect' | 'rise'
+  tid: 'recommend' | 'hot' | 'new' | 'hot_collect' | 'rise' | 'my'
   id: string
 }
 
