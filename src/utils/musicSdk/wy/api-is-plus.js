@@ -19,16 +19,6 @@ const qualityMap = {
   },
 }
 
-const requestPlayerUrlV1 = (songmid, type) => {
-  const quality = qualityMap[type] || qualityMap['320k']
-  const requestObj = eapiRequest('/api/song/enhance/player/url/v1', {
-    ids: `[${songmid}]`,
-    level: quality.level,
-    encodeType: 'flac',
-  })
-  return requestObj.promise.then(({ body }) => normalizeEnhancedUrl(body, type))
-}
-
 const requestPlayerUrl = (songmid, type) => {
   const quality = qualityMap[type] || qualityMap['320k']
   const requestObj = eapiRequest('/api/song/enhance/player/url', {
@@ -42,7 +32,9 @@ export default {
   getMusicUrl(songInfo, type) {
     const targetType = type || '320k'
     let requestObj = requestPlayerUrl(songInfo.songmid, targetType)
-      .catch(() => requestPlayerUrlV1(songInfo.songmid, targetType))
+      .catch(() => targetType == '128k'
+        ? Promise.reject(new Error('Get music url failed'))
+        : requestPlayerUrl(songInfo.songmid, '128k'))
 
     return {
       promise: requestObj,
