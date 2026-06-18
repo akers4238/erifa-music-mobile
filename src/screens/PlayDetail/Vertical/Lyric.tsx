@@ -325,12 +325,12 @@ export default () => {
   ), [handleSpaceLayout])
 
   return (
-    <>
+    <View style={styles.container}>
       <FlatList
         data={lyricLines}
         renderItem={renderItem}
         keyExtractor={getkey}
-        style={styles.container}
+        style={styles.list}
         ref={flatListRef}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={spaceComponent}
@@ -343,12 +343,17 @@ export default () => {
         onScroll={handleScroll}
       />
       { isShowLyricProgressSetting ? <PlayLine ref={playLineRef} onPlayLine={handlePlayLine} /> : null }
-    </>
+    </View>
   )
 }
 
 const styles = createStyle({
   container: {
+    flex: 1,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  list: {
     flex: 1,
     paddingLeft: 20,
     paddingRight: 20,
