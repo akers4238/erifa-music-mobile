@@ -35,6 +35,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
   const [loginVisible, setLoginVisible] = useState(false)
   const [loginStatus, setLoginStatus] = useState('')
   const [loading, setLoading] = useState(false)
+  const [webViewKey, setWebViewKey] = useState(0)
 
   const updateLoginSetting = useCallback((value: string) => {
     const setting: Partial<LX.AppSetting> = {}
@@ -118,6 +119,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
                 <View style={styles.loginContent}>
                   <WebView
                     source={{ uri: loginUrl }}
+                    key={webViewKey}
                     userAgent={userAgent}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
@@ -138,6 +140,10 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
                     }}
                     onHttpError={({ nativeEvent }) => {
                       if (nativeEvent.statusCode >= 400) setLoginStatus(`${t('setting_plugin_login_web_failed')} (${nativeEvent.statusCode})`)
+                    }}
+                    onRenderProcessGone={() => {
+                      setLoginStatus(t('setting_plugin_login_web_failed'))
+                      setWebViewKey(key => key + 1)
                     }}
                     style={styles.webview}
                   />

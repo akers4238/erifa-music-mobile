@@ -24,6 +24,7 @@ export default memo(() => {
   const [loginVisible, setLoginVisible] = useState(false)
   const [loginStatus, setLoginStatus] = useState('')
   const [loading, setLoading] = useState(false)
+  const [webViewKey, setWebViewKey] = useState(0)
   const checkingRef = useRef(false)
 
   const handleCancelLogin = useCallback(() => {
@@ -109,6 +110,7 @@ export default memo(() => {
                 <View style={styles.loginContent}>
                   <WebView
                     source={{ uri: loginUrl }}
+                    key={webViewKey}
                     userAgent={userAgent}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
@@ -128,6 +130,10 @@ export default memo(() => {
                     }}
                     onHttpError={({ nativeEvent }) => {
                       if (nativeEvent.statusCode >= 400) setLoginStatus(`${t('setting_basic_netease_login_failed')} (${nativeEvent.statusCode})`)
+                    }}
+                    onRenderProcessGone={() => {
+                      setLoginStatus(t('setting_basic_netease_login_failed'))
+                      setWebViewKey(key => key + 1)
                     }}
                     style={styles.webview}
                   />
