@@ -7,11 +7,14 @@ import { useTheme } from '@/store/theme/hook'
 import { createStyle } from '@/utils/tools'
 import WebCookieLogin, { type LoginSettingKey } from './WebCookieLogin'
 
+const androidChromeUserAgent = 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+
 const LOGIN_ITEMS = [
   {
     id: 'qq',
     settingKey: 'common.qqMusicCookie',
-    loginUrl: 'https://y.qq.com/',
+    loginUrl: 'https://y.qq.com/n/ryqq/profile',
+    userAgent: `${androidChromeUserAgent} MQQBrowser/13.0 QQMusic/12.0`,
     cookieUrls: [
       'https://y.qq.com',
       'https://u.y.qq.com',
@@ -24,6 +27,7 @@ const LOGIN_ITEMS = [
     id: 'bilibili',
     settingKey: 'common.bilibiliCookie',
     loginUrl: 'https://passport.bilibili.com/login',
+    userAgent: androidChromeUserAgent,
     cookieUrls: [
       'https://www.bilibili.com',
       'https://passport.bilibili.com',
@@ -34,7 +38,8 @@ const LOGIN_ITEMS = [
   {
     id: 'youtube',
     settingKey: 'common.youtubeCookie',
-    loginUrl: 'https://www.youtube.com/',
+    loginUrl: 'https://m.youtube.com/',
+    userAgent: androidChromeUserAgent,
     cookieUrls: [
       'https://www.youtube.com',
       'https://accounts.google.com',
@@ -46,6 +51,7 @@ const LOGIN_ITEMS = [
   id: 'qq' | 'bilibili' | 'youtube'
   settingKey: LoginSettingKey
   loginUrl: string
+  userAgent: string
   cookieUrls: string[]
   requiredKeys: readonly string[]
 }>
@@ -62,6 +68,7 @@ export default memo(() => {
             key={item.id}
             title={t(`setting_plugin_login_${item.id}`)}
             loginUrl={item.loginUrl}
+            userAgent={item.userAgent}
             cookieUrls={item.cookieUrls}
             requiredKeys={item.requiredKeys}
             settingKey={item.settingKey}

@@ -20,12 +20,13 @@ export type LoginSettingKey =
 interface Props {
   title: string
   loginUrl: string
+  userAgent: string
   cookieUrls: string[]
   requiredKeys: readonly string[]
   settingKey: LoginSettingKey
 }
 
-export default memo(({ title, loginUrl, cookieUrls, requiredKeys, settingKey }: Props) => {
+export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, settingKey }: Props) => {
   const t = useI18n()
   const theme = useTheme()
   const cookie = useSettingValue(settingKey)
@@ -90,7 +91,7 @@ export default memo(({ title, loginUrl, cookieUrls, requiredKeys, settingKey }: 
     if (!loginVisible) return
     const timer = setInterval(() => {
       void saveWebCookie()
-    }, 2000)
+    }, 6000)
 
     return () => {
       clearInterval(timer)
@@ -117,12 +118,26 @@ export default memo(({ title, loginUrl, cookieUrls, requiredKeys, settingKey }: 
                 <View style={styles.loginContent}>
                   <WebView
                     source={{ uri: loginUrl }}
+                    userAgent={userAgent}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
                     domStorageEnabled
                     javaScriptEnabled
+                    cacheEnabled
+                    setSupportMultipleWindows={false}
+                    javaScriptCanOpenWindowsAutomatically={false}
+                    mixedContentMode="always"
+                    androidLayerType="hardware"
+                    overScrollMode="never"
+                    allowsInlineMediaPlayback
                     onLoadEnd={() => {
                       void saveWebCookie()
+                    }}
+                    onError={() => {
+                      setLoginStatus(t('setting_plugin_login_web_failed'))
+                    }}
+                    onHttpError={({ nativeEvent }) => {
+                      if (nativeEvent.statusCode >= 400) setLoginStatus(`${t('setting_plugin_login_web_failed')} (${nativeEvent.statusCode})`)
                     }}
                     style={styles.webview}
                   />

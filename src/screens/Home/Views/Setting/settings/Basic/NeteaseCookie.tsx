@@ -13,7 +13,8 @@ import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import { clearWebLoginCookie, flushWebLoginCookie, getWebLoginCookie } from '@/utils/musicSdk/wy/login'
 
-const loginUrl = 'https://music.163.com/#/login'
+const loginUrl = 'https://music.163.com/m/login'
+const userAgent = 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
 
 export default memo(() => {
   const t = useI18n()
@@ -82,7 +83,7 @@ export default memo(() => {
     if (!loginVisible) return
     const timer = setInterval(() => {
       void saveWebCookie()
-    }, 2000)
+    }, 6000)
 
     return () => {
       clearInterval(timer)
@@ -108,12 +109,25 @@ export default memo(() => {
                 <View style={styles.loginContent}>
                   <WebView
                     source={{ uri: loginUrl }}
+                    userAgent={userAgent}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
                     domStorageEnabled
                     javaScriptEnabled
+                    cacheEnabled
+                    setSupportMultipleWindows={false}
+                    javaScriptCanOpenWindowsAutomatically={false}
+                    mixedContentMode="always"
+                    androidLayerType="hardware"
+                    overScrollMode="never"
                     onLoadEnd={() => {
                       void saveWebCookie()
+                    }}
+                    onError={() => {
+                      setLoginStatus(t('setting_basic_netease_login_failed'))
+                    }}
+                    onHttpError={({ nativeEvent }) => {
+                      if (nativeEvent.statusCode >= 400) setLoginStatus(`${t('setting_basic_netease_login_failed')} (${nativeEvent.statusCode})`)
                     }}
                     style={styles.webview}
                   />

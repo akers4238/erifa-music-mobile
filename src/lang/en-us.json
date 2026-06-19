@@ -496,6 +496,7 @@
   "source_alias_mg": "MG Music",
   "source_alias_tx": "TX Music",
   "source_alias_wy": "WY Music",
+  "source_selector_empty": "Source",
   "source_real_all": "Aggregated",
   "source_real_bd": "Baidu",
   "source_real_kg": "Kugou",

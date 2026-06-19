@@ -41,7 +41,7 @@ const Component = <S extends Sources>({ fontSize = 15, center, onSourceChange }:
   useImperativeHandle(ref, () => ({
     setSourceList(list, activeSource) {
       setList(list)
-      setSource(activeSource)
+      setSource(list.includes(activeSource) ? activeSource : (list[0] ?? '' as S[number]))
     },
   }), [])
 
@@ -54,6 +54,8 @@ const Component = <S extends Sources>({ fontSize = 15, center, onSourceChange }:
     setSource(action)
   }
 
+  const label = sourceNames[source] || t(`source_${sourceNameType}_${source}`) || sourceList_t[0]?.label || t('source_selector_empty')
+
   return (
     <DorpDownMenu
       menus={sourceList_t}
@@ -63,7 +65,7 @@ const Component = <S extends Sources>({ fontSize = 15, center, onSourceChange }:
       activeId={source}
     >
       <View style={styles.sourceMenu}>
-        <Text style={{ textAlign: center ? 'center' : 'left' }} numberOfLines={1} size={fontSize}>{sourceNames[source] || t(`source_${sourceNameType}_${source}`) || source}</Text>
+        <Text style={{ textAlign: center ? 'center' : 'left' }} numberOfLines={1} size={fontSize}>{label}</Text>
       </View>
     </DorpDownMenu>
   )
@@ -75,6 +77,7 @@ export default forwardRef(Component) as <S extends Sources>(p: SourceSelectorPro
 const styles = createStyle({
   sourceMenu: {
     height: '100%',
+    minWidth: 72,
     justifyContent: 'center',
     // paddingTop: 12,
     // paddingBottom: 12,
