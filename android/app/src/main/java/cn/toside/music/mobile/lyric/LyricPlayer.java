@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.lyric;
+package com.erifa.music2.lyric;
 
 import java.util.ArrayList;
 import java.util.Collections;

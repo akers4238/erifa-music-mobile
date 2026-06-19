@@ -22,6 +22,7 @@ export interface InitState {
   statusText: string
 
   playedList: LX.Player.PlayMusicInfo[]
+  playHistory: LX.Player.PlayMusicInfo[]
   tempPlayList: LX.Player.PlayMusicInfo[]
 
   loadErrorPicUrl: string
@@ -70,6 +71,7 @@ const state: InitState = {
   loadErrorPicUrl: '',
 
   playedList: [],
+  playHistory: [],
   tempPlayList: [],
 
   progress: {

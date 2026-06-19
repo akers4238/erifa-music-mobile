@@ -9,8 +9,8 @@ import { useTheme } from '@/store/theme/hook'
 import Text from './Text'
 import { scaleSizeH, scaleSizeW } from '@/utils/pixelRatio'
 
-const menuItemHeight = scaleSizeH(40)
-const menuItemWidth = scaleSizeW(100)
+const menuItemHeight = scaleSizeH(46)
+const menuItemWidth = scaleSizeW(168)
 
 export interface Position { w: number, h: number, x: number, y: number, menuWidth?: number, menuHeight?: number }
 export interface MenuSize { width?: number, height?: number }
@@ -35,8 +35,8 @@ const styles = createStyle({
     elevation: 3,
   },
   menuItem: {
-    paddingLeft: 10,
-    paddingRight: 10,
+    paddingLeft: 14,
+    paddingRight: 14,
     // height: menuItemHeight,
     // width: menuItemWidth,
     // alignItems: 'center',

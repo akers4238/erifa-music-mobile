@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.crypto;
+package com.erifa.music2.crypto;
 
 import android.util.Base64;
 

@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.lyric;
+package com.erifa.music2.lyric;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;

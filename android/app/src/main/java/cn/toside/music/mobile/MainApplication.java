@@ -1,4 +1,4 @@
-package cn.toside.music.mobile;
+package com.erifa.music2;
 
 import com.facebook.react.PackageList;
 import com.facebook.react.flipper.ReactNativeFlipper;
@@ -9,11 +9,11 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.reactnativenavigation.react.NavigationReactNativeHost;
 import java.util.List;
 
-import cn.toside.music.mobile.cache.CachePackage;
-import cn.toside.music.mobile.crypto.CryptoPackage;
-import cn.toside.music.mobile.lyric.LyricPackage;
-import cn.toside.music.mobile.userApi.UserApiPackage;
-import cn.toside.music.mobile.utils.UtilsPackage;
+import com.erifa.music2.cache.CachePackage;
+import com.erifa.music2.crypto.CryptoPackage;
+import com.erifa.music2.lyric.LyricPackage;
+import com.erifa.music2.userApi.UserApiPackage;
+import com.erifa.music2.utils.UtilsPackage;
 
 public class MainApplication extends NavigationApplication {
 

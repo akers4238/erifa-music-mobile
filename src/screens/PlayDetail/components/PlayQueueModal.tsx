@@ -1,15 +1,17 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
 
 import Dialog, { type DialogType } from '@/components/common/Dialog'
 import { Icon } from '@/components/common/Icon'
 import Text from '@/components/common/Text'
+import { clearListMusics, removeListMusics } from '@/core/list'
+import { clearPlayHistory, removePlayHistory } from '@/core/player/playHistory'
 import { playList, playNext } from '@/core/player/player'
 import { addTempPlayList, clearTempPlayeList, removeTempPlayList } from '@/core/player/tempPlayList'
-import { usePlayInfo, usePlayMusicInfo, useTempPlayList } from '@/store/player/hook'
+import { usePlayHistory, usePlayInfo, usePlayMusicInfo, useTempPlayList } from '@/store/player/hook'
 import { useTheme } from '@/store/theme/hook'
 import { getListMusicSync } from '@/utils/listManage'
-import { createStyle, toast } from '@/utils/tools'
+import { confirmDialog, createStyle, toast } from '@/utils/tools'
 
 export interface PlayQueueModalType {
   show: () => void
@@ -62,8 +64,27 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
   const playInfo = usePlayInfo()
   const playMusicInfo = usePlayMusicInfo()
   const tempPlayList = useTempPlayList()
+  const playHistory = usePlayHistory()
+  const [list, setList] = useState<Array<LX.Music.MusicInfo | LX.Download.ListItem>>([])
 
-  const list = useMemo(() => playInfo.playerListId ? getListMusicSync(playInfo.playerListId) : [], [playInfo.playerListId, playMusicInfo.musicInfo])
+  const refreshList = useCallback(() => {
+    setList(playInfo.playerListId ? [...getListMusicSync(playInfo.playerListId)] : [])
+  }, [playInfo.playerListId])
+
+  useEffect(() => {
+    refreshList()
+  }, [refreshList, playMusicInfo.musicInfo])
+
+  useEffect(() => {
+    const handleListUpdate = (ids: string[]) => {
+      if (!playInfo.playerListId || !ids.includes(playInfo.playerListId)) return
+      refreshList()
+    }
+    global.app_event.on('myListMusicUpdate', handleListUpdate)
+    return () => {
+      global.app_event.off('myListMusicUpdate', handleListUpdate)
+    }
+  }, [playInfo.playerListId, refreshList])
 
   useImperativeHandle(ref, () => ({
     show() {
@@ -87,6 +108,39 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
     if (!playInfo.playerListId) return
     void playList(playInfo.playerListId, index)
     dialogRef.current?.setVisible(false)
+  }
+
+  const handlePlayHistory = (info: LX.Player.PlayMusicInfo) => {
+    addTempPlayList([{ listId: info.listId, musicInfo: info.musicInfo, isTop: true }])
+    void playNext()
+    dialogRef.current?.setVisible(false)
+  }
+
+  const handleClearHistory = () => {
+    clearPlayHistory()
+    toast('已清空播放历史')
+  }
+
+  const handleClearList = () => {
+    if (!playInfo.playerListId || !list.length) return
+    void confirmDialog({
+      message: `确定清空当前歌单的 ${list.length} 首歌曲吗？`,
+      confirmButtonText: '清空',
+    }).then(isClear => {
+      if (!isClear || !playInfo.playerListId) return
+      void clearListMusics([playInfo.playerListId]).then(() => {
+        refreshList()
+        toast('已清空当前歌单')
+      })
+    })
+  }
+
+  const handleRemoveListMusic = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem) => {
+    if (!playInfo.playerListId) return
+    void removeListMusics(playInfo.playerListId, [musicInfo.id]).then(() => {
+      refreshList()
+      toast('已从当前歌单删除')
+    })
   }
 
   return (
@@ -117,8 +171,39 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
           : <Text style={styles.emptyCompact} size={12} color={theme['c-font-label']}>暂无稍后播放</Text>}
 
         <View style={styles.header}>
+          <Text size={12} color={theme['c-font-label']}>播放历史 {playHistory.length}</Text>
+          {playHistory.length
+            ? <TouchableOpacity onPress={handleClearHistory}>
+                <Text size={12} color={theme['c-primary-font-active']}>清空</Text>
+              </TouchableOpacity>
+            : null}
+        </View>
+        {playHistory.length
+          ? <ScrollView style={styles.historyList}>
+              {playHistory.map((info, index) => (
+                <MusicItem
+                  key={`${info.musicInfo.id}_${index}`}
+                  index={index}
+                  musicInfo={info.musicInfo}
+                  active={playMusicInfo.musicInfo?.id == info.musicInfo.id}
+                  suffix="历史"
+                  onPress={() => { handlePlayHistory(info) }}
+                  onRemove={() => { removePlayHistory(index) }}
+                />
+              ))}
+            </ScrollView>
+          : <Text style={styles.emptyCompact} size={12} color={theme['c-font-label']}>暂无播放历史</Text>}
+
+        <View style={styles.header}>
           <Text size={12} color={theme['c-font-label']}>当前歌单 {list.length}</Text>
-          {playInfo.playIndex > -1 ? <Text size={12} color={theme['c-font-label']}>当前第 {playInfo.playIndex + 1} 首</Text> : null}
+          <View style={styles.headerActions}>
+            {playInfo.playIndex > -1 ? <Text size={12} color={theme['c-font-label']}>当前第 {playInfo.playIndex + 1} 首</Text> : null}
+            {list.length
+              ? <TouchableOpacity onPress={handleClearList}>
+                  <Text size={12} color={theme['c-primary-font-active']}>清空</Text>
+                </TouchableOpacity>
+              : null}
+          </View>
         </View>
         <ScrollView style={styles.list}>
           {list.length
@@ -129,6 +214,7 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
                 musicInfo={musicInfo}
                 active={!playMusicInfo.isTempPlay && playMusicInfo.musicInfo?.id == musicInfo.id}
                 onPress={() => { handlePlayListMusic(index) }}
+                onRemove={() => { handleRemoveListMusic(musicInfo) }}
               />
             ))
             : <Text style={styles.empty} size={12} color={theme['c-font-label']}>暂无播放歌单</Text>}
@@ -151,7 +237,15 @@ const styles = createStyle({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   tempList: {
+    maxHeight: 132,
+  },
+  historyList: {
     maxHeight: 132,
   },
   list: {

@@ -104,7 +104,7 @@ export default memo(() => {
       {
         loginVisible
           ? (
-              <Dialog title={t('setting_basic_netease_login_title')} height="82%" ref={loginDialogRef} bgHide={false} onHide={handleHideLogin}>
+              <Dialog title={t('setting_basic_netease_login_title')} fullScreen ref={loginDialogRef} bgHide={false} onHide={handleHideLogin}>
                 <View style={styles.loginContent}>
                   <WebView
                     source={{ uri: loginUrl }}
@@ -140,16 +140,13 @@ const styles = createStyle({
     marginTop: 8,
   },
   loginContent: {
-    flexGrow: 1,
-    flexShrink: 1,
+    flex: 1,
     paddingHorizontal: 10,
     paddingTop: 10,
     paddingBottom: 8,
   },
   webview: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minHeight: 360,
+    flex: 1,
   },
   loginStatus: {
     marginTop: 8,

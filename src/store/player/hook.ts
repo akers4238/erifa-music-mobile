@@ -54,6 +54,32 @@ export const useTempPlayList = () => {
   return value
 }
 
+export const usePlayedList = () => {
+  const [value, update] = useState(state.playedList)
+
+  useEffect(() => {
+    global.state_event.on('playPlayedListChanged', update)
+    return () => {
+      global.state_event.off('playPlayedListChanged', update)
+    }
+  }, [])
+
+  return value
+}
+
+export const usePlayHistory = () => {
+  const [value, update] = useState(state.playHistory)
+
+  useEffect(() => {
+    global.state_event.on('playHistoryListChanged', update)
+    return () => {
+      global.state_event.off('playHistoryListChanged', update)
+    }
+  }, [])
+
+  return value
+}
+
 export const useStatusText = () => {
   const [value, update] = useState(state.statusText)
 

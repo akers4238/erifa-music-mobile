@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.cache;
+package com.erifa.music2.cache;
 
 import android.content.Context;
 

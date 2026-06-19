@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.userApi;
+package com.erifa.music2.userApi;
 
 public class HandlerWhat {
   public static final int ACTION = 1000;

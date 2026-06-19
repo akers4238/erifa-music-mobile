@@ -9,6 +9,7 @@ import { addDislikeInfo, hasDislike } from '@/core/dislikeList'
 import playerState from '@/store/player/state'
 import musicSdk from '@/utils/musicSdk'
 import { toOldMusicInfo } from '@/utils'
+import { downloadMusicsToLocal } from '@/core/downloadMusic'
 
 export const handlePlay = (musicInfo: LX.Music.MusicInfoOnline) => {
   void addListMusics(LIST_IDS.DEFAULT, [musicInfo], settingState.setting['list.addMusicLocationType']).then(() => {
@@ -29,6 +30,15 @@ export const handlePlayLater = (musicInfo: LX.Music.MusicInfoOnline, selectedLis
 
 export const handleShare = (musicInfo: LX.Music.MusicInfoOnline) => {
   shareMusic(settingState.setting['common.shareType'], settingState.setting['download.fileName'], musicInfo)
+}
+
+export const handleDownload = (musicInfo: LX.Music.MusicInfoOnline, selectedList: LX.Music.MusicInfoOnline[], onCancelSelect: () => void) => {
+  const list = selectedList.length ? selectedList : [musicInfo]
+  void downloadMusicsToLocal(list).then(() => {
+    if (selectedList.length) onCancelSelect()
+  }).catch(err => {
+    toast(global.i18n.t('download_music_failed', { msg: err?.message || err }))
+  })
 }
 
 export const handleShowMusicSourceDetail = async(minfo: LX.Music.MusicInfoOnline) => {
@@ -52,4 +62,3 @@ export const handleDislikeMusic = async(musicInfo: LX.Music.MusicInfoOnline) => 
     void playNext(true)
   }
 }
-

@@ -70,6 +70,28 @@ export default {
 
     global.state_event.playPlayedListChanged([...state.playedList])
   },
+  initPlayHistory(list: LX.Player.PlayMusicInfo[]) {
+    state.playHistory = list
+
+    global.state_event.playHistoryListChanged([...state.playHistory])
+  },
+  addPlayHistory(info: LX.Player.PlayMusicInfo) {
+    state.playHistory = state.playHistory.filter(m => m.musicInfo.id != info.musicInfo.id)
+    state.playHistory.unshift(info)
+    if (state.playHistory.length > 100) state.playHistory = state.playHistory.slice(0, 100)
+
+    global.state_event.playHistoryListChanged([...state.playHistory])
+  },
+  removePlayHistory(index: number) {
+    state.playHistory.splice(index, 1)
+
+    global.state_event.playHistoryListChanged([...state.playHistory])
+  },
+  clearPlayHistory() {
+    state.playHistory = []
+
+    global.state_event.playHistoryListChanged([...state.playHistory])
+  },
   removePlayedList(index: number) {
     state.playedList.splice(index, 1)
 

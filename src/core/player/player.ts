@@ -15,6 +15,7 @@ import {
   addPlayedList,
   removePlayedList,
 } from '@/core/player/playedList'
+import { addPlayHistory } from '@/core/player/playHistory'
 import {
   clearTempPlayeList,
   removeTempPlayList,
@@ -193,6 +194,7 @@ const handleRestorePlay = async(restorePlayInfo: LX.Player.SavedPlayInfo) => {
   })
 
   if (settingState.setting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay) addPlayedList(playMusicInfo as LX.Player.PlayMusicInfo)
+  addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
 }
 
 
@@ -261,6 +263,7 @@ const handlePlay = async() => {
 
 
   if (settingState.setting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay) addPlayedList(playMusicInfo as LX.Player.PlayMusicInfo)
+  addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
 
   debouncePlay(musicInfo)
 }

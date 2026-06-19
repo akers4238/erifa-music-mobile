@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.lyric;
+package com.erifa.music2.lyric;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

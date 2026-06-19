@@ -16,6 +16,11 @@ const styles = createStyle({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  centeredViewFullScreen: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+  },
   modalView: {
     maxWidth: '90%',
     minWidth: '60%',
@@ -30,6 +35,15 @@ const styles = createStyle({
     // shadowOpacity: 0.25,
     // shadowRadius: 4,
     elevation: 3,
+  },
+  modalViewFullScreen: {
+    width: '100%',
+    height: '100%',
+    maxWidth: '100%',
+    minWidth: '100%',
+    maxHeight: '100%',
+    borderRadius: 0,
+    elevation: 0,
   },
   header: {
     flexGrow: 0,
@@ -64,6 +78,7 @@ export interface DialogProps {
   title?: string
   children: React.ReactNode | React.ReactNode[]
   height?: number | `${number}%`
+  fullScreen?: boolean
 }
 
 export interface DialogType {
@@ -78,6 +93,7 @@ export default forwardRef<DialogType, DialogProps>(({
   title = '',
   children,
   height,
+  fullScreen = false,
 }: DialogProps, ref) => {
   const theme = useTheme()
   const { keyboardShown, keyboardHeight } = useKeyboard()
@@ -99,8 +115,8 @@ export default forwardRef<DialogType, DialogProps>(({
 
   return (
     <Modal onHide={onHide} keyHide={keyHide} bgHide={bgHide} bgColor="rgba(50,50,50,.3)" ref={modalRef}>
-      <View style={{ ...styles.centeredView, paddingBottom: keyboardShown ? keyboardHeight : 0 }}>
-        <View style={{ ...styles.modalView, height, backgroundColor: theme['c-content-background'] }} onStartShouldSetResponder={() => true}>
+      <View style={{ ...(fullScreen ? styles.centeredViewFullScreen : styles.centeredView), paddingBottom: keyboardShown ? keyboardHeight : 0 }}>
+        <View style={{ ...styles.modalView, ...(fullScreen ? styles.modalViewFullScreen : null), height, backgroundColor: theme['c-content-background'] }} onStartShouldSetResponder={() => true}>
           <View style={{ ...styles.header, backgroundColor: theme['c-primary-light-100-alpha-100'] }}>
             <Text style={styles.title} size={13} color={theme['c-primary-light-1000']} numberOfLines={1}>{title}</Text>
             {closeBtnComponent}

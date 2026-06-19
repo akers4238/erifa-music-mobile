@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.utils;
+package com.erifa.music2.utils;
 
 import android.os.Handler;
 import android.os.Looper;

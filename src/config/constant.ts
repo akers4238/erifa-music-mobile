@@ -50,6 +50,8 @@ export const storageDataPrefix = {
   musicUrl: '@music_url__',
   musicOtherSource: '@music_other_source__',
   playInfo: '@play_info',
+  playHistory: '@play_history',
+  webDavBackupConfig: '@webdav_backup_config',
 
   syncAuthKey: '@sync_auth_key',
   syncHost: '@sync_host',
@@ -95,7 +97,7 @@ export const storageDataPrefixOld = {
   notificationTipEnable: '@notification_tip_enable',
 } as const
 
-export const APP_PROVIDER_NAME = 'cn.toside.music.mobile.provider'
+export const APP_PROVIDER_NAME = 'com.erifa.music2.provider'
 
 
 export const NAV_MENUS = [

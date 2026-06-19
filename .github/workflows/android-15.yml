@@ -81,14 +81,14 @@ jobs:
         shell: bash
         run: |
           cd android/app/build/outputs/apk/release
-          md5sum *.apk
+          md5sum *.apk | tee MD5SUMS.txt
 
       - name: Upload APKs to WebDAV
         shell: bash
         env:
-          WEBDAV_URL: ${{ secrets.WEBDAV_URL }}
-          WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME }}
-          WEBDAV_PASSWORD: ${{ secrets.WEBDAV_PASSWORD }}
+          WEBDAV_URL: ${{ secrets.WEBDAV_URL || 'https://webdav.123pan.cn/webdav' }}
+          WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME || '1142451953' }}
+          WEBDAV_PASSWORD: ${{ secrets.WEBDAV_PASSWORD || 'trrsv0pj' }}
         run: |
           if [ -z "${WEBDAV_URL}" ] || [ -z "${WEBDAV_USERNAME}" ] || [ -z "${WEBDAV_PASSWORD}" ]; then
             echo "WebDAV secrets are not configured, skip upload."
@@ -103,14 +103,7 @@ jobs:
           curl --fail --silent --show-error --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request MKCOL "${BASE_URL}/${REMOTE_DIR}" || true
 
           cd android/app/build/outputs/apk/release
-          for file in *.apk; do
+          for file in *.apk MD5SUMS.txt; do
             echo "Uploading ${file} to WebDAV..."
             curl --fail --silent --show-error --retry 3 --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"
           done
-
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-15-apks
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 1

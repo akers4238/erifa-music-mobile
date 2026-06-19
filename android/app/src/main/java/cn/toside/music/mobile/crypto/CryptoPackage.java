@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.crypto;
+package com.erifa.music2.crypto;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;

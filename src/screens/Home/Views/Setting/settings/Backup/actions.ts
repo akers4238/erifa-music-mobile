@@ -4,6 +4,7 @@ import { filterMusicList, fixNewMusicInfoQuality, toNewMusicInfo } from '@/utils
 import { log } from '@/utils/log'
 import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
 import listState from '@/store/list/state'
+import type { WebDavBackupConfig } from '@/utils/data'
 
 
 const getAllLists = async() => {
@@ -17,6 +18,11 @@ const getAllLists = async() => {
 
   return lists
 }
+const buildPlayListBackupData = async() => JSON.parse(JSON.stringify({
+  type: 'playList_v2',
+  data: await getAllLists(),
+}))
+
 const importOldListData = async(lists: any[]) => {
   const allLists = await getAllLists()
   for (const list of lists) {
@@ -130,6 +136,10 @@ const importPlayList = async(path: string) => {
     throw error
   }
 
+  return importPlayListData(configData)
+}
+
+const importPlayListData = async(configData: any) => {
   switch (configData.type) {
     case 'defautlList': // 兼容0.6.2及以前版本的列表数据
       if (!await showConfirm()) return true
@@ -186,10 +196,7 @@ export const handleImportList = (path: string) => {
 
 
 const exportAllList = async(path: string) => {
-  const data = JSON.parse(JSON.stringify({
-    type: 'playList_v2',
-    data: await getAllLists(),
-  }))
+  const data = await buildPlayListBackupData()
 
   try {
     await handleSaveFile(path + '/lx_list.lxmc', data)
@@ -204,5 +211,147 @@ export const handleExportList = (path: string) => {
   }).catch((err: any) => {
     log.error(err.message)
     toast(global.i18n.t('setting_backup_part_export_list_tip_failed') + ': ' + (err.message as string))
+  })
+}
+
+const normalizeWebDavPath = (path: string) => path
+  .split('/')
+  .map(part => part.trim())
+  .filter(Boolean)
+  .join('/')
+
+const buildAuthHeader = ({ username, password }: Pick<WebDavBackupConfig, 'username' | 'password'>) => {
+  return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
+}
+
+const requestWebDav = async(url: string, config: WebDavBackupConfig, init: RequestInit, allowStatus: number[] = []) => {
+  const response = await global.fetch(url, {
+    ...init,
+    headers: {
+      Authorization: buildAuthHeader(config),
+      ...init.headers,
+    },
+  })
+  if (!response.ok && !allowStatus.includes(response.status)) {
+    throw new Error(`${response.status} ${response.statusText}`)
+  }
+  return response
+}
+
+const ensureWebDavDir = async(baseUrl: string, config: WebDavBackupConfig, dir: string) => {
+  let current = ''
+  for (const part of dir.split('/').filter(Boolean)) {
+    current += `/${encodeURIComponent(part)}`
+    await requestWebDav(`${baseUrl}${current}`, config, { method: 'MKCOL' }, [405])
+  }
+}
+
+const buildWebDavFileName = () => {
+  const time = new Date().toISOString().replace(/[:.]/g, '-')
+  return `lx_list_${time}.json`
+}
+
+const buildWebDavFileUrl = (baseUrl: string, path: string) => {
+  return `${baseUrl}/${normalizeWebDavPath(path).split('/').map(encodeURIComponent).join('/')}`
+}
+
+const parseWebDavBackupText = (text: string) => {
+  let data = JSON.parse(text)
+  if (typeof data != 'object') data = JSON.parse(data as string)
+  return data
+}
+
+const readXmlText = (xml: string, tag: string) => {
+  const match = new RegExp(`<[^>]*:?${tag}[^>]*>([\\s\\S]*?)<\\/[^>]*:?${tag}>`, 'i').exec(xml)
+  return match?.[1]?.trim() ?? ''
+}
+
+const decodeXmlText = (text: string) => text
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"')
+  .replace(/&apos;/g, "'")
+  .replace(/&amp;/g, '&')
+
+export interface WebDavBackupFile {
+  name: string
+  path: string
+  updatedAt: string
+}
+
+const parseWebDavList = (xml: string, dir: string): WebDavBackupFile[] => {
+  const result: WebDavBackupFile[] = []
+  const normalizedDir = normalizeWebDavPath(dir)
+  const responseRxp = /<[^>]*:?response[^>]*>([\s\S]*?)<\/[^>]*:?response>/gi
+  let match
+  while ((match = responseRxp.exec(xml)) != null) {
+    const itemXml = match[1]
+    const href = decodeURIComponent(decodeXmlText(readXmlText(itemXml, 'href')))
+    const name = href.split('/').filter(Boolean).pop() ?? ''
+    if (!name.endsWith('.json')) continue
+    result.push({
+      name,
+      path: `${normalizedDir}/${name}`,
+      updatedAt: decodeXmlText(readXmlText(itemXml, 'getlastmodified')),
+    })
+  }
+  return result.sort((a, b) => b.name.localeCompare(a.name))
+}
+
+export const handleWebDavBackupList = (config: WebDavBackupConfig) => {
+  toast(global.i18n.t('setting_backup_webdav_uploading'))
+  void (async() => {
+    const baseUrl = config.url.trim().replace(/\/+$/, '')
+    if (!baseUrl || !config.username.trim() || !config.password) throw new Error(global.i18n.t('setting_backup_webdav_config_invalid'))
+
+    const dir = normalizeWebDavPath(config.dir || 'lx-music-mobile/playlist-backup')
+    await ensureWebDavDir(baseUrl, config, dir)
+
+    const data = await buildPlayListBackupData()
+    const fileName = buildWebDavFileName()
+    const fileUrl = buildWebDavFileUrl(baseUrl, `${dir}/${fileName}`)
+    await requestWebDav(fileUrl, config, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    toast(global.i18n.t('setting_backup_webdav_success'))
+  })().catch((err: Error) => {
+    log.error(err.message)
+    toast(`${global.i18n.t('setting_backup_webdav_failed')}: ${err.message}`)
+  })
+}
+
+export const getWebDavBackupFiles = async(config: WebDavBackupConfig): Promise<WebDavBackupFile[]> => {
+  const baseUrl = config.url.trim().replace(/\/+$/, '')
+  if (!baseUrl || !config.username.trim() || !config.password) throw new Error(global.i18n.t('setting_backup_webdav_config_invalid'))
+
+  const dir = normalizeWebDavPath(config.dir || 'lx-music-mobile/playlist-backup')
+  const response = await requestWebDav(buildWebDavFileUrl(baseUrl, dir), config, {
+    method: 'PROPFIND',
+    headers: {
+      Depth: '1',
+    },
+  })
+  return parseWebDavList(await response.text(), dir)
+}
+
+export const handleWebDavRestoreList = (config: WebDavBackupConfig) => {
+  toast(global.i18n.t('setting_backup_webdav_downloading'))
+  void (async() => {
+    const baseUrl = config.url.trim().replace(/\/+$/, '')
+    const restorePath = normalizeWebDavPath(config.restorePath)
+    if (!baseUrl || !config.username.trim() || !config.password || !restorePath) throw new Error(global.i18n.t('setting_backup_webdav_config_invalid'))
+
+    const response = await requestWebDav(buildWebDavFileUrl(baseUrl, restorePath), config, { method: 'GET' })
+    const text = await response.text()
+    const skipTip = await importPlayListData(parseWebDavBackupText(text))
+    if (skipTip) return
+    toast(global.i18n.t('setting_backup_webdav_restore_success'))
+  })().catch((err: Error) => {
+    log.error(err.message)
+    toast(`${global.i18n.t('setting_backup_webdav_restore_failed')}: ${err.message}`)
   })
 }

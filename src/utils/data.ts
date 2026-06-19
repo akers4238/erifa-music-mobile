@@ -21,6 +21,8 @@ const searchHistoryListKey = storageDataPrefix.searchHistoryList
 const songListSettingKey = storageDataPrefix.songListSetting
 const leaderboardSettingKey = storageDataPrefix.leaderboardSetting
 const listPrevSelectIdKey = storageDataPrefix.listPrevSelectId
+const playHistoryKey = storageDataPrefix.playHistory
+const webDavBackupConfigKey = storageDataPrefix.webDavBackupConfig
 const syncAuthKeyPrefix = storageDataPrefix.syncAuthKey
 const syncHostPrefix = storageDataPrefix.syncHost
 const syncHostHistoryPrefix = storageDataPrefix.syncHostHistory
@@ -428,6 +430,43 @@ export const savePlayInfo = async(playInfo: LX.Player.SavedPlayInfo) => {
 // 获取上次关闭时的当前歌曲播放信息
 export const getPlayInfo = async() => {
   return getData<LX.Player.SavedPlayInfo | null>(playInfoStorageKey)
+}
+
+export const getPlayHistory = async() => {
+  return await getData<LX.Player.PlayMusicInfo[]>(playHistoryKey) ?? []
+}
+export const savePlayHistory = async(historyList: LX.Player.PlayMusicInfo[]) => {
+  await saveData(playHistoryKey, historyList)
+}
+
+export interface WebDavBackupConfig {
+  url: string
+  username: string
+  password: string
+  dir: string
+  restorePath: string
+}
+
+const defaultWebDavBackupConfig: WebDavBackupConfig = {
+  url: 'https://webdav.123pan.cn/webdav',
+  username: '1142451953',
+  password: 'trrsv0pj',
+  dir: 'lx-music-mobile/playlist-backup',
+  restorePath: '',
+}
+
+let webDavBackupConfig: WebDavBackupConfig | null = null
+export const getWebDavBackupConfig = async() => {
+  // eslint-disable-next-line require-atomic-updates
+  webDavBackupConfig ??= {
+    ...defaultWebDavBackupConfig,
+    ...await getData<Partial<WebDavBackupConfig>>(webDavBackupConfigKey),
+  }
+  return { ...webDavBackupConfig }
+}
+export const saveWebDavBackupConfig = async(config: WebDavBackupConfig) => {
+  webDavBackupConfig = config
+  await saveData(webDavBackupConfigKey, config)
 }
 
 let selectedManagedFolder: string | null = ''

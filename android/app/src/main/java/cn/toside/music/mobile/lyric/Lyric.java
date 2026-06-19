@@ -1,4 +1,4 @@
-package cn.toside.music.mobile.lyric;
+package com.erifa.music2.lyric;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -11,6 +11,7 @@ import type { SelectInfo } from './ListMenu'
 import { type Metadata } from '@/components/MetadataEditModal'
 import musicSdk from '@/utils/musicSdk'
 import { getListMusicSync } from '@/utils/listManage'
+import { downloadMusicsToLocal } from '@/core/downloadMusic'
 
 export const handlePlay = (listId: SelectInfo['listId'], index: SelectInfo['index']) => {
   void playList(listId, index)
@@ -69,6 +70,15 @@ export const handleUpdateMusicInfo = (listId: SelectInfo['listId'], musicInfo: L
 
 export const handleShare = (musicInfo: SelectInfo['musicInfo']) => {
   shareMusic(settingState.setting['common.shareType'], settingState.setting['download.fileName'], musicInfo)
+}
+
+export const handleDownload = (musicInfo: SelectInfo['musicInfo'], selectedList: SelectInfo['selectedList'], onCancelSelect: () => void) => {
+  const list = selectedList.length ? selectedList : [musicInfo]
+  void downloadMusicsToLocal(list).then(() => {
+    if (selectedList.length) onCancelSelect()
+  }).catch(err => {
+    toast(global.i18n.t('download_music_failed', { msg: err?.message || err }))
+  })
 }
 
 
