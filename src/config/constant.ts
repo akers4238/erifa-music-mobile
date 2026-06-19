@@ -106,6 +106,7 @@ export const NAV_MENUS = [
   { id: 'nav_top', icon: 'leaderboard' },
   { id: 'nav_love', icon: 'love' },
   // { id: 'download', icon: 'download-2' },
+  { id: 'nav_plugin_manage', icon: 'slider' },
   { id: 'nav_setting', icon: 'setting' },
 ] as const
 
