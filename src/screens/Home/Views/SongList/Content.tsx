@@ -1,5 +1,5 @@
 import { getSongListSetting, saveSongListSetting } from '@/utils/data'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 // import List from './List/List'
@@ -29,25 +29,36 @@ export default () => {
   const listRef = useRef<ListType>(null)
   const songlistInfo = useRef<SonglistInfo>({ source: 'kw', sortId: '5', tagId: '' })
 
-  useEffect(() => {
-    void getSongListSetting().then(info => {
-      const source = getAvailableSource(info.source)
-      if (!source) return
-      const sortList = getSourceSortList(source)
-      const sortId = sortList.some(sort => sort.id == info.sortId) ? info.sortId : sortList[0].id
-      const tagId = sortId == info.sortId ? info.tagId : ''
-      const tagName = tagId ? info.tagName : ''
+  const loadSetting = useCallback(async(preferredSource?: InitState['sources'][number]) => {
+    const info = await getSongListSetting()
+    const source = getAvailableSource(preferredSource ?? info.source)
+    if (!source) return
+    const sortList = getSourceSortList(source)
+    const sortId = sortList.some(sort => sort.id == info.sortId) ? info.sortId : sortList[0].id
+    const tagId = sortId == info.sortId ? info.tagId : ''
+    const tagName = tagId ? info.tagName : ''
 
-      songlistInfo.current.source = source
-      songlistInfo.current.sortId = sortId
-      songlistInfo.current.tagId = tagId
-      if (source != info.source || sortId != info.sortId || tagId != info.tagId) {
-        void saveSongListSetting({ source, sortId, tagId, tagName })
-      }
-      headerBarRef.current?.setSource(source, sortId, tagName, tagId)
-      listRef.current?.loadList(source, sortId, tagId)
-    })
+    songlistInfo.current.source = source
+    songlistInfo.current.sortId = sortId
+    songlistInfo.current.tagId = tagId
+    if (source != info.source || sortId != info.sortId || tagId != info.tagId) {
+      void saveSongListSetting({ source, sortId, tagId, tagName })
+    }
+    headerBarRef.current?.setSource(source, sortId, tagName, tagId)
+    listRef.current?.loadList(source, sortId, tagId)
   }, [])
+
+  useEffect(() => {
+    void loadSetting()
+    const handleApiSourceUpdated = () => {
+      void loadSetting(songlistInfo.current.source)
+    }
+    global.state_event.on('apiSourceUpdated', handleApiSourceUpdated)
+
+    return () => {
+      global.state_event.off('apiSourceUpdated', handleApiSourceUpdated)
+    }
+  }, [loadSetting])
 
   const handleSortChange: HeaderBarProps['onSortChange'] = (id) => {
     songlistInfo.current.sortId = id

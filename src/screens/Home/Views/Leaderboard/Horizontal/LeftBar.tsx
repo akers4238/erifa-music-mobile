@@ -35,7 +35,9 @@ export default forwardRef<LeftBarType, LeftBarProps>(({ onChangeList }, ref) => 
       boundInfo.current = { source, id: listId }
       sourceSelectorRef.current?.setSourceList(boardState.sources, source)
       void getBoardsList(source).then(list => {
-        boardsListRef.current?.setList(list, listId)
+        const id = list.some(item => item.id == listId) ? listId : list[0]?.id
+        if (!id) return
+        boardsListRef.current?.setList(list, id)
       })
     },
   }), [])
@@ -44,6 +46,7 @@ export default forwardRef<LeftBarType, LeftBarProps>(({ onChangeList }, ref) => 
   const onSourceChange = (source: LX.OnlineSource) => {
     boundInfo.current.source = source
     void getBoardsList(source).then(list => {
+      if (!list.length) return
       const id = list[0].id
       requestAnimationFrame(() => {
         boardsListRef.current?.setList(list, id)
@@ -95,4 +98,3 @@ const styles = createStyle({
     height: 38,
   },
 })
-

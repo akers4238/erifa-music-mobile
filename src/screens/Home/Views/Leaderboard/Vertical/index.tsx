@@ -21,6 +21,10 @@ import boardState from '@/store/leaderboard/state'
 
 const MAX_WIDTH = scaleSizeW(200)
 
+const getAvailableSource = (source: LX.OnlineSource) => {
+  return boardState.sources.includes(source) ? source : boardState.sources[0]
+}
+
 export default () => {
   const drawer = useRef<DrawerLayoutFixedType>(null)
   const theme = useTheme()
@@ -67,6 +71,7 @@ export default () => {
   const onSourceChange: HeaderBarProps['onSourceChange'] = (source) => {
     boundInfo.current.source = source
     void getBoardsList(source).then(list => {
+      if (!list.length) return
       const id = list[0].id
       const name = list[0].name
       requestAnimationFrame(() => {
@@ -94,26 +99,38 @@ export default () => {
 
 
   useEffect(() => {
-    const handleFixDrawer = (id: CommonState['navActiveId']) => {
-      if (id == 'nav_top') drawer.current?.fixWidth()
-    }
-    global.state_event.on('navActiveIdUpdated', handleFixDrawer)
-
-
-    isUnmountedRef.current = false
-    void getLeaderboardSetting().then(({ source, boardId }) => {
+    const loadSetting = async(preferredSource?: LX.OnlineSource) => {
+      const { source: settingSource, boardId } = await getLeaderboardSetting()
+      const source = getAvailableSource(preferredSource ?? settingSource)
+      if (!source) return
       boundInfo.current.source = source
       boundInfo.current.id = boardId
       void getBoardsList(source).then(list => {
-        const bound = list.find(l => l.id == boardId)
-        boardsListRef.current?.setList(list, boardId)
-        headerBarRef.current?.setBound(source, boardId, bound?.name ?? 'Unknown')
+        if (!list.length) return
+        const bound = list.find(l => l.id == boardId) ?? list[0]
+        boundInfo.current.id = bound.id
+        boardsListRef.current?.setList(list, bound.id)
+        headerBarRef.current?.setBound(source, bound.id, bound.name ?? 'Unknown')
+        if (source != settingSource || bound.id != boardId) void saveLeaderboardSetting({ source, boardId: bound.id })
+        musicListRef.current?.loadList(source, bound.id)
       })
-      musicListRef.current?.loadList(source, boardId)
-    })
+    }
+    const handleFixDrawer = (id: CommonState['navActiveId']) => {
+      if (id == 'nav_top') drawer.current?.fixWidth()
+    }
+    const handleApiSourceUpdated = () => {
+      void loadSetting(boundInfo.current.source)
+    }
+    global.state_event.on('navActiveIdUpdated', handleFixDrawer)
+    global.state_event.on('apiSourceUpdated', handleApiSourceUpdated)
+
+
+    isUnmountedRef.current = false
+    void loadSetting()
 
     return () => {
       global.state_event.off('navActiveIdUpdated', handleFixDrawer)
+      global.state_event.off('apiSourceUpdated', handleApiSourceUpdated)
       isUnmountedRef.current = true
     }
   }, [])
