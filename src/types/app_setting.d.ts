@@ -22,6 +22,9 @@ declare global {
       'common.apiSource': string
 
       'common.neteaseCookie': string
+      'common.qqMusicCookie': string
+      'common.bilibiliCookie': string
+      'common.youtubeCookie': string
 
       /**
        * 音源名称类型，原名、别名

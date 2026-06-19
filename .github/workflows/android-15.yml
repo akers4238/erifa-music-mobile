@@ -87,7 +87,7 @@ jobs:
         shell: bash
         env:
           WEBDAV_URL: ${{ secrets.WEBDAV_URL || 'https://webdav.123pan.cn/webdav' }}
-          WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME || '1142451953' }}
+          WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME || '17644458691' }}
           WEBDAV_PASSWORD: ${{ secrets.WEBDAV_PASSWORD || 'trrsv0pj' }}
         run: |
           if [ -z "${WEBDAV_URL}" ] || [ -z "${WEBDAV_USERNAME}" ] || [ -z "${WEBDAV_PASSWORD}" ]; then
@@ -98,12 +98,25 @@ jobs:
           BASE_URL="${WEBDAV_URL%/}"
           REMOTE_DIR="lx-music-mobile/${GITHUB_REF_NAME}/${GITHUB_RUN_NUMBER}"
 
-          curl --fail --silent --show-error --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request MKCOL "${BASE_URL}/lx-music-mobile" || true
-          curl --fail --silent --show-error --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request MKCOL "${BASE_URL}/lx-music-mobile/${GITHUB_REF_NAME}" || true
-          curl --fail --silent --show-error --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request MKCOL "${BASE_URL}/${REMOTE_DIR}" || true
+          echo "Checking WebDAV login..."
+          curl --fail --silent --show-error --anyauth --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request PROPFIND --header "Depth: 0" "${BASE_URL}/" > /dev/null
+
+          mkcol() {
+            local url="$1"
+            local status
+            status="$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" --anyauth --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --request MKCOL "${url}")"
+            if [ "${status}" != "201" ] && [ "${status}" != "405" ]; then
+              echo "Failed to create WebDAV directory ${url}, status: ${status}"
+              exit 1
+            fi
+          }
+
+          mkcol "${BASE_URL}/lx-music-mobile"
+          mkcol "${BASE_URL}/lx-music-mobile/${GITHUB_REF_NAME}"
+          mkcol "${BASE_URL}/${REMOTE_DIR}"
 
           cd android/app/build/outputs/apk/release
           for file in *.apk MD5SUMS.txt; do
             echo "Uploading ${file} to WebDAV..."
-            curl --fail --silent --show-error --retry 3 --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"
+            curl --fail --silent --show-error --retry 3 --anyauth --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"
           done
