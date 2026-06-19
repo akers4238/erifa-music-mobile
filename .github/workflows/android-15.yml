@@ -122,8 +122,30 @@ jobs:
           mkcol "${BASE_URL}/lx-music-mobile/${GITHUB_REF_NAME}"
           mkcol "${BASE_URL}/${REMOTE_DIR}"
 
+          upload_file() {
+            local file="$1"
+            local attempt=1
+            local max_attempts=5
+
+            while true; do
+              echo "Uploading ${file} to WebDAV... attempt ${attempt}/${max_attempts}"
+              if curl --fail --silent --show-error --connect-timeout 30 --max-time 180 --anyauth --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"; then
+                echo "Uploaded ${file}."
+                return 0
+              fi
+
+              if [ "${attempt}" -ge "${max_attempts}" ]; then
+                echo "Failed to upload ${file} after ${max_attempts} attempts."
+                return 1
+              fi
+
+              echo "Upload ${file} failed or timed out after 3 minutes, retrying in 10 seconds..."
+              attempt=$((attempt + 1))
+              sleep 10
+            done
+          }
+
           cd android/app/build/outputs/apk/release
           for file in *.apk MD5SUMS.txt; do
-            echo "Uploading ${file} to WebDAV..."
-            curl --fail --silent --show-error --retry 3 --anyauth --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"
+            upload_file "${file}"
           done
