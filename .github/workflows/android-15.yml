@@ -53,7 +53,7 @@ jobs:
 
           if [ -n "${KEYSTORE_STORE_FILE_BASE64}" ] && [ -n "${KEYSTORE_STORE_FILE}" ]; then
             echo "${KEYSTORE_STORE_FILE_BASE64}" | base64 --decode > "app/${KEYSTORE_STORE_FILE}"
-            ./gradlew assembleRelease \
+            ./gradlew --no-daemon --stacktrace --max-workers=2 assembleRelease \
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
@@ -65,7 +65,7 @@ jobs:
               -PMYAPP_UPLOAD_KEY_PASSWORD="${KEYSTORE_KEY_PASSWORD}"
             rm -f "app/${KEYSTORE_STORE_FILE}"
           else
-            ./gradlew assembleRelease \
+            ./gradlew --no-daemon --stacktrace --max-workers=2 assembleRelease \
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \

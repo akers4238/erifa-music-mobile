@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:tools="http://schemas.android.com/tools"
-  package="com.erifa.music2">
+  xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 获取读写外置存储权限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -100,7 +99,7 @@
         android:grantUriPermissions="true">
         <!-- you might need the tools:replace thing to workaround rn-fetch-blob or other definitions of provider -->
         <!-- just make sure if you "replace" here that you include all the paths you are replacing *plus* the cache path we use -->
-        <meta-data tools:replace="android:resource"
+        <meta-data
           android:name="android.support.FILE_PROVIDER_PATHS"
           android:resource="@xml/file_paths" />
       </provider>
