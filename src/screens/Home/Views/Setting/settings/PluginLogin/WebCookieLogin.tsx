@@ -26,6 +26,17 @@ interface Props {
   settingKey: LoginSettingKey
 }
 
+const getIntentFallbackUrl = (url: string) => {
+  if (!url.startsWith('intent://')) return ''
+  const match = /(?:^|;)S\.browser_fallback_url=([^;]+)/.exec(url)
+  if (!match) return ''
+  try {
+    return decodeURIComponent(match[1])
+  } catch {
+    return match[1]
+  }
+}
+
 export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, settingKey }: Props) => {
   const t = useI18n()
   const theme = useTheme()
@@ -36,6 +47,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
   const [loginStatus, setLoginStatus] = useState('')
   const [loading, setLoading] = useState(false)
   const [webViewKey, setWebViewKey] = useState(0)
+  const [loginPageUrl, setLoginPageUrl] = useState(loginUrl)
 
   const updateLoginSetting = useCallback((value: string) => {
     const setting: Partial<LX.AppSetting> = {}
@@ -71,6 +83,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
 
   const handleShowLogin = () => {
     if (!loginVisible) setLoginVisible(true)
+    setLoginPageUrl(loginUrl)
     setLoginStatus(t('setting_plugin_login_web_wait'))
     requestAnimationFrame(() => {
       loginDialogRef.current?.setVisible(true)
@@ -90,6 +103,12 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
 
   const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
     if (/^(https?:|about:blank)/i.test(url)) return true
+    const fallbackUrl = getIntentFallbackUrl(url)
+    if (/^https?:/i.test(fallbackUrl)) {
+      setLoginPageUrl(fallbackUrl)
+      setWebViewKey(key => key + 1)
+      return false
+    }
     void Linking.openURL(url).catch(() => {
       setLoginStatus(t('setting_plugin_login_web_failed'))
     })
@@ -126,7 +145,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
               <Dialog title={t('setting_plugin_login_web_title', { name: title })} fullScreen ref={loginDialogRef} bgHide={false} onHide={handleHideLogin}>
                 <View style={styles.loginContent}>
                   <WebView
-                    source={{ uri: loginUrl }}
+                    source={{ uri: loginPageUrl }}
                     key={webViewKey}
                     userAgent={userAgent}
                     sharedCookiesEnabled

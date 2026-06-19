@@ -16,6 +16,17 @@ import { clearWebLoginCookie, flushWebLoginCookie, getWebLoginCookie } from '@/u
 const loginUrl = 'https://music.163.com/m/login'
 const userAgent = 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
 
+const getIntentFallbackUrl = (url: string) => {
+  if (!url.startsWith('intent://')) return ''
+  const match = /(?:^|;)S\.browser_fallback_url=([^;]+)/.exec(url)
+  if (!match) return ''
+  try {
+    return decodeURIComponent(match[1])
+  } catch {
+    return match[1]
+  }
+}
+
 export default memo(() => {
   const t = useI18n()
   const theme = useTheme()
@@ -25,6 +36,7 @@ export default memo(() => {
   const [loginStatus, setLoginStatus] = useState('')
   const [loading, setLoading] = useState(false)
   const [webViewKey, setWebViewKey] = useState(0)
+  const [loginPageUrl, setLoginPageUrl] = useState(loginUrl)
   const checkingRef = useRef(false)
 
   const handleCancelLogin = useCallback(() => {
@@ -55,6 +67,7 @@ export default memo(() => {
 
   const handleShowLogin = () => {
     if (!loginVisible) setLoginVisible(true)
+    setLoginPageUrl(loginUrl)
     setLoginStatus(t('setting_basic_netease_login_wait_web'))
     requestAnimationFrame(() => {
       loginDialogRef.current?.setVisible(true)
@@ -82,6 +95,12 @@ export default memo(() => {
 
   const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
     if (/^(https?:|about:blank)/i.test(url)) return true
+    const fallbackUrl = getIntentFallbackUrl(url)
+    if (/^https?:/i.test(fallbackUrl)) {
+      setLoginPageUrl(fallbackUrl)
+      setWebViewKey(key => key + 1)
+      return false
+    }
     void Linking.openURL(url).catch(() => {
       setLoginStatus(t('setting_basic_netease_login_failed'))
     })
@@ -117,7 +136,7 @@ export default memo(() => {
               <Dialog title={t('setting_basic_netease_login_title')} fullScreen ref={loginDialogRef} bgHide={false} onHide={handleHideLogin}>
                 <View style={styles.loginContent}>
                   <WebView
-                    source={{ uri: loginUrl }}
+                    source={{ uri: loginPageUrl }}
                     key={webViewKey}
                     userAgent={userAgent}
                     sharedCookiesEnabled
