@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   ANDROID_COMPILE_API_LEVEL: 35
@@ -90,63 +90,18 @@ jobs:
           cd android/app/build/outputs/apk/release
           md5sum *.apk | tee MD5SUMS.txt
 
-      - name: Upload APKs to WebDAV
+      - name: Upload APKs to GitHub Release
         shell: bash
         env:
-          WEBDAV_URL: ${{ secrets.WEBDAV_URL || 'https://webdav.123pan.cn/webdav' }}
-          WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME || '17644458691' }}
-          WEBDAV_PASSWORD: ${{ secrets.WEBDAV_PASSWORD || 'trrsv0pj' }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -z "${WEBDAV_URL}" ] || [ -z "${WEBDAV_USERNAME}" ] || [ -z "${WEBDAV_PASSWORD}" ]; then
-            echo "WebDAV secrets are not configured, skip upload."
-            exit 0
-          fi
-
-          BASE_URL="${WEBDAV_URL%/}"
-          REMOTE_DIR="lx-music-mobile/${GITHUB_REF_NAME}/${GITHUB_RUN_NUMBER}"
-          CURL_AUTH=(--basic --user "${WEBDAV_USERNAME}:${WEBDAV_PASSWORD}")
-
-          echo "Checking WebDAV login..."
-          curl --fail --silent --show-error "${CURL_AUTH[@]}" --request PROPFIND --header "Depth: 0" "${BASE_URL}/" > /dev/null
-
-          mkcol() {
-            local url="$1"
-            local status
-            status="$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" "${CURL_AUTH[@]}" --request MKCOL "${url}")"
-            if [ "${status}" != "201" ] && [ "${status}" != "405" ]; then
-              echo "Failed to create WebDAV directory ${url}, status: ${status}"
-              exit 1
-            fi
-          }
-
-          mkcol "${BASE_URL}/lx-music-mobile"
-          mkcol "${BASE_URL}/lx-music-mobile/${GITHUB_REF_NAME}"
-          mkcol "${BASE_URL}/${REMOTE_DIR}"
-
-          upload_file() {
-            local file="$1"
-            local attempt=1
-            local max_attempts=5
-
-            while true; do
-              echo "Uploading ${file} to WebDAV... attempt ${attempt}/${max_attempts}"
-              if curl --fail --silent --show-error --connect-timeout 30 --max-time 180 "${CURL_AUTH[@]}" --upload-file "${file}" "${BASE_URL}/${REMOTE_DIR}/${file}"; then
-                echo "Uploaded ${file}."
-                return 0
-              fi
-
-              if [ "${attempt}" -ge "${max_attempts}" ]; then
-                echo "Failed to upload ${file} after ${max_attempts} attempts."
-                return 1
-              fi
-
-              echo "Upload ${file} failed or timed out after 3 minutes, retrying in 10 seconds..."
-              attempt=$((attempt + 1))
-              sleep 10
-            done
-          }
-
           cd android/app/build/outputs/apk/release
-          for file in *.apk MD5SUMS.txt; do
-            upload_file "${file}"
-          done
+          tag="android-15-${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          title="Android 15 ${GITHUB_REF_NAME} #${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+
+          gh release create "${tag}" ./*.apk ./MD5SUMS.txt \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "${title}" \
+            --notes "Android 15 APK build from ${GITHUB_REF_NAME} at ${GITHUB_SHA}." \
+            --prerelease
