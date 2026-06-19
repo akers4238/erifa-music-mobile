@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { View } from 'react-native'
+import { Linking, View } from 'react-native'
 import WebView from 'react-native-webview'
 
 import Dialog, { type DialogType } from '@/components/common/Dialog'
@@ -88,6 +88,14 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
     setLoginStatus(t('setting_plugin_login_web_cleared'))
   }
 
+  const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
+    if (/^(https?:|about:blank)/i.test(url)) return true
+    void Linking.openURL(url).catch(() => {
+      setLoginStatus(t('setting_plugin_login_web_failed'))
+    })
+    return false
+  }, [t])
+
   useEffect(() => {
     if (!loginVisible) return
     const timer = setInterval(() => {
@@ -135,6 +143,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
                     onLoadEnd={() => {
                       void saveWebCookie()
                     }}
+                    onShouldStartLoadWithRequest={handleShouldStartLoad}
                     onError={() => {
                       setLoginStatus(t('setting_plugin_login_web_failed'))
                     }}
