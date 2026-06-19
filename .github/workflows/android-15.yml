@@ -53,7 +53,7 @@ jobs:
 
           if [ -n "${KEYSTORE_STORE_FILE_BASE64}" ] && [ -n "${KEYSTORE_STORE_FILE}" ]; then
             echo "${KEYSTORE_STORE_FILE_BASE64}" | base64 --decode > "app/${KEYSTORE_STORE_FILE}"
-            ./gradlew --no-daemon --stacktrace --max-workers=2 assembleRelease \
+            ./gradlew --no-daemon --stacktrace --max-workers=1 assembleRelease \
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
@@ -65,7 +65,7 @@ jobs:
               -PMYAPP_UPLOAD_KEY_PASSWORD="${KEYSTORE_KEY_PASSWORD}"
             rm -f "app/${KEYSTORE_STORE_FILE}"
           else
-            ./gradlew --no-daemon --stacktrace --max-workers=2 assembleRelease \
+            ./gradlew --no-daemon --stacktrace --max-workers=1 assembleRelease \
               -PandroidCompileSdkVersion="${ANDROID_COMPILE_API_LEVEL}" \
               -PandroidTargetSdkVersion="${ANDROID_TARGET_API_LEVEL}" \
               -PandroidBuildToolsVersion="${ANDROID_BUILD_TOOLS}" \
@@ -76,6 +76,13 @@ jobs:
               -PMYAPP_UPLOAD_STORE_PASSWORD="android" \
               -PMYAPP_UPLOAD_KEY_PASSWORD="android"
           fi
+
+      - name: Show build crash diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          free -h || true
+          find android -maxdepth 2 -name "hs_err_pid*.log" -print -exec sed -n '1,220p' {} \; || true
 
       - name: Show APK checksums
         shell: bash
