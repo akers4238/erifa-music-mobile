@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { type LayoutChangeEvent, View } from 'react-native'
 
 // import music from '@/utils/musicSdk'
@@ -30,22 +30,30 @@ export default () => {
   const searchInfo = useRef<SearchInfo>({ temp_source: '', source: '', searchType: 'music' })
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const getCurrentSources = useCallback((type: SearchType) => type == 'music' ? searchMusicState.sources : searchSonglistState.sources, [])
+  const getCurrentSource = useCallback((type: SearchType, fallback?: string | 'all') => {
+    const sources = getCurrentSources(type)
+    if (fallback && sources.includes(fallback)) return fallback
+    return sources.find(source => source != 'all') ?? sources[0] ?? ''
+  }, [getCurrentSources])
+  const setSearchSourceState = useCallback((type: SearchType, source: string | 'all') => {
+    const tempSource = source == 'all' ? getCurrentSource(type) : source
+    searchInfo.current.source = source
+    searchInfo.current.temp_source = tempSource
+    searchState.searchType = type
+    searchState.temp_source = tempSource
+    return tempSource
+  }, [getCurrentSource])
+
   useEffect(() => {
-    const getCurrentSources = (type: SearchType) => type == 'music' ? searchMusicState.sources : searchSonglistState.sources
-    const getCurrentSource = (type: SearchType, fallback?: string | 'all') => {
-      const sources = getCurrentSources(type)
-      if (fallback && sources.includes(fallback)) return fallback
-      return sources.find(source => source != 'all') ?? sources[0] ?? ''
-    }
     const setPluginSourceList = (type: SearchType, source?: string | 'all') => {
       const sources = getCurrentSources(type)
       const activeSource = getCurrentSource(type, source)
-      searchInfo.current.source = activeSource
-      searchInfo.current.temp_source = activeSource == 'all' ? getCurrentSource(type) : activeSource
+      const tempSource = setSearchSourceState(type, activeSource)
       headerBarRef.current?.setSourceList(sources.includes(activeSource) ? sources : activeSource ? [activeSource] : [], activeSource)
       void saveSearchSetting({
         source: activeSource as LX.OnlineSource,
-        temp_source: searchInfo.current.temp_source as LX.OnlineSource,
+        temp_source: tempSource as LX.OnlineSource,
       })
       return activeSource
     }
@@ -76,7 +84,7 @@ export default () => {
       global.app_event.off('searchTypeChanged', handleTypeChange)
       global.state_event.off('apiSourceUpdated', handleApiSourceUpdated)
     }
-  }, [])
+  }, [getCurrentSource, getCurrentSources, setSearchSourceState])
 
 
   const handleLayout = (e: LayoutChangeEvent) => {
@@ -84,8 +92,8 @@ export default () => {
   }
 
   const handleSourceChange: HeaderBarProps['onSourceChange'] = (source) => {
-    searchInfo.current.source = source
-    void saveSearchSetting({ source })
+    const tempSource = setSearchSourceState(searchInfo.current.searchType, source)
+    void saveSearchSetting({ source, temp_source: tempSource as LX.OnlineSource })
     listRef.current?.loadList(searchState.searchText, source, searchInfo.current.searchType)
   }
   const handleTipSearch: HeaderBarProps['onTipSearch'] = (text) => {
