@@ -113,10 +113,17 @@ export default forwardRef<DialogType, DialogProps>(({
       : null
   }, [closeBtn, theme])
 
+  const modalViewStyle = useMemo(() => ({
+    ...styles.modalView,
+    ...(fullScreen ? styles.modalViewFullScreen : null),
+    ...(height == null ? null : { height }),
+    backgroundColor: theme['c-content-background'],
+  }), [fullScreen, height, theme])
+
   return (
     <Modal onHide={onHide} keyHide={keyHide} bgHide={bgHide} bgColor="rgba(50,50,50,.3)" ref={modalRef}>
       <View style={{ ...(fullScreen ? styles.centeredViewFullScreen : styles.centeredView), paddingBottom: keyboardShown ? keyboardHeight : 0 }}>
-        <View style={{ ...styles.modalView, ...(fullScreen ? styles.modalViewFullScreen : null), height, backgroundColor: theme['c-content-background'] }} onStartShouldSetResponder={() => true}>
+        <View style={modalViewStyle} onStartShouldSetResponder={() => true}>
           <View style={{ ...styles.header, backgroundColor: theme['c-primary-light-100-alpha-100'] }}>
             <Text style={styles.title} size={13} color={theme['c-primary-light-1000']} numberOfLines={1}>{title}</Text>
             {closeBtnComponent}
