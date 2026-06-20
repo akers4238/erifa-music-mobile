@@ -11,19 +11,6 @@ const androidChromeUserAgent = 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWeb
 
 const LOGIN_ITEMS = [
   {
-    id: 'qq',
-    settingKey: 'common.qqMusicCookie',
-    loginUrl: 'https://y.qq.com/n/ryqq/profile',
-    userAgent: `${androidChromeUserAgent} MQQBrowser/13.0 QQMusic/12.0`,
-    cookieUrls: [
-      'https://y.qq.com',
-      'https://u.y.qq.com',
-      'https://c.y.qq.com',
-      'https://i.y.qq.com',
-    ],
-    requiredKeys: ['uin', 'qqmusic_key', 'qm_keyst', 'p_uin'],
-  },
-  {
     id: 'bilibili',
     settingKey: 'common.bilibiliCookie',
     loginUrl: 'https://passport.bilibili.com/login',
@@ -35,20 +22,8 @@ const LOGIN_ITEMS = [
     ],
     requiredKeys: ['SESSDATA', 'bili_jct', 'DedeUserID'],
   },
-  {
-    id: 'youtube',
-    settingKey: 'common.youtubeCookie',
-    loginUrl: 'https://m.youtube.com/',
-    userAgent: androidChromeUserAgent,
-    cookieUrls: [
-      'https://www.youtube.com',
-      'https://accounts.google.com',
-      'https://google.com',
-    ],
-    requiredKeys: ['LOGIN_INFO', 'SID', 'SAPISID', 'VISITOR_INFO1_LIVE'],
-  },
 ] satisfies Array<{
-  id: 'qq' | 'bilibili' | 'youtube'
+  id: 'bilibili'
   settingKey: LoginSettingKey
   loginUrl: string
   userAgent: string

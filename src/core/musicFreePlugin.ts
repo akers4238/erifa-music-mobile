@@ -17,6 +17,14 @@ type MusicFreeQuality = 'low' | 'standard' | 'high' | 'super' | LX.Quality
 const musicFreeQualityFallbacks: MusicFreeQuality[] = ['standard', 'high', 'super', 'low', '320k', 'flac', 'flac24bit', '128k']
 const youtubeUserAgent = 'com.google.android.apps.youtube.music/6.14.50 (Linux; U; Android 13) gzip'
 const builtinSourceEntries = musicSdk.sources.filter(source => source.id == 'wy')
+const preferBilibiliSource = <T extends string>(sources: T[]) => {
+  const index = sources.findIndex(source => source.toLowerCase() == 'bilibili')
+  if (index < 1) return sources
+  const nextSources = [...sources]
+  const [bilibili] = nextSources.splice(index, 1)
+  nextSources.unshift(bilibili)
+  return nextSources
+}
 type MusicFreeCacheControl = 'cache' | 'no-cache' | 'no-store'
 
 interface MusicFreeUserVariable {
@@ -1160,10 +1168,10 @@ export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, scrip
   const pluginSongListSearchSources = pluginSourceEntries.filter(entry => entry.sdkSource.songList?.search || entry.sdkSource.songList?.getList).map(entry => entry.platform)
   const pluginSongListSources = pluginSourceEntries.filter(entry => entry.sdkSource.songList?.getList).map(entry => entry.platform)
   const pluginLeaderboardSources = pluginSourceEntries.filter(entry => entry.sdkSource.leaderboard).map(entry => entry.platform)
-  const searchableSources = [...builtinSearchableSources, ...pluginSearchableSources]
-  const songListSearchSources = [...builtinSongListSearchSources, ...pluginSongListSearchSources]
-  const songListSources = [...builtinSongListSources, ...pluginSongListSources]
-  const leaderboardSources = [...builtinLeaderboardSources, ...pluginLeaderboardSources]
+  const searchableSources = preferBilibiliSource([...builtinSearchableSources, ...pluginSearchableSources])
+  const songListSearchSources = preferBilibiliSource([...builtinSongListSearchSources, ...pluginSongListSearchSources])
+  const songListSources = preferBilibiliSource([...builtinSongListSources, ...pluginSongListSources])
+  const leaderboardSources = preferBilibiliSource([...builtinLeaderboardSources, ...pluginLeaderboardSources])
   const sourceNames = pluginSourceEntries.reduce<Record<string, string>>((names, entry) => {
     names[entry.platform] = entry.sourceName
     return names
@@ -1186,7 +1194,7 @@ export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, scrip
     all: '\u5168\u90e8',
   } as any)
 
-  searchMusicState.source = searchableSources.includes(active.platform) ? active.platform : searchableSources[0] ?? ''
+  searchMusicState.source = searchableSources[0] ?? ''
   searchMusicState.sources = searchableSources.length > 1 ? ['all', ...searchableSources] : searchableSources
   searchMusicState.listInfos = {
     all: { page: 1, maxPage: 0, limit: 30, total: 0, list: [], key: null },
@@ -1195,7 +1203,7 @@ export const activateMusicFreePlugin = async(info: LX.UserApi.UserApiInfo, scrip
   searchMusicState.maxPages = Object.fromEntries(searchableSources.map(platform => [platform, 0])) as any
   searchState.temp_source = searchMusicState.source
 
-  searchSonglistState.source = songListSources.includes(active.platform) ? active.platform : songListSources[0] ?? ''
+  searchSonglistState.source = songListSources[0] ?? ''
   searchSonglistState.sources = songListSources.length > 1 ? ['all', ...songListSources] : songListSources
   searchSonglistState.listInfos = {
     all: { page: 1, limit: 15, total: 0, list: [], key: null, tagId: '', sortId: '' },
