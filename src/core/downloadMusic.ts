@@ -39,6 +39,7 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   await ensureMusicCacheDir()
   const resource = await getMusicResource({
     musicInfo,
+    isRefresh: true,
     quality: settingState.setting['player.playQuality'],
     allowToggleSource: true,
   })
