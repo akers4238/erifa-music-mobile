@@ -239,7 +239,7 @@ const PluginManagePage = () => {
     global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
     global.state_event.on('themeUpdated', handleHide)
     global.state_event.on('languageChanged', handleHide)
-      global.state_event.off('configUpdated', handleConfigUpdated)
+    global.state_event.on('configUpdated', handleConfigUpdated)
 
     return () => {
       global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
@@ -274,7 +274,7 @@ const PlayHistoryPage = () => {
     global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
     global.state_event.on('themeUpdated', handleHide)
     global.state_event.on('languageChanged', handleHide)
-      global.state_event.off('configUpdated', handleConfigUpdated)
+    global.state_event.on('configUpdated', handleConfigUpdated)
 
     return () => {
       global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
@@ -309,7 +309,7 @@ const PermissionManagePage = () => {
     global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
     global.state_event.on('themeUpdated', handleHide)
     global.state_event.on('languageChanged', handleHide)
-      global.state_event.off('configUpdated', handleConfigUpdated)
+    global.state_event.on('configUpdated', handleConfigUpdated)
 
     return () => {
       global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
