@@ -3,7 +3,10 @@ import Search from '../Views/Search'
 import SongList from '../Views/SongList'
 import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
+import LocalMusic from '../Views/LocalMusic'
 import PluginManage from '../Views/PluginManage'
+import PlayHistory from '../Views/PlayHistory'
+import PermissionManage from '../Views/PermissionManage'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 
@@ -28,7 +31,10 @@ const Main = () => {
       case 'nav_songlist': return <SongList />
       case 'nav_top': return <Leaderboard />
       case 'nav_love': return <Mylist />
+      case 'nav_local_music': return <LocalMusic />
       case 'nav_plugin_manage': return <PluginManage />
+      case 'nav_play_history': return <PlayHistory />
+      case 'nav_permission_manage': return <PermissionManage />
       case 'nav_setting': return <Setting />
       case 'nav_search':
       default: return <Search />

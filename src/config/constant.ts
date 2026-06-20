@@ -105,8 +105,11 @@ export const NAV_MENUS = [
   { id: 'nav_songlist', icon: 'album' },
   { id: 'nav_top', icon: 'leaderboard' },
   { id: 'nav_love', icon: 'love' },
+  { id: 'nav_local_music', icon: 'add-music' },
   // { id: 'download', icon: 'download-2' },
   { id: 'nav_plugin_manage', icon: 'slider' },
+  { id: 'nav_play_history', icon: 'back-2' },
+  { id: 'nav_permission_manage', icon: 'sd-card' },
   { id: 'nav_setting', icon: 'setting' },
 ] as const
 

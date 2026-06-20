@@ -5,10 +5,9 @@ import Dialog, { type DialogType } from '@/components/common/Dialog'
 import { Icon } from '@/components/common/Icon'
 import Text from '@/components/common/Text'
 import { clearListMusics, removeListMusics } from '@/core/list'
-import { clearPlayHistory, removePlayHistory } from '@/core/player/playHistory'
 import { playList, playNext } from '@/core/player/player'
 import { addTempPlayList, clearTempPlayeList, removeTempPlayList } from '@/core/player/tempPlayList'
-import { usePlayHistory, usePlayInfo, usePlayMusicInfo, useTempPlayList } from '@/store/player/hook'
+import { usePlayInfo, usePlayMusicInfo, useTempPlayList } from '@/store/player/hook'
 import { useTheme } from '@/store/theme/hook'
 import { getListMusicSync } from '@/utils/listManage'
 import { confirmDialog, createStyle, toast } from '@/utils/tools'
@@ -64,7 +63,6 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
   const playInfo = usePlayInfo()
   const playMusicInfo = usePlayMusicInfo()
   const tempPlayList = useTempPlayList()
-  const playHistory = usePlayHistory()
   const [list, setList] = useState<Array<LX.Music.MusicInfo | LX.Download.ListItem>>([])
 
   const refreshList = useCallback(() => {
@@ -108,17 +106,6 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
     if (!playInfo.playerListId) return
     void playList(playInfo.playerListId, index)
     dialogRef.current?.setVisible(false)
-  }
-
-  const handlePlayHistory = (info: LX.Player.PlayMusicInfo) => {
-    addTempPlayList([{ listId: info.listId, musicInfo: info.musicInfo, isTop: true }])
-    void playNext()
-    dialogRef.current?.setVisible(false)
-  }
-
-  const handleClearHistory = () => {
-    clearPlayHistory()
-    toast('已清空播放历史')
   }
 
   const handleClearList = () => {
@@ -171,30 +158,6 @@ export default forwardRef<PlayQueueModalType>((_, ref) => {
           : <Text style={styles.emptyCompact} size={12} color={theme['c-font-label']}>暂无稍后播放</Text>}
 
         <View style={styles.header}>
-          <Text size={12} color={theme['c-font-label']}>播放历史 {playHistory.length}</Text>
-          {playHistory.length
-            ? <TouchableOpacity onPress={handleClearHistory}>
-                <Text size={12} color={theme['c-primary-font-active']}>清空</Text>
-              </TouchableOpacity>
-            : null}
-        </View>
-        {playHistory.length
-          ? <ScrollView style={styles.historyList}>
-              {playHistory.map((info, index) => (
-                <MusicItem
-                  key={`${info.musicInfo.id}_${index}`}
-                  index={index}
-                  musicInfo={info.musicInfo}
-                  active={playMusicInfo.musicInfo?.id == info.musicInfo.id}
-                  suffix="历史"
-                  onPress={() => { handlePlayHistory(info) }}
-                  onRemove={() => { removePlayHistory(index) }}
-                />
-              ))}
-            </ScrollView>
-          : <Text style={styles.emptyCompact} size={12} color={theme['c-font-label']}>暂无播放历史</Text>}
-
-        <View style={styles.header}>
           <Text size={12} color={theme['c-font-label']}>当前歌单 {list.length}</Text>
           <View style={styles.headerActions}>
             {playInfo.playIndex > -1 ? <Text size={12} color={theme['c-font-label']}>当前第 {playInfo.playIndex + 1} 首</Text> : null}
@@ -243,9 +206,6 @@ const styles = createStyle({
     gap: 12,
   },
   tempList: {
-    maxHeight: 132,
-  },
-  historyList: {
     maxHeight: 132,
   },
   list: {
