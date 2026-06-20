@@ -96,6 +96,9 @@ export const getList = async(source: LX.OnlineSource, tabId: string, sortId: str
  * @returns
  */
 const getListDetailLimit = async(source: LX.OnlineSource, id: string, page: number): Promise<ListDetailInfo> => {
+  const sourceApi = musicSdk[source]?.songList
+  if (!sourceApi?.getListDetail) return Promise.reject(new Error('source not found: ' + source))
+
   const listKey = `sdetail__${source}__${id}`
   const prevPageKey = `sdetail__${source}__${id}__${page - 1}`
   const tempListKey = `sdetail__${source}__${id}__temp`
@@ -108,43 +111,61 @@ const getListDetailLimit = async(source: LX.OnlineSource, id: string, page: numb
     if (prevPageData) sourcePage = prevPageData.sourcePage
   }
 
-  return musicSdk[source]?.songList.getListDetail(id, sourcePage + 1).then((result: ListDetailInfo) => {
-    if (listCache !== cache.get(listKey)) return
+  const getSourceMaxPage = (sourceResult: ListDetailInfo) => Math.max(1, Math.ceil(sourceResult.total / (sourceResult.limit || LIST_LOAD_LIMIT)))
+  const loadSourcePage = async(page: number) => {
+    const result = await sourceApi.getListDetail(id, page) as ListDetailInfo
     result.list = deduplicationList(result.list.map(m => toNewMusicInfo(m)) as LX.Music.MusicInfoOnline[])
+    return result
+  }
+  const savePage = (sourceResult: ListDetailInfo, pageIndex: number, pageList: LX.Music.MusicInfoOnline[], pageSourcePage: number) => {
+    listCache.set(`sdetail__${source}__${id}__${pageIndex}`, {
+      data: {
+        ...sourceResult,
+        list: pageList,
+        page: pageIndex,
+        limit: LIST_LOAD_LIMIT,
+        maxPage: Math.max(1, Math.ceil(sourceResult.total / LIST_LOAD_LIMIT)),
+      },
+      sourcePage: pageSourcePage,
+    })
+  }
+
+  return loadSourcePage(sourcePage + 1).then(async(result: ListDetailInfo) => {
+    if (listCache !== cache.get(listKey)) throw new Error('list cache cleared')
     let p = page
     const tempList = listCache.get(tempListKey) as ListDetailInfo['list']
-    if (tempList) {
+    if (tempList?.length) {
+      result.list = [...tempList, ...result.list]
       listCache.delete(tempListKey)
-      listCache.set(`sdetail__${source}__${id}__${p}`, {
-        data: {
-          ...result,
-          list: [...tempList, ...result.list.splice(0, LIST_LOAD_LIMIT - tempList.length)],
-          page: p,
-          limit: LIST_LOAD_LIMIT,
-        },
-        sourcePage,
-      })
-      p++
     }
     sourcePage++
+
+    while (result.list.length < LIST_LOAD_LIMIT && sourcePage < getSourceMaxPage(result)) {
+      const nextResult = await loadSourcePage(sourcePage + 1)
+      if (listCache !== cache.get(listKey)) throw new Error('list cache cleared')
+      sourcePage++
+      result = {
+        ...nextResult,
+        list: [...result.list, ...nextResult.list],
+      }
+    }
+
     do {
-      if (result.list.length < LIST_LOAD_LIMIT && sourcePage < Math.ceil(result.total / result.limit)) {
-        listCache.set(tempListKey, result.list.splice(0, LIST_LOAD_LIMIT))
+      if (result.list.length < LIST_LOAD_LIMIT && sourcePage < getSourceMaxPage(result)) {
+        listCache.set(tempListKey, result.list.splice(0, result.list.length))
         break
       }
-      listCache.set(`sdetail__${source}__${id}__${p}`, {
-        data: {
-          ...result,
-          list: result.list.splice(0, LIST_LOAD_LIMIT),
-          page: p,
-          limit: LIST_LOAD_LIMIT,
-        },
-        sourcePage,
-      })
+      savePage(result, p, result.list.splice(0, LIST_LOAD_LIMIT), sourcePage)
       p++
     } while (result.list.length > 0)
-    return (listCache.get(`sdetail__${source}__${id}__${page}`) as DetailPageCache).data
-  }) ?? Promise.reject(new Error('source not found'))
+
+    let pageCache = listCache.get(`sdetail__${source}__${id}__${page}`) as DetailPageCache | undefined
+    if (!pageCache) {
+      savePage(result, page, [], sourcePage)
+      pageCache = listCache.get(`sdetail__${source}__${id}__${page}`) as DetailPageCache
+    }
+    return pageCache.data
+  })
 }
 
 /**
