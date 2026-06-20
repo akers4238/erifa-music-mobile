@@ -194,7 +194,7 @@ const handleRestorePlay = async(restorePlayInfo: LX.Player.SavedPlayInfo) => {
   })
 
   if (settingState.setting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay) addPlayedList(playMusicInfo as LX.Player.PlayMusicInfo)
-  addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
+  if (playMusicInfo.listId != LIST_IDS.PLAY_HISTORY) addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
 }
 
 
@@ -263,7 +263,7 @@ const handlePlay = async() => {
 
 
   if (settingState.setting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay) addPlayedList(playMusicInfo as LX.Player.PlayMusicInfo)
-  addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
+  if (playMusicInfo.listId != LIST_IDS.PLAY_HISTORY) addPlayHistory(playMusicInfo as LX.Player.PlayMusicInfo)
 
   debouncePlay(musicInfo)
 }

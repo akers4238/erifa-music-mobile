@@ -12,7 +12,7 @@ declare namespace LX {
     | 'error'
     | 'completed'
 
-    type FileExt = 'mp3' | 'flac' | 'wav' | 'ape'
+    type FileExt = 'mp3' | 'm4a' | 'flac' | 'wav' | 'ape' | 'ogg' | 'aac'
 
     interface ProgressInfo {
       progress: number

@@ -14,6 +14,8 @@ import {
   handleGetOnlinePicUrl,
   getCachedLyricInfo,
 } from './utils'
+import { buildPicCachePath, ensureMusicPrivateCacheDir, findCachedMusicPath, findCachedPicPath } from '@/utils/musicCache'
+import { downloadFile, existsFile } from '@/utils/fs'
 
 /* export const setMusicUrl = ({ musicInfo, type, url }: {
   musicInfo: LX.Music.MusicInfo
@@ -53,6 +55,11 @@ export const getMusicResource = async({ musicInfo, quality, isRefresh, allowTogg
   //   // return Promise.reject(new Error('该歌曲没有可播放的音频'))
   // }
   const targetQuality = quality ?? getPlayQuality(settingState.setting['player.playQuality'], musicInfo)
+  if (!isRefresh) {
+    const cachedPath = await findCachedMusicPath(musicInfo)
+    if (cachedPath) return { url: cachedPath }
+  }
+
   const cachedUrl = await getStoreMusicUrl(musicInfo, targetQuality)
   if (cachedUrl && !isRefresh) return { url: cachedUrl }
 
@@ -74,6 +81,11 @@ export const getPicUrl = async({ musicInfo, listId, isRefresh, allowToggleSource
   allowToggleSource?: boolean
   onToggleSource?: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<string> => {
+  if (!isRefresh) {
+    const cachedPicPath = await findCachedPicPath(musicInfo)
+    if (cachedPicPath) return cachedPicPath
+  }
+
   if (musicInfo.meta.picUrl && !isRefresh) return musicInfo.meta.picUrl
   return handleGetOnlinePicUrl({ musicInfo, onToggleSource, isRefresh, allowToggleSource }).then(({ url, musicInfo: targetMusicInfo, isFromCache }) => {
     // picRequest = null
@@ -82,8 +94,18 @@ export const getPicUrl = async({ musicInfo, listId, isRefresh, allowToggleSource
       void updateListMusics([{ id: listId, musicInfo }])
     }
     // savePic({ musicInfo, url, listId })
+    void cachePic(targetMusicInfo, url)
     return url
   })
+}
+
+const cachePic = async(musicInfo: LX.Music.MusicInfoOnline, url: string) => {
+  if (!/^https?:\/\//i.test(url)) return
+  await ensureMusicPrivateCacheDir()
+  const path = buildPicCachePath(musicInfo, url)
+  if (await existsFile(path)) return
+  const { promise } = downloadFile(url, path, { background: true })
+  await promise.catch(() => {})
 }
 export const getLyricInfo = async({ musicInfo, isRefresh, allowToggleSource = true, onToggleSource = () => {} }: {
   musicInfo: LX.Music.MusicInfoOnline

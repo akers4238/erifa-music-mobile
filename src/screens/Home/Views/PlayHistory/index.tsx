@@ -3,7 +3,7 @@ import { ScrollView, TouchableOpacity, View } from 'react-native'
 
 import { Icon } from '@/components/common/Icon'
 import Text from '@/components/common/Text'
-import { clearPlayHistory, removePlayHistory } from '@/core/player/playHistory'
+import { clearPlayHistory, playHistoryList, removePlayHistory } from '@/core/player/playHistory'
 import { useI18n } from '@/lang'
 import { usePlayHistory, usePlayMusicInfo } from '@/store/player/hook'
 import { useSourceNames } from '@/store/common/hook'
@@ -31,11 +31,13 @@ const HistoryItem = ({
   index,
   info,
   active,
+  onPress,
   onRemove,
 }: {
   index: number
   info: LX.Player.PlayMusicInfo
   active: boolean
+  onPress: () => void
   onRemove: () => void
 }) => {
   const theme = useTheme()
@@ -51,12 +53,18 @@ const HistoryItem = ({
         backgroundColor: active ? theme['c-primary-light-100-alpha-300'] : 'transparent',
       }}
     >
-      <Text style={styles.index} size={12} color={active ? theme['c-primary-font-active'] : theme['c-font-label']}>{index + 1}</Text>
-      <View style={styles.info}>
-        <Text numberOfLines={1} size={14} color={active ? theme['c-primary-font-active'] : theme['c-font']}>{name}</Text>
-        <Text numberOfLines={1} size={12} color={theme['c-font-label']}>{singer || '-'}</Text>
-      </View>
-      <Text style={styles.source} numberOfLines={1} size={11} color={theme['c-font-label']}>{sourceName}</Text>
+      <TouchableOpacity style={styles.itemLeft} onPress={onPress}>
+        {
+          active
+            ? <Icon style={styles.index} name="play-outline" size={13} color={theme['c-primary-font-active']} />
+            : <Text style={styles.index} size={12} color={theme['c-font-label']}>{index + 1}</Text>
+        }
+        <View style={styles.info}>
+          <Text numberOfLines={1} size={14} color={active ? theme['c-primary-font-active'] : theme['c-font']}>{name}</Text>
+          <Text numberOfLines={1} size={12} color={theme['c-font-label']}>{singer || '-'}</Text>
+        </View>
+        <Text style={styles.source} numberOfLines={1} size={11} color={theme['c-font-label']}>{sourceName}</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
         <Icon name="remove" color={theme['c-font-label']} size={12} />
       </TouchableOpacity>
@@ -84,6 +92,7 @@ export default memo(() => {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="always">
       <Section title={t('nav_play_history')}>
+        <Text style={styles.desc} size={12} color={theme['c-font-label']}>{t('play_history_desc')}</Text>
         <View style={styles.header}>
           <Text size={12} color={theme['c-font-label']}>{t('play_history_count', { num: playHistory.length })}</Text>
           {playHistory.length
@@ -99,6 +108,7 @@ export default memo(() => {
                 index={index}
                 info={info}
                 active={playMusicInfo.musicInfo?.id == info.musicInfo.id}
+                onPress={() => { playHistoryList(index) }}
                 onRemove={() => { removePlayHistory(index) }}
               />
           ))
@@ -121,9 +131,19 @@ const styles = createStyle({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  desc: {
+    paddingHorizontal: 14,
+    paddingBottom: 8,
+    lineHeight: 20,
+  },
   item: {
     minHeight: 48,
     paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
