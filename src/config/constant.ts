@@ -12,6 +12,7 @@ export const LIST_IDS = {
   LOVE: 'love',
   TEMP: 'temp',
   DOWNLOAD: 'download',
+  LOCAL_MUSIC: 'local_music',
   PLAY_HISTORY: 'play_history',
   PLAY_LATER: null,
 } as const
