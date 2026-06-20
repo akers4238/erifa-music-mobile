@@ -12,6 +12,7 @@ const sources: Array<{
     disabled: false,
     supportQualitys: {
       wy: ['128k', '320k', 'flac', 'flac24bit'],
+      bilibili: ['128k'],
     },
   },
 ]

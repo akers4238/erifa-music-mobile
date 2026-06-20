@@ -15,6 +15,26 @@ import {
 import { getLocalFilePath } from '@/utils/music'
 import { readLyric, readPic } from '@/utils/localMediaMetadata'
 import { stat } from '@/utils/fs'
+import musicSdk from '@/utils/musicSdk'
+
+const getOriginSourcePic = async(musicInfo: LX.Music.MusicInfoLocal) => {
+  const source = musicInfo.meta.originSource
+  const songId = musicInfo.meta.originSongId
+  if (!source || !songId) throw new Error('origin source not found')
+  const sdk = musicSdk[source]
+  if (!sdk?.getPic) throw new Error('origin source pic not supported')
+  const request = sdk.getPic({
+    name: musicInfo.name,
+    singer: musicInfo.singer,
+    source,
+    songmid: songId,
+    albumName: musicInfo.meta.albumName,
+    img: musicInfo.meta.picUrl ?? '',
+    interval: musicInfo.interval,
+    typeUrl: {},
+  })
+  return ('promise' in request ? request.promise : request).then((url: string) => url)
+}
 
 const getOtherSourceByLocal = async<T>(musicInfo: LX.Music.MusicInfoLocal, handler: (infos: LX.Music.MusicInfoOnline[]) => Promise<T>) => {
   let result: LX.Music.MusicInfoOnline[] = []
@@ -115,6 +135,15 @@ export const getPicUrl = async({ musicInfo, listId, isRefresh, skipFilePic, onTo
 
     if (musicInfo.meta.picUrl) return musicInfo.meta.picUrl
   }
+
+  try {
+    const url = await getOriginSourcePic(musicInfo)
+    if (listId) {
+      musicInfo.meta.picUrl = url
+      void updateListMusics([{ id: listId, musicInfo }])
+    }
+    return url
+  } catch {}
 
   try {
     return await getOnlineOtherSourcePicByLocal(musicInfo).then(({ url }) => {

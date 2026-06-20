@@ -34,6 +34,8 @@ declare namespace LX {
     interface MusicInfoMeta_local extends MusicInfoMetaBase {
       filePath: string
       ext: string
+      originSource?: LX.OnlineSource
+      originSongId?: string | number
     }
 
 
@@ -50,7 +52,7 @@ declare namespace LX {
       meta: MusicInfoMeta_local
     }
 
-    interface MusicInfo_online_common extends MusicInfoBase<'kw' | 'wy'> {
+    interface MusicInfo_online_common extends MusicInfoBase<'kw' | 'wy' | 'bilibili'> {
       meta: MusicInfoMeta_online
     }
 

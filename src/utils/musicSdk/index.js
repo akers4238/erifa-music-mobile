@@ -3,6 +3,7 @@ import kg from './kg'
 import tx from './tx'
 import wy from './wy'
 import mg from './mg'
+import bilibili from './bilibili'
 // import bd from './bd'
 import xm from './xm'
 import { supportQuality } from './api-source'
@@ -11,8 +12,12 @@ import { supportQuality } from './api-source'
 const sources = {
   sources: [
     {
-      name: '网易云',
+      name: 'wy',
       id: 'wy',
+    },
+    {
+      name: 'bilibili',
+      id: 'bilibili',
     },
   ],
   kw,
@@ -20,6 +25,7 @@ const sources = {
   tx,
   wy,
   mg,
+  bilibili,
   // bd,
   xm,
 }

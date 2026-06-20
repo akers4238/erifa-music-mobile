@@ -1,4 +1,4 @@
-import { addListMusics, getListMusics, removeListMusics, removeUserList, setFetchingListStatus, updateListMusics } from '@/core/list'
+import { addListMusics, getListMusics, removeUserList, setFetchingListStatus, updateListMusics } from '@/core/list'
 import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
 import syncSourceList from '@/core/syncSourceList'
 import { log } from '@/utils/log'
@@ -7,7 +7,8 @@ import { handleImportListPart } from '@/screens/Home/Views/Setting/settings/Back
 import { readMetadata, scanAudioFiles, type MusicMetadataFull } from '@/utils/localMediaMetadata'
 import settingState from '@/store/setting/state'
 import BackgroundTimer from 'react-native-background-timer'
-import { type FileType } from '@/utils/fs'
+import { existsFile, moveFile, type FileType } from '@/utils/fs'
+import { buildFormattedMusicFileName, parseLocalMusicFileName, type LocalMusicFileNameInfo } from '@/utils/musicCache'
 
 export const handleRemove = (listInfo: LX.List.UserListInfo) => {
   void confirmDialog({
@@ -92,24 +93,85 @@ export const handleSync = (listInfo: LX.List.UserListInfo) => {
   })
 }
 
+const getPathParts = (path: string) => {
+  const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  return {
+    dir: index > -1 ? path.substring(0, index) : '',
+    name: index > -1 ? path.substring(index + 1) : path,
+    separator: path.includes('\\') ? '\\' : '/',
+  }
+}
+
+const buildPath = (dir: string, name: string, separator: string) => {
+  return dir ? `${dir}${separator}${name}` : name
+}
+
+const buildUniqueFilePath = async(dir: string, parsed: LocalMusicFileNameInfo, separator: string) => {
+  let targetName = parsed.normalizedName
+  let targetPath = buildPath(dir, targetName, separator)
+  let index = 1
+  while (await existsFile(targetPath)) {
+    targetName = buildFormattedMusicFileName(`${parsed.name} (${index++})`, parsed.singer, parsed.source, parsed.songId, parsed.ext)
+    targetPath = buildPath(dir, targetName, separator)
+  }
+  return { targetName, targetPath }
+}
+
+const normalizeLocalMusicFile = async(file: FileType): Promise<FileType> => {
+  const parsed = parseLocalMusicFileName(file.name)
+  if (!parsed?.isLegacyName) return file
+
+  const { dir, separator } = getPathParts(file.path)
+  const { targetName, targetPath } = await buildUniqueFilePath(dir, parsed, separator)
+  try {
+    await moveFile(file.path, targetPath)
+    return {
+      ...file,
+      name: targetName,
+      path: targetPath,
+    }
+  } catch (error: any) {
+    log.warn(`Rename local music failed: ${file.path}\n${error?.message || error}`)
+    return file
+  }
+}
+
+const normalizeLocalMusicFiles = async(files: FileType[]) => {
+  const result: FileType[] = []
+  for (const file of files) result.push(await normalizeLocalMusicFile(file))
+  return result
+}
+
+const getFileNameByPath = (path: string) => getPathParts(path).name
+
+const buildLocalMeta = (filePath: string, ext: string, parsed: LocalMusicFileNameInfo | null): LX.Music.MusicInfoLocal['meta'] => {
+  return {
+    albumName: parsed?.source ?? '',
+    filePath,
+    songId: filePath,
+    picUrl: '',
+    ext,
+    originSource: parsed?.source,
+    originSongId: parsed?.songId,
+  }
+}
+
 export const buildLocalMusicInfoByFilePath = (file: FileType): LX.Music.MusicInfoLocal => {
   const index = file.name.lastIndexOf('.')
+  const fileName = index > -1 ? file.name.substring(0, index) : file.name
+  const ext = index > -1 ? file.name.substring(index + 1) : ''
+  const parsed = parseLocalMusicFileName(file.name)
   return {
     id: file.path,
-    name: file.name.substring(0, index),
-    singer: '',
+    name: parsed?.name ?? fileName,
+    singer: parsed?.singer ?? '',
     source: 'local',
     interval: null,
-    meta: {
-      albumName: '',
-      filePath: file.path,
-      songId: file.path,
-      picUrl: '',
-      ext: file.name.substring(index + 1),
-    },
+    meta: buildLocalMeta(file.path, parsed?.ext ?? ext, parsed),
   }
 }
 export const buildLocalMusicInfo = (filePath: string, metadata: MusicMetadataFull): LX.Music.MusicInfoLocal => {
+  const parsed = parseLocalMusicFileName(getFileNameByPath(filePath))
   return {
     id: filePath,
     name: metadata.name,
@@ -122,6 +184,8 @@ export const buildLocalMusicInfo = (filePath: string, metadata: MusicMetadataFul
       songId: filePath,
       picUrl: '',
       ext: metadata.ext,
+      originSource: parsed?.source,
+      originSongId: parsed?.songId,
     },
   }
 }
@@ -182,21 +246,21 @@ const handleUpdateMusics = async(filePaths: string[],
   else {
     if (errorPath.length) {
       log.warn('Parse metadata failed:\n' + errorPath.map(p => p.split('/').at(-1)).join('\n'))
-      toast(global.i18n.t('list_select_local_file_result_failed_tip', { total, success: total - errorPath.length, failed: errorPath.length }), 'long')
+      toast(global.i18n.t('list_select_local_file_result_tip', { total }), 'long')
     } else {
       toast(global.i18n.t('list_select_local_file_result_tip', { total }), 'long')
     }
-    throttleUpdateMusics([], errorPath)
+    throttleUpdateMusics([])
   }
 }
 export const handleImportMediaFile = async(listInfo: LX.List.MyListInfo, path: string) => {
   setFetchingListStatus(listInfo.id, true)
-  const files = await scanAudioFiles(path)
+  const files = await normalizeLocalMusicFiles(await scanAudioFiles(path))
   if (files.length) {
     const throttleUpdateMusics = createThrottleAddMusics(async(listId, musicInfos) => {
       return updateListMusics(musicInfos.map(info => ({ id: listId, musicInfo: info })))
-    }, async(listId, errorPath) => {
-      return removeListMusics(listId, errorPath)
+    }, async() => {
+      // Keep filename-based local entries when metadata parsing fails.
     }, listInfo.id)
     await addListMusics(listInfo.id, files.map(buildLocalMusicInfoByFilePath), settingState.setting['list.addMusicLocationType'])
     toast(global.i18n.t('list_select_local_file_temp_add_tip', { total: files.length }), 'long')

@@ -1,11 +1,9 @@
 import { addListMusics, removeListMusics, updateListMusicPosition, updateListMusics } from '@/core/list'
-import { playList, playListById, playNext } from '@/core/player/player'
+import { playList, playListById } from '@/core/player/player'
 import { addTempPlayList } from '@/core/player/tempPlayList'
 import settingState from '@/store/setting/state'
 import { similar, sortInsert, toOldMusicInfo } from '@/utils'
 import { confirmDialog, openUrl, shareMusic, toast } from '@/utils/tools'
-import { addDislikeInfo, hasDislike } from '@/core/dislikeList'
-import playerState from '@/store/player/state'
 
 import type { SelectInfo } from './ListMenu'
 import { type Metadata } from '@/components/MetadataEditModal'
@@ -125,22 +123,6 @@ export const handleShowMusicSourceDetail = async(minfo: SelectInfo['musicInfo'])
   const url = musicSdk[minfo.source as LX.OnlineSource]?.getMusicDetailPageUrl(toOldMusicInfo(minfo))
   if (!url) return
   void openUrl(url)
-}
-
-
-export const handleDislikeMusic = async(musicInfo: SelectInfo['musicInfo']) => {
-  const confirm = await confirmDialog({
-    message: musicInfo.singer ? global.i18n.t('lists_dislike_music_singer_tip', { name: musicInfo.name, singer: musicInfo.singer }) : global.i18n.t('lists_dislike_music_tip', { name: musicInfo.name }),
-    cancelButtonText: global.i18n.t('cancel_button_text_2'),
-    confirmButtonText: global.i18n.t('confirm_button_text'),
-    bgClose: false,
-  })
-  if (!confirm) return
-  await addDislikeInfo([{ name: musicInfo.name, singer: musicInfo.singer }])
-  toast(global.i18n.t('lists_dislike_music_add_tip'))
-  if (hasDislike(playerState.playMusicInfo.musicInfo)) {
-    void playNext(true)
-  }
 }
 
 export const handleToggleSource = async(listId: string, musicInfo: LX.Music.MusicInfo, toggleMusicInfo: LX.Music.MusicInfoOnline) => {
