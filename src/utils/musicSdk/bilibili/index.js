@@ -33,6 +33,16 @@ const normalizePic = pic => {
   return pic
 }
 
+const getNavInfo = () => {
+  const requestObj = httpFetch('https://api.bilibili.com/x/web-interface/nav', {
+    headers: buildHeaders(),
+  })
+  return requestObj.promise.then(({ body }) => {
+    if (body?.code != 0 || !body?.data?.mid) throw new Error(body?.message || 'Please login bilibili first')
+    return body.data
+  })
+}
+
 const buildMusicInfo = item => {
   const bvid = item.bvid || item.id || ''
   const title = stripHtml(item.title)
@@ -114,8 +124,108 @@ const musicSearch = {
   },
 }
 
+const buildSongListItem = item => {
+  const mediaId = item.media_id || item.id
+  return {
+    play_count: String(item.view_count ?? item.cnt_info?.play ?? ''),
+    id: String(mediaId),
+    author: stripHtml(item.upper?.name || item.author_name || ''),
+    name: stripHtml(item.title || item.name),
+    time: '',
+    img: normalizePic(item.cover || item.cover_url),
+    desc: stripHtml(item.intro || item.description || ''),
+    source,
+    total: String(item.media_count ?? item.count ?? ''),
+  }
+}
+
+const buildFavMusicInfo = item => {
+  const upper = item.upper || item.owner || {}
+  return buildMusicInfo({
+    bvid: item.bvid,
+    id: item.bvid || item.id,
+    title: item.title,
+    author: upper.name || item.author || item.owner_name,
+    duration: item.duration,
+    pic: item.cover || item.pic,
+  })
+}
+
+const songList = {
+  sortList: [
+    {
+      name: '我的收藏夹',
+      tid: 'my',
+      id: 'my',
+    },
+  ],
+  getTags() {
+    return Promise.resolve({
+      tags: [],
+      hotTag: [],
+      source,
+    })
+  },
+  getList(sortId = 'my', tagId = '', page = 1, limit = 20) {
+    return getNavInfo().then(info => {
+      const url = `https://api.bilibili.com/x/v3/fav/folder/created/list?pn=${page}&ps=${limit}&up_mid=${encodeURIComponent(info.mid)}&type=2`
+      const requestObj = httpFetch(url, {
+        headers: buildHeaders(),
+      })
+      return requestObj.promise.then(({ body }) => {
+        if (body?.code != 0) throw new Error(body?.message || 'Get bilibili favorite folders failed')
+        const data = body?.data || {}
+        const list = data.list || []
+        const total = Number(data.count ?? (data.has_more ? page * limit + 1 : (page - 1) * limit + list.length))
+        return {
+          list: list.map(buildSongListItem),
+          total,
+          page,
+          limit,
+          maxPage: Math.max(1, Math.ceil(total / limit)),
+          key: null,
+          source,
+          tagId,
+          sortId,
+        }
+      })
+    })
+  },
+  getListDetail(id, page = 1, limit = 20) {
+    const url = `https://api.bilibili.com/x/v3/fav/resource/list?media_id=${encodeURIComponent(id)}&pn=${page}&ps=${limit}&keyword=&order=mtime&type=0&tid=0&platform=web`
+    const requestObj = httpFetch(url, {
+      headers: buildHeaders(),
+    })
+    return requestObj.promise.then(({ body }) => {
+      if (body?.code != 0) throw new Error(body?.message || 'Get bilibili favorite detail failed')
+      const data = body?.data || {}
+      const info = data.info || {}
+      const list = data.medias || data.list || []
+      const total = Number(data.info?.media_count ?? data.total ?? list.length)
+      return {
+        list: list.map(buildFavMusicInfo),
+        source,
+        total,
+        page,
+        limit,
+        maxPage: Math.max(1, Math.ceil(total / limit)),
+        key: null,
+        id,
+        info: {
+          name: stripHtml(info.title || info.name),
+          img: normalizePic(info.cover),
+          desc: stripHtml(info.intro || info.description || ''),
+          author: stripHtml(info.upper?.name || ''),
+          play_count: String(info.cnt_info?.play ?? ''),
+        },
+      }
+    })
+  },
+}
+
 export default {
   musicSearch,
+  songList,
   getMusicUrl(songInfo, type = '128k') {
     const bvid = songInfo.songmid || songInfo.id
     return {

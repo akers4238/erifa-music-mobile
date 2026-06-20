@@ -1,5 +1,5 @@
-import { memo } from 'react'
-import { ScrollView, TouchableOpacity, View } from 'react-native'
+import { memo, useEffect, useMemo, useState } from 'react'
+import { LayoutAnimation, Platform, ScrollView, TouchableOpacity, UIManager, View } from 'react-native'
 import { useI18n } from '@/lang'
 import { useNavActiveId, useStatusbarHeight } from '@/store/common/hook'
 import { useTheme } from '@/store/theme/hook'
@@ -12,6 +12,26 @@ import type { InitState } from '@/store/common/state'
 import { exitApp, setNavActiveId } from '@/core/common'
 import Text from '@/components/common/Text'
 import { useSettingValue } from '@/store/setting/hook'
+
+if (Platform.OS == 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true)
+
+const MENU_GROUPS = [
+  {
+    id: 'nav_group_online',
+    titleKey: 'nav_group_online',
+    list: ['nav_search', 'nav_songlist', 'nav_top'],
+  },
+  {
+    id: 'nav_group_my',
+    titleKey: 'nav_group_my',
+    list: ['nav_love', 'nav_local_music', 'nav_play_history'],
+  },
+  {
+    id: 'nav_group_other',
+    titleKey: 'nav_group_other',
+    list: ['nav_plugin_manage', 'nav_permission_manage', 'nav_setting'],
+  },
+] as const
 
 const styles = createStyle({
   container: {
@@ -55,6 +75,22 @@ const styles = createStyle({
     paddingLeft: 20,
     // fontWeight: '500',
   },
+  groupTitle: {
+    flexDirection: 'row',
+    paddingTop: 11,
+    paddingBottom: 7,
+    paddingLeft: 25,
+    paddingRight: 25,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  groupTitleText: {
+    paddingLeft: 20,
+    fontWeight: '500',
+  },
+  groupList: {
+    overflow: 'hidden',
+  },
 })
 
 const Header = () => {
@@ -71,6 +107,11 @@ const Header = () => {
 }
 
 type IdType = InitState['navActiveId'] | 'nav_exit' | 'back_home'
+type GroupId = typeof MENU_GROUPS[number]['id']
+
+const getActiveGroupId = (activeId: InitState['navActiveId']): GroupId => {
+  return MENU_GROUPS.find(group => group.list.some(id => id == activeId))?.id ?? 'nav_group_online'
+}
 
 const MenuItem = ({ id, icon, onPress }: {
   id: IdType
@@ -93,14 +134,56 @@ const MenuItem = ({ id, icon, onPress }: {
           <Icon name={icon} size={20} color={theme['c-font-label']} />
         </View>
         <Text style={styles.text}>{t(id)}</Text>
+    </TouchableOpacity>
+}
+
+const MenuGroup = ({ group, expanded, onToggle, onPress }: {
+  group: typeof MENU_GROUPS[number]
+  expanded: boolean
+  onToggle: (id: GroupId) => void
+  onPress: (id: IdType) => void
+}) => {
+  const theme = useTheme()
+  const t = useI18n()
+  const menuMap = useMemo(() => new Map(NAV_MENUS.map(menu => [menu.id, menu])), [])
+
+  return (
+    <View>
+      <TouchableOpacity style={styles.groupTitle} onPress={() => { onToggle(group.id) }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.iconContent}>
+            <Text size={16} color={theme['c-font-label']}>{expanded ? '-' : '+'}</Text>
+          </View>
+          <Text style={styles.groupTitleText} color={theme['c-font-label']}>{t(group.titleKey)}</Text>
+        </View>
       </TouchableOpacity>
+      {
+        expanded
+          ? <View style={styles.groupList}>
+              {group.list.map(id => {
+                const menu = menuMap.get(id)
+                if (!menu) return null
+                return <MenuItem key={menu.id} id={menu.id} icon={menu.icon} onPress={onPress} />
+              })}
+            </View>
+          : null
+      }
+    </View>
+  )
 }
 
 export default memo(() => {
   const theme = useTheme()
+  const activeId = useNavActiveId()
   // console.log('render drawer nav')
   const showBackBtn = useSettingValue('common.showBackBtn')
   const showExitBtn = useSettingValue('common.showExitBtn')
+  const [expandedGroups, setExpandedGroups] = useState<Set<GroupId>>(() => new Set([getActiveGroupId(activeId)]))
+
+  useEffect(() => {
+    const groupId = getActiveGroupId(activeId)
+    setExpandedGroups(prev => prev.has(groupId) ? prev : new Set([...prev, groupId]))
+  }, [activeId])
 
   const handlePress = (id: IdType) => {
     switch (id) {
@@ -122,13 +205,30 @@ export default memo(() => {
     setNavActiveId(id)
   }
 
+  const handleToggleGroup = (id: GroupId) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   return (
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
       <Header />
       <ScrollView style={styles.menus}>
         <View style={styles.list}>
-          {NAV_MENUS.map(menu => <MenuItem key={menu.id} id={menu.id} icon={menu.icon} onPress={handlePress} />)}
+          {MENU_GROUPS.map(group => (
+            <MenuGroup
+              key={group.id}
+              group={group}
+              expanded={expandedGroups.has(group.id)}
+              onToggle={handleToggleGroup}
+              onPress={handlePress}
+            />
+          ))}
         </View>
       </ScrollView>
 

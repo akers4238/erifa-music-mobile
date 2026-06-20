@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef, useState } from 'react'
-import { ScrollView, TouchableOpacity, View } from 'react-native'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { ScrollView, TextInput, TouchableOpacity, View } from 'react-native'
 
 import ChoosePath, { type ChoosePathType } from '@/components/common/ChoosePath'
 import { Icon } from '@/components/common/Icon'
@@ -67,7 +67,24 @@ export default memo(() => {
   const choosePathRef = useRef<ChoosePathType>(null)
   const [visible, setVisible] = useState(false)
   const [list, setList] = useState<LX.Music.MusicInfo[]>([])
+  const [searchVisible, setSearchVisible] = useState(false)
+  const [keyword, setKeyword] = useState('')
   const playMusicInfo = usePlayMusicInfo()
+  const displayList = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
+    const targetList = list.map((item, index) => ({ item, index }))
+    if (!text) return targetList
+    return targetList.filter(({ item }) => {
+      return [
+        item.name,
+        item.singer,
+        item.meta.albumName,
+        item.meta.filePath,
+        item.meta.originSource,
+        item.meta.originSongId,
+      ].some(value => String(value ?? '').toLowerCase().includes(text))
+    })
+  }, [keyword, list])
 
   const refreshList = () => {
     void getListMusics(LIST_IDS.LOCAL_MUSIC).then(list => {
@@ -121,6 +138,11 @@ export default memo(() => {
     void handleImportMediaFile(localMusicListInfo, path)
   }
 
+  const handlePlayAll = () => {
+    if (!list.length) return
+    void playList(LIST_IDS.LOCAL_MUSIC, 0)
+  }
+
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="always">
       <Section title={t('nav_local_music')}>
@@ -129,19 +151,42 @@ export default memo(() => {
           <Text size={12} color={theme['c-font-label']}>{t('local_music_count', { num: list.length })}</Text>
           <View style={styles.headerActions}>
             {list.length
-              ? <TouchableOpacity onPress={handleClear}>
+              ? <TouchableOpacity style={styles.headerAction} onPress={handlePlayAll}>
+                  <Text size={12} color={theme['c-primary-font-active']}>{t('play_all')}</Text>
+                </TouchableOpacity>
+              : null}
+            {list.length
+              ? <TouchableOpacity style={styles.headerAction} onPress={() => { setSearchVisible(!searchVisible) }}>
+                  <Text size={12} color={theme['c-primary-font-active']}>{t('nav_search')}</Text>
+                </TouchableOpacity>
+              : null}
+            {list.length
+              ? <TouchableOpacity style={styles.headerAction} onPress={handleClear}>
                   <Text size={12} color={theme['c-primary-font-active']}>{t('local_music_clear')}</Text>
                 </TouchableOpacity>
               : null}
             <Button onPress={handleSelectFolder}>{t('local_music_select_folder')}</Button>
           </View>
         </View>
-        {list.length
-          ? list.map((item, index) => (
+        {searchVisible && list.length
+          ? <TextInput
+              style={{
+                ...styles.searchInput,
+                color: theme['c-font'],
+                borderColor: theme['c-border-background'],
+              }}
+              placeholder={t('nav_search')}
+              placeholderTextColor={theme['c-font-label']}
+              value={keyword}
+              onChangeText={setKeyword}
+            />
+          : null}
+        {displayList.length
+          ? displayList.map(({ item, index }, displayIndex) => (
               <LocalMusicItem
                 key={`${item.id}_${index}`}
                 item={item}
-                index={index}
+                index={displayIndex}
                 active={playMusicInfo.listId == LIST_IDS.LOCAL_MUSIC && playMusicInfo.musicInfo?.id == item.id}
                 onPress={() => { void playList(LIST_IDS.LOCAL_MUSIC, index) }}
                 onRemove={() => { void removeListMusics(LIST_IDS.LOCAL_MUSIC, [item.id], false) }}
@@ -175,6 +220,17 @@ const styles = createStyle({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  headerAction: {
+    marginRight: 10,
+  },
+  searchInput: {
+    marginHorizontal: 14,
+    marginVertical: 8,
+    height: 36,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
   },
   item: {
     minHeight: 48,

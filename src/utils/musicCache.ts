@@ -6,6 +6,18 @@ export const MUSIC_PRIVATE_CACHE_DIR = `${privateStorageDirectoryPath}/music/lxm
 export const MUSIC_PIC_CACHE_DIR = `${MUSIC_PRIVATE_CACHE_DIR}/pic`
 export const MUSIC_CACHE_EXTS = ['mp3', 'm4a', 'flac', 'wav', 'ape', 'ogg', 'aac'] as const
 const UNKNOWN_NAME = 'unknown'
+const SOURCE_ALIASES: Record<string, LX.OnlineSource> = {
+  wy: 'wy',
+  netease: 'wy',
+  '网易云': 'wy',
+  '网易云音乐': 'wy',
+  bilibili: 'bilibili',
+  bili: 'bilibili',
+  'b站': 'bilibili',
+  'B站': 'bilibili',
+  '哔哩哔哩': 'bilibili',
+  '嗶哩嗶哩': 'bilibili',
+}
 
 export interface LocalMusicFileNameInfo {
   name: string
@@ -48,8 +60,8 @@ const splitNameAndExt = (fileName: string) => {
   }
 }
 
-const isOnlineSource = (source: string): source is LX.OnlineSource => {
-  return ['kw', 'kg', 'tx', 'wy', 'mg', 'bilibili'].includes(source)
+const normalizeSource = (source: string): LX.OnlineSource | null => {
+  return SOURCE_ALIASES[source.trim()] ?? SOURCE_ALIASES[source.trim().toLowerCase()] ?? null
 }
 
 export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInfo | null => {
@@ -57,8 +69,9 @@ export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInf
   if (!baseName || !ext) return null
 
   const legacyParts = baseName.split('@')
-  if (legacyParts.length >= 4 && isOnlineSource(legacyParts[0]) && legacyParts[1] && legacyParts[2]) {
-    const source = legacyParts[0]
+  const legacySource = normalizeSource(legacyParts[0] ?? '')
+  if (legacyParts.length >= 4 && legacySource && legacyParts[1] && legacyParts[2]) {
+    const source = legacySource
     const songId = legacyParts[1]
     const name = legacyParts.slice(2, -1).join('@') || UNKNOWN_NAME
     const singer = legacyParts.at(-1) || UNKNOWN_NAME
@@ -76,8 +89,8 @@ export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInf
   const normalizedParts = baseName.split('-')
   if (normalizedParts.length >= 4) {
     const songId = normalizedParts.at(-1)!
-    const source = normalizedParts.at(-2)!
-    if (isOnlineSource(source) && songId) {
+    const source = normalizeSource(normalizedParts.at(-2)!)
+    if (source && songId) {
       const titleAndSinger = normalizedParts.slice(0, -2)
       const singer = titleAndSinger.pop() || UNKNOWN_NAME
       const name = titleAndSinger.join('-') || UNKNOWN_NAME
