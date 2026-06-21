@@ -6,18 +6,18 @@ export const MUSIC_PRIVATE_CACHE_DIR = `${privateStorageDirectoryPath}/music/lxm
 export const MUSIC_PIC_CACHE_DIR = `${MUSIC_PRIVATE_CACHE_DIR}/pic`
 export const MUSIC_CACHE_EXTS = ['mp3', 'm4a', 'flac', 'wav', 'ape', 'ogg', 'aac'] as const
 const UNKNOWN_NAME = 'unknown'
-const SOURCE_ALIASES: Record<string, LX.OnlineSource> = {
-  wy: 'wy',
-  netease: 'wy',
-  '网易云': 'wy',
-  '网易云音乐': 'wy',
-  bilibili: 'bilibili',
-  bili: 'bilibili',
-  'b站': 'bilibili',
-  'B站': 'bilibili',
-  '哔哩哔哩': 'bilibili',
-  '嗶哩嗶哩': 'bilibili',
-}
+const SOURCE_ALIASES = new Map<string, LX.OnlineSource>([
+  ['wy', 'wy'],
+  ['netease', 'wy'],
+  ['网易云', 'wy'],
+  ['网易云音乐', 'wy'],
+  ['bilibili', 'bilibili'],
+  ['bili', 'bilibili'],
+  ['b站', 'bilibili'],
+  ['B站', 'bilibili'],
+  ['哔哩哔哩', 'bilibili'],
+  ['嗶哩嗶哩', 'bilibili'],
+])
 
 export interface LocalMusicFileNameInfo {
   name: string
@@ -61,7 +61,7 @@ const splitNameAndExt = (fileName: string) => {
 }
 
 const normalizeSource = (source: string): LX.OnlineSource | null => {
-  return SOURCE_ALIASES[source.trim()] ?? SOURCE_ALIASES[source.trim().toLowerCase()] ?? null
+  return SOURCE_ALIASES.get(source.trim()) ?? SOURCE_ALIASES.get(source.trim().toLowerCase()) ?? null
 }
 
 const isSingerContinuationPart = (part: string) => {
@@ -73,13 +73,17 @@ const isSingerContinuationPart = (part: string) => {
 }
 
 const splitFormattedTitleAndSinger = (parts: string[]) => {
-  if (parts.length <= 1) return {
-    name: parts[0] || UNKNOWN_NAME,
-    singer: UNKNOWN_NAME,
+  if (parts.length <= 1) {
+    return {
+      name: parts[0] ?? UNKNOWN_NAME,
+      singer: UNKNOWN_NAME,
+    }
   }
 
   let singerStartIndex = parts.length - 1
-  while (singerStartIndex > 1 && isSingerContinuationPart(parts[singerStartIndex - 1])) singerStartIndex--
+  while (singerStartIndex > 1 && isSingerContinuationPart(parts[singerStartIndex - 1])) {
+    singerStartIndex--
+  }
   return {
     name: parts.slice(0, singerStartIndex).join('-') || UNKNOWN_NAME,
     singer: parts.slice(singerStartIndex).join('-') || UNKNOWN_NAME,

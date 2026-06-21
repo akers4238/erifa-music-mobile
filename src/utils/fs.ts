@@ -87,3 +87,7 @@ export const downloadFile = (url: string, path: string, options: Omit<RNFS.Downl
 export const stopDownload = (jobId: number) => {
   RNFS.stopDownload(jobId)
 }
+
+export const scanFile = (path: string) => {
+  RNFS.scanFile(path)
+}

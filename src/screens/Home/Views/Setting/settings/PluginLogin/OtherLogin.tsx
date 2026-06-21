@@ -1,6 +1,6 @@
 import { memo } from 'react'
+import { View } from 'react-native'
 
-import SubTitle from '../../components/SubTitle'
 import Text from '@/components/common/Text'
 import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
@@ -36,7 +36,7 @@ export default memo(() => {
   const theme = useTheme()
 
   return (
-    <SubTitle title={t('setting_plugin_login_other')}>
+    <View style={styles.container}>
       {
         LOGIN_ITEMS.map(item => (
           <WebCookieLogin
@@ -51,11 +51,15 @@ export default memo(() => {
         ))
       }
       <Text style={styles.tip} size={12} color={theme['c-600']}>{t('setting_plugin_login_other_tip')}</Text>
-    </SubTitle>
+    </View>
   )
 })
 
 const styles = createStyle({
+  container: {
+    paddingLeft: 25,
+    marginBottom: 18,
+  },
   tip: {
     marginTop: 12,
   },

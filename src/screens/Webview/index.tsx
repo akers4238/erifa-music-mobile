@@ -33,7 +33,7 @@ export default memo(({ componentId, url, title }: { componentId: string, url: st
   const webviewRef = useRef<WebView>(null)
   const [webViewKey, setWebViewKey] = useState(0)
   const [currentUrl, setCurrentUrl] = useState(url)
-  const [pageTitle, setPageTitle] = useState(title || url)
+  const [pageTitle, setPageTitle] = useState(title ?? url)
   const [canGoBack, setCanGoBack] = useState(false)
   const [progress, setProgress] = useState(0)
 

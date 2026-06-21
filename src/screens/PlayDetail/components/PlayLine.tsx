@@ -94,12 +94,16 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }
   const time = lyricLines[targetLineNum]?.time ?? 0
   const timeLabel = formatPlayTime2(time / 1000)
+  const lineText = lyricLines[targetLineNum]?.text ?? ''
   return (
     <Animated.View style={{ ...styles.playLine, opacity: opsAnim }}>
-      <Text style={styles.label} color={theme['c-primary-font']} size={13}>{timeLabel}</Text>
-      <View style={styles.lineContent}>
-        <View style={{ ...styles.lineShadow, backgroundColor: theme['c-content-background'] }}>
-          <View style={{ ...styles.line, backgroundColor: theme['c-primary-font'] }} />
+      <View style={{
+        ...styles.selectedContent,
+        backgroundColor: theme['c-primary-light-100-alpha-700'],
+      }}>
+        <View style={styles.textContent}>
+          <Text style={styles.label} color={theme['c-primary-font']} size={12}>{timeLabel}</Text>
+          <Text numberOfLines={1} color={theme['c-primary-font']} size={14}>{lineText ? lineText : timeLabel}</Text>
         </View>
         <TouchableOpacity style={styles.button} onPress={handlePlayLine}>
           <Icon name="play" color={theme['c-button-font']} size={18} />
@@ -112,11 +116,11 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
 const styles = createStyle({
   playLine: {
     position: 'absolute',
-    width: '100%',
+    width: '92%',
     top: '40%',
-    left: 0,
-    height: 20,
-    marginTop: -10,
+    left: '4%',
+    minHeight: 44,
+    marginTop: -22,
     zIndex: 10,
     elevation: 10,
     overflow: 'visible',
@@ -124,40 +128,26 @@ const styles = createStyle({
     // paddingBottom: 5,
     // backgroundColor: 'rgba(0,0,0,0.1)',
   },
+  selectedContent: {
+    minHeight: 44,
+    borderRadius: 4,
+    paddingLeft: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  textContent: {
+    flex: 1,
+    paddingVertical: 6,
+  },
   label: {
-    position: 'absolute',
-    right: 45,
-    bottom: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  lineContent: {
-    // backgroundColor: 'rgba(0,0,0,0.1)',
-    position: 'absolute',
-    width: '100%',
-    height: 20,
-    top: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  line: {
-    flex: 1,
-    height: 3,
-    borderRadius: 3,
-  },
-  lineShadow: {
-    marginLeft: 30,
-    flex: 1,
-    height: 7,
-    borderRadius: 7,
-    padding: 2,
-    opacity: 0.95,
+    marginBottom: 2,
   },
   button: {
     flex: 0,
-    paddingLeft: 5,
-    paddingRight: 15,
+    width: 48,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })

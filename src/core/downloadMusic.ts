@@ -8,13 +8,12 @@ import { toOldMusicInfo } from '@/utils'
 
 const MAX_CONCURRENT_DOWNLOADS = 5
 
-const buildSavePath = async(musicInfo: LX.Music.MusicInfo, url: string) => {
-  if (musicInfo.source == 'local') return musicInfo.meta.filePath
-  const cachedPath = await findCachedMusicPath(musicInfo as LX.Music.MusicInfoOnline)
+const buildSavePath = async(musicInfo: LX.Music.MusicInfoOnline, url: string) => {
+  const cachedPath = await findCachedMusicPath(musicInfo)
   if (cachedPath) return cachedPath
 
   const ext = getExtFromUrl(url)
-  return buildMusicCachePath(musicInfo as LX.Music.MusicInfoOnline, ext)
+  return buildMusicCachePath(musicInfo, ext)
 }
 
 const buildHeaders = (resource: LX.Player.MusicResource) => {
@@ -25,11 +24,12 @@ const buildHeaders = (resource: LX.Player.MusicResource) => {
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error)
 
-const getPicUrl = async(musicInfo: LX.Music.MusicInfoOnline) => {
+const getPicUrl = async(musicInfo: LX.Music.MusicInfoOnline): Promise<string> => {
   if (musicInfo.meta.picUrl) return musicInfo.meta.picUrl
-  const sdk = musicSdk[musicInfo.source as LX.OnlineSource]
+  const sdk = musicSdk[musicInfo.source]
   if (!sdk?.getPic) return ''
-  return sdk.getPic(toOldMusicInfo(musicInfo))
+  const result = await Promise.resolve(sdk.getPic(toOldMusicInfo(musicInfo)) as unknown)
+  return typeof result == 'string' ? result : ''
 }
 
 const downloadMusicPic = async(musicInfo: LX.Music.MusicInfoOnline) => {
@@ -53,6 +53,7 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
     toast(global.i18n.t('download_music_skip_local'))
     return
   }
+  const onlineMusicInfo = musicInfo
 
   const granted = await requestStoragePermission()
   if (!granted) {
@@ -63,14 +64,14 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   toast(global.i18n.t('download_music_start', { name: musicInfo.name }))
   await ensureMusicCacheDir()
   const resource = await getMusicResource({
-    musicInfo,
+    musicInfo: onlineMusicInfo,
     isRefresh: true,
     quality: settingState.setting['player.playQuality'],
     allowToggleSource: true,
   })
-  const savePath = await buildSavePath(musicInfo, resource.url)
+  const savePath = await buildSavePath(onlineMusicInfo, resource.url)
   if (await existsFile(savePath)) {
-    await downloadMusicPic(musicInfo as LX.Music.MusicInfoOnline)
+    await downloadMusicPic(onlineMusicInfo)
     toast(global.i18n.t('download_music_success'))
     return
   }
@@ -80,7 +81,7 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   })
   const result = await promise
   if (result.statusCode && result.statusCode >= 400) throw new Error(`HTTP ${result.statusCode}`)
-  await downloadMusicPic(musicInfo as LX.Music.MusicInfoOnline)
+  await downloadMusicPic(onlineMusicInfo)
   toast(global.i18n.t('download_music_success'))
 }
 
