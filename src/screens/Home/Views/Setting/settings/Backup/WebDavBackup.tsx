@@ -18,6 +18,7 @@ const emptyConfig: WebDavBackupConfig = {
   dir: '',
   restorePath: '',
 }
+const defaultBackupDir = 'lx-music-mobile/playlist-backup'
 
 const ConfigInput = ({
   label,
@@ -68,43 +69,52 @@ export default memo(() => {
   }
 
   const upload = () => {
-    const nextConfig = {
+    const nextConfig: WebDavBackupConfig = {
       ...config,
       url: config.url.trim(),
       username: config.username.trim(),
-      dir: config.dir.trim() || 'lx-music-mobile/playlist-backup',
+      dir: config.dir.trim(),
     }
     setConfig(nextConfig)
     void saveWebDavBackupConfig(nextConfig)
-    handleWebDavBackupList(nextConfig)
+    handleWebDavBackupList({
+      ...nextConfig,
+      dir: nextConfig.dir || defaultBackupDir,
+    })
     dialogRef.current?.setVisible(false)
   }
 
   const restore = () => {
-    const nextConfig = {
+    const nextConfig: WebDavBackupConfig = {
       ...config,
       url: config.url.trim(),
       username: config.username.trim(),
-      dir: config.dir.trim() || 'lx-music-mobile/playlist-backup',
+      dir: config.dir.trim(),
       restorePath: config.restorePath.trim(),
     }
     setConfig(nextConfig)
     void saveWebDavBackupConfig(nextConfig)
-    handleWebDavRestoreList(nextConfig)
+    handleWebDavRestoreList({
+      ...nextConfig,
+      dir: nextConfig.dir || defaultBackupDir,
+    })
     dialogRef.current?.setVisible(false)
   }
 
   const loadFiles = () => {
-    const nextConfig = {
+    const nextConfig: WebDavBackupConfig = {
       ...config,
       url: config.url.trim(),
       username: config.username.trim(),
-      dir: config.dir.trim() || 'lx-music-mobile/playlist-backup',
+      dir: config.dir.trim(),
     }
     setConfig(nextConfig)
     void saveWebDavBackupConfig(nextConfig)
     setLoadingFiles(true)
-    void getWebDavBackupFiles(nextConfig).then(list => {
+    void getWebDavBackupFiles({
+      ...nextConfig,
+      dir: nextConfig.dir || defaultBackupDir,
+    }).then(list => {
       setFiles(list)
       if (!list.length) toast(t('setting_backup_webdav_files_empty'))
     }).catch((err: Error) => {
@@ -144,12 +154,12 @@ export default memo(() => {
             value={config.dir}
             label={t('setting_backup_webdav_dir')}
             onChangeText={text => { updateConfig('dir', text) }}
-            placeholder="lx-music-mobile/playlist-backup" />
+            placeholder={defaultBackupDir} />
           <ConfigInput
             value={config.restorePath}
             label={t('setting_backup_webdav_restore_path')}
             onChangeText={text => { updateConfig('restorePath', text) }}
-            placeholder="lx-music-mobile/playlist-backup/lx_list_2026-06-19T00-00-00-000Z.json" />
+            placeholder={`${defaultBackupDir}/lx_list_2026-06-19T00-00-00-000Z.json`} />
           <Text style={styles.tip} size={12} color={theme['c-font-label']}>{t('setting_backup_webdav_tip')}</Text>
           <View style={styles.actions}>
             <Button onPress={upload}>{t('setting_backup_webdav_upload')}</Button>

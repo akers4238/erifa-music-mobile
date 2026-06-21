@@ -1,11 +1,12 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
-import { type NativeScrollEvent, type NativeSyntheticEvent, View, TouchableOpacity } from 'react-native'
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { type NativeScrollEvent, type NativeSyntheticEvent, View, TouchableOpacity, Animated } from 'react-native'
 import Text from '@/components/common/Text'
 import { createStyle } from '@/utils/tools'
 import { type Lines } from 'lrc-file-parser'
 import { useTheme } from '@/store/theme/hook'
 import { formatPlayTime2 } from '@/utils'
 import { Icon } from '@/components/common/Icon'
+import { BorderWidths } from '@/theme'
 
 
 export interface PlayLineType {
@@ -20,6 +21,9 @@ export interface PlayLineProps {
   onPlayLine: (time: number) => void
 }
 
+const ANIMATION_DURATION = 200
+const LINE_POSITION_RATIO = 0.4
+
 export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => {
   const theme = useTheme()
   const [scrollInfo, setScrollInfo] = useState<NativeSyntheticEvent<NativeScrollEvent>['nativeEvent'] | null>(null)
@@ -27,6 +31,17 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   const [lyricLines, setLyricLines] = useState<Lines>([])
   const [selectedLineNum, setSelectedLineNum] = useState<number | null>(null)
   const [visible, setVisible] = useState(false)
+  const opacityAnim = useRef(new Animated.Value(0)).current
+
+  const setShow = (show: boolean) => {
+    Animated.timing(opacityAnim, {
+      toValue: show ? 1 : 0,
+      duration: ANIMATION_DURATION,
+      useNativeDriver: true,
+    }).start(() => {
+      if (!show) setVisible(false)
+    })
+  }
 
   useImperativeHandle(ref, () => ({
     updateScrollInfo(info) {
@@ -41,22 +56,29 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     selectLine(lineNum) {
       setSelectedLineNum(lineNum)
       setVisible(true)
+      requestAnimationFrame(() => {
+        setShow(true)
+      })
     },
     setVisible(v) {
       if (v) {
+        setSelectedLineNum(null)
         setVisible(true)
       } else {
         setSelectedLineNum(null)
-        setVisible(false)
       }
+      requestAnimationFrame(() => {
+        setShow(v)
+      })
     },
   }))
 
   const targetLineNum = useMemo(() => {
     if (selectedLineNum != null) return selectedLineNum
     if (!scrollInfo) return null
-    const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * 0.4
-    let lineOffset = listLayoutInfo.spaceHeight || 0
+    if (!listLayoutInfo.lineHeights.length) return null
+    const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * LINE_POSITION_RATIO
+    let lineOffset = listLayoutInfo.spaceHeight
     let found = -1
     for (let line = 0; line < listLayoutInfo.lineHeights.length; line++) {
       lineOffset += listLayoutInfo.lineHeights[line] || 0
@@ -76,22 +98,6 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     return formatPlayTime2(Math.max(0, time) / 1000)
   }, [time])
 
-  const lineY = useMemo(() => {
-    try {
-      if (targetLineNum == null || !scrollInfo || !listLayoutInfo.lineHeights.length) return null
-      let y = listLayoutInfo.spaceHeight || 0
-      const end = Math.min(targetLineNum, listLayoutInfo.lineHeights.length - 1)
-      for (let line = 0; line <= end; line++) {
-        y += listLayoutInfo.lineHeights[line] || 0
-      }
-      const result = y - (scrollInfo.contentOffset?.y || 0)
-      if (isNaN(result)) return null
-      return result
-    } catch {
-      return null
-    }
-  }, [targetLineNum, scrollInfo, listLayoutInfo])
-
   const handlePlayLine = () => {
     if (!lyricLines.length) return
     const num = targetLineNum
@@ -104,45 +110,59 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   if (!visible) return null
   if (targetLineNum == null) return null
   if (targetLineNum < 0 || targetLineNum >= lyricLines.length) return null
-  if (lineY == null) return null
 
   return (
-    <View style={{ ...styles.container, top: lineY }}>
-      <View style={{ ...styles.line, backgroundColor: theme['c-primary-alpha-600'] }} />
-      <View style={styles.rightContent}>
-        <Text color={theme['c-primary']} size={11}>{timeLabel}</Text>
+    <Animated.View pointerEvents="box-none" style={{ ...styles.container, opacity: opacityAnim }}>
+      <Text style={styles.label} color={theme['c-primary']} size={12}>{timeLabel}</Text>
+      <View style={styles.lineContent}>
+        <View style={{ ...styles.line, borderBottomColor: theme['c-primary-alpha-700'] }} />
         <TouchableOpacity style={styles.playBtn} onPress={handlePlayLine}>
-          <Icon name="play" color={theme['c-primary']} size={16} />
+          <Icon name="play" color={theme['c-primary']} size={18} />
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   )
 })
 
 const styles = createStyle({
   container: {
     position: 'absolute',
+    width: '100%',
     left: 0,
-    right: 0,
-    height: 22,
-    flexDirection: 'row',
-    alignItems: 'center',
+    top: '40%',
+    height: 20,
+    marginTop: -10,
     zIndex: 10,
     elevation: 10,
-    paddingRight: 14,
+    overflow: 'visible',
   },
-  line: {
-    flex: 1,
-    height: 1,
-  },
-  rightContent: {
+  label: {
+    position: 'absolute',
+    right: 45,
+    bottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 8,
+    gap: 5,
+  },
+  lineContent: {
+    position: 'absolute',
+    width: '100%',
+    height: 20,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  line: {
+    marginLeft: 30,
+    borderBottomWidth: BorderWidths.normal2,
+    borderStyle: 'dashed',
+    flex: 1,
   },
   playBtn: {
-    width: 24,
-    height: 24,
+    width: 34,
+    height: 34,
+    paddingRight: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

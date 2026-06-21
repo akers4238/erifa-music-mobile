@@ -450,10 +450,10 @@ export interface WebDavBackupConfig {
 }
 
 const defaultWebDavBackupConfig: WebDavBackupConfig = {
-  url: 'https://webdav.123pan.cn/webdav',
-  username: '1142451953',
-  password: 'trrsv0pj',
-  dir: 'lx-music-mobile/playlist-backup',
+  url: '',
+  username: '',
+  password: '',
+  dir: '',
   restorePath: '',
 }
 

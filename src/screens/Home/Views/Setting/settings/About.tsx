@@ -112,7 +112,7 @@ export default memo(() => {
       </View>
       <View style={styles.part}>
         <Text style={styles.text}>By: </Text>
-        <Text style={styles.text}>落雪无痕</Text>
+        <Text style={styles.text}>erifa</Text>
       </View>
     </Section>
   )
