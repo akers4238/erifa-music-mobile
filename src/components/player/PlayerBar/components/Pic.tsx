@@ -1,6 +1,6 @@
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import RNFS from 'react-native-fs'
-import { StyleSheet, TouchableOpacity } from 'react-native'
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native'
 import { navigations } from '@/navigation'
 import { usePlayerMusicInfo } from '@/store/player/hook'
 import { scaleSizeH } from '@/utils/pixelRatio'
@@ -9,7 +9,6 @@ import playerState from '@/store/player/state'
 import { LIST_IDS, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import Image from '@/components/common/Image'
 import { setLoadErrorPicUrl, setMusicInfo } from '@/core/player/playInfo'
-import Menu, { type MenuType } from '@/components/common/Menu'
 import { useI18n } from '@/lang'
 import { toast, tipDialog, requestStoragePermission } from '@/utils/tools'
 import { downloadFile, scanFile, mkdir, externalStorageDirectoryPath, temporaryDirectoryPath } from '@/utils/fs'
@@ -27,8 +26,6 @@ const styles = StyleSheet.create({
 export default ({ isHome }: { isHome: boolean }) => {
   const t = useI18n()
   const musicInfo = usePlayerMusicInfo()
-  const coverBtnRef = useRef<TouchableOpacity>(null)
-  const menuRef = useRef<MenuType>(null)
 
   const handlePress = () => {
     if (!musicInfo.id) return
@@ -36,21 +33,28 @@ export default ({ isHome }: { isHome: boolean }) => {
   }
 
   const handleLongPress = () => {
-    coverBtnRef.current?.measure?.((fx, fy, width, height, px, py) => {
-      if (!menuRef.current) return
-      menuRef.current.show({ x: Math.ceil(px), y: Math.ceil(py), w: Math.ceil(width), h: Math.ceil(height) })
-    })
-  }
+    if (!musicInfo.id) return
 
-  const handleMenuPress = ({ action }: { action: string }) => {
-    switch (action) {
-      case 'save_cover':
-        handleSaveCover()
-        break
-      case 'jump_list':
-        global.app_event.jumpListPosition()
-        break
+    const buttons: Array<{ text: string, onPress: () => void }> = [
+      { text: t('cancel'), onPress: () => {} },
+    ]
+
+    buttons.unshift({
+      text: t('player_pic_save_cover'),
+      onPress: () => { handleSaveCover() },
+    })
+
+    if (isHome) {
+      const listId = playerState.playMusicInfo.listId
+      if (listId && listId !== LIST_IDS.DOWNLOAD) {
+        buttons.unshift({
+          text: t('player_pic_jump_list'),
+          onPress: () => { global.app_event.jumpListPosition() },
+        })
+      }
     }
+
+    Alert.alert('', '', buttons)
   }
 
   const handleSaveCover = async () => {
@@ -84,7 +88,7 @@ export default ({ isHome }: { isHome: boolean }) => {
       }
 
       const publicDir = `${externalStorageDirectoryPath}/Pictures/EMusic`
-      await mkdir(publicDir)
+      await mkdir(publicDir).catch(() => {})
       const savePath = `${publicDir}/${fileName}`
       await RNFS.copyFile(tempPath, savePath)
 
@@ -106,31 +110,9 @@ export default ({ isHome }: { isHome: boolean }) => {
     })
   }, [])
 
-  const showJumpList = (() => {
-    if (!isHome) return false
-    const listId = playerState.playMusicInfo.listId
-    return !!(listId && listId !== LIST_IDS.DOWNLOAD)
-  })()
-
   return (
-    <>
-      <TouchableOpacity ref={coverBtnRef} onLongPress={handleLongPress} onPress={handlePress} activeOpacity={0.7}>
-        <Image url={musicInfo.pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={styles.image} onError={handleError} />
-      </TouchableOpacity>
-      <Menu
-        ref={menuRef}
-        menus={
-          showJumpList
-            ? [
-                { action: 'save_cover', label: t('player_pic_save_cover') },
-                { action: 'jump_list', label: t('player_pic_jump_list') },
-              ]
-            : [
-                { action: 'save_cover', label: t('player_pic_save_cover') },
-              ]
-        }
-        onPress={handleMenuPress}
-      />
-    </>
+    <TouchableOpacity onLongPress={handleLongPress} onPress={handlePress} activeOpacity={0.7}>
+      <Image url={musicInfo.pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={styles.image} onError={handleError} />
+    </TouchableOpacity>
   )
 }

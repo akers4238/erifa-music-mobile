@@ -123,7 +123,6 @@ export default memo(({ componentId, url, title }: { componentId: string, url: st
         setSupportMultipleWindows
         javaScriptCanOpenWindowsAutomatically
         mixedContentMode="always"
-        androidLayerType="hardware"
         onShouldStartLoadWithRequest={handleShouldStartLoad}
         onNavigationStateChange={state => {
           setCanGoBack(state.canGoBack)

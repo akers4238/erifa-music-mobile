@@ -147,7 +147,6 @@ export default memo(() => {
                     setSupportMultipleWindows={false}
                     javaScriptCanOpenWindowsAutomatically={false}
                     mixedContentMode="always"
-                    androidLayerType="hardware"
                     overScrollMode="never"
                     onLoadEnd={() => {
                       void saveWebCookie()

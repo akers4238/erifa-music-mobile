@@ -94,7 +94,6 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }
   const time = lyricLines[targetLineNum]?.time ?? 0
   const timeLabel = formatPlayTime2(time / 1000)
-  const lineText = lyricLines[targetLineNum]?.text ?? ''
   return (
     <Animated.View style={{ ...styles.playLine, opacity: opsAnim }}>
       <View style={{
@@ -103,7 +102,6 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
       }}>
         <View style={styles.textContent}>
           <Text style={styles.label} color={theme['c-primary-font']} size={12}>{timeLabel}</Text>
-          <Text numberOfLines={1} color={theme['c-primary-font']} size={14}>{lineText ? lineText : timeLabel}</Text>
         </View>
         <TouchableOpacity style={styles.button} onPress={handlePlayLine}>
           <Icon name="play" color={theme['c-button-font']} size={18} />

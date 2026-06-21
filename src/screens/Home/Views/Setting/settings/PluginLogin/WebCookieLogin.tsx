@@ -156,7 +156,6 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
                     setSupportMultipleWindows={false}
                     javaScriptCanOpenWindowsAutomatically={false}
                     mixedContentMode="always"
-                    androidLayerType="hardware"
                     overScrollMode="never"
                     allowsInlineMediaPlayback
                     onLoadEnd={() => {
@@ -194,11 +193,11 @@ const styles = createStyle({
     marginTop: 12,
   },
   btns: {
-    marginTop: 8,
+    marginTop: 10,
     flexDirection: 'row',
   },
   summary: {
-    marginTop: 6,
+    marginTop: 8,
   },
   loginContent: {
     flex: 1,
