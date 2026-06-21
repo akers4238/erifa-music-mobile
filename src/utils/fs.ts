@@ -89,5 +89,5 @@ export const stopDownload = (jobId: number) => {
 }
 
 export const scanFile = (path: string) => {
-  RNFS.scanFile(path)
+  void RNFS.scanFile(path)
 }

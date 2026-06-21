@@ -7,6 +7,61 @@ import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } f
 import listState from '@/store/list/state'
 import type { WebDavBackupConfig } from '@/utils/data'
 
+interface MusicFreeBackupItem {
+  id?: string | number
+  title?: string
+  artist?: string
+  album?: string
+  artwork?: string
+  platform?: string
+  duration?: number
+  bvid?: string
+}
+
+interface MusicFreeBackupSheet {
+  id?: string
+  title?: string
+  musicList?: MusicFreeBackupItem[]
+}
+
+type BuiltinMusicFreeSource = 'wy' | 'bilibili'
+
+const musicFreePlatformMap = new Map<string, BuiltinMusicFreeSource>([
+  ['wy', 'wy'],
+  ['netease', 'wy'],
+  ['neteasemusic', 'wy'],
+  ['163', 'wy'],
+  ['wangyi', 'wy'],
+  ['wangyiyunyinyue', 'wy'],
+  ['bilibili', 'bilibili'],
+  ['bili', 'bilibili'],
+])
+
+const normalizeMusicFreePlatform = (platform: string | undefined, item: MusicFreeBackupItem): BuiltinMusicFreeSource => {
+  const raw = `${platform ?? ''}`.trim()
+  const normalized = raw.replace(/\s+/g, '').toLowerCase()
+  const mapped = musicFreePlatformMap.get(normalized)
+  if (mapped) return mapped
+
+  if (/网易|網易|云音乐|雲音樂/.test(raw) || normalized.includes('缃戞槗') || normalized.includes('浜戦煶')) {
+    return 'wy'
+  }
+  if (/哔哩|嗶哩|b站|B站/.test(raw) || normalized.includes('bilibili') || normalized.includes('bili') || normalized.includes('鍝斿摡') || normalized.includes('绔')) {
+    return 'bilibili'
+  }
+  if (typeof item.bvid == 'string' || /^BV/i.test(`${item.id ?? ''}`)) return 'bilibili'
+  return 'wy'
+}
+
+const normalizeMusicFreeDuration = (duration: number | undefined): string | null => {
+  if (!duration) return null
+  const seconds = duration > 24 * 60 * 60 ? Math.round(duration / 1000) : duration
+  return formatPlayTime2(seconds)
+}
+
+const isMusicFreeSheet = (sheet: unknown): sheet is MusicFreeBackupSheet => {
+  return !!sheet && typeof sheet == 'object'
+}
 
 const getAllLists = async() => {
   const lists = []
@@ -33,16 +88,16 @@ const buildMusicFreeBackupData = async() => {
     musicSheets: lists.map(list => ({
       id: list.id,
       title: list.name,
-      musicList: list.list.map((item: any) => ({
+      musicList: list.list.map((item: LX.Music.MusicInfo) => ({
         id: item.id,
         title: item.name,
         artist: item.singer,
-        album: item.meta?.albumName || '',
-        artwork: item.meta?.picUrl || '',
+        album: item.meta.albumName ?? '',
+        artwork: item.meta.picUrl ?? '',
         platform: item.source,
         duration: item.interval ? (() => {
           const parts = item.interval.split(':')
-          return parts.length === 2 ? parseInt(parts[0]) * 60 + parseInt(parts[1]) : 0
+          return parts.length === 2 ? parseInt(parts[0] ?? '0', 10) * 60 + parseInt(parts[1] ?? '0', 10) : 0
         })() : 0,
       })),
     })),
@@ -53,36 +108,39 @@ const buildMusicFreeBackupData = async() => {
 /**
  * 将 MusicFree 格式的歌曲项转换为内部格式
  */
-const convertMusicFreeItem = (item: any): LX.Music.MusicInfoOnline => {
-  return {
-    id: `${item.id ?? ''}`,
+const convertMusicFreeItem = (item: MusicFreeBackupItem): LX.Music.MusicInfoOnline => {
+  const source = normalizeMusicFreePlatform(item.platform, item)
+  const id = `${item.id ?? item.bvid ?? ''}`
+  const musicInfo: LX.Music.MusicInfoOnline = {
+    id,
     name: item.title ?? '',
     singer: item.artist ?? '',
-    source: item.platform ?? 'wy',
-    interval: item.duration ? formatPlayTime2(item.duration) : null,
+    source,
+    interval: normalizeMusicFreeDuration(item.duration),
     meta: {
-      songId: `${item.id ?? ''}`,
+      songId: id,
       albumName: item.album ?? '',
       picUrl: item.artwork ?? '',
       qualitys: [],
       _qualitys: {},
     },
-  } as LX.Music.MusicInfoOnline
+  }
+  return musicInfo
 }
 
 /**
  * 导入 MusicFree 格式的歌单数据
  */
-const importMusicFreeData = async(musicSheets: any[]) => {
+const importMusicFreeData = async(musicSheets: MusicFreeBackupSheet[]) => {
   const lists: Array<LX.List.MyDefaultListInfoFull | LX.List.MyLoveListInfoFull | LX.List.UserListInfoFull> = []
   for (const sheet of musicSheets) {
-    const musicList = (sheet.musicList || []).map((item: any) => convertMusicFreeItem(item))
+    const musicList = (sheet.musicList ?? []).map(convertMusicFreeItem)
     const list: LX.List.UserListInfoFull = {
       id: sheet.id ?? `musicfree__${Date.now()}`,
-      name: sheet.title || '未命名歌单',
+      name: sheet.title?.trim() ? sheet.title : '未命名歌单',
       list: filterMusicList(musicList),
-      source: null,
-      sourceListId: null,
+      source: undefined,
+      sourceListId: undefined,
       locationUpdateTime: null,
     }
     lists.push(list)
@@ -210,7 +268,8 @@ const importPlayListData = async(configData: any) => {
   // 检测 MusicFree 格式（含有 musicSheets 字段）
   if (configData.musicSheets && Array.isArray(configData.musicSheets)) {
     if (!await showConfirm()) return true
-    await importMusicFreeData(configData.musicSheets)
+    const musicSheets = (configData.musicSheets as unknown[]).filter(isMusicFreeSheet)
+    await importMusicFreeData(musicSheets)
     return
   }
   switch (configData.type) {

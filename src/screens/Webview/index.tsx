@@ -25,7 +25,7 @@ const getIntentFallbackUrl = (url: string) => {
   }
 }
 
-const isWebUrl = (url: string) => /^(https?:|about:blank)/i.test(url)
+const isWebUrl = (url: string) => /^(https?:|about:blank|data:|blob:|file:)/i.test(url)
 
 export default memo(({ componentId, url, title }: { componentId: string, url: string, title?: string }) => {
   const theme = useTheme()
@@ -63,17 +63,22 @@ export default memo(({ componentId, url, title }: { componentId: string, url: st
     void Linking.openURL(currentUrl)
   }, [currentUrl])
 
+  const loadUrl = useCallback((targetUrl: string) => {
+    if (!targetUrl) return
+    setCurrentUrl(targetUrl)
+    setWebViewKey(key => key + 1)
+  }, [])
+
   const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
     if (isWebUrl(url)) return true
     const fallbackUrl = getIntentFallbackUrl(url)
     if (/^https?:/i.test(fallbackUrl)) {
-      setCurrentUrl(fallbackUrl)
-      setWebViewKey(key => key + 1)
+      loadUrl(fallbackUrl)
       return false
     }
     void Linking.openURL(url).catch(() => {})
     return false
-  }, [])
+  }, [loadUrl])
 
   useEffect(() => {
     setComponentId(COMPONENT_IDS.webview, componentId)
@@ -105,13 +110,14 @@ export default memo(({ componentId, url, title }: { componentId: string, url: st
       </View>
       {
         progress > 0 && progress < 1
-          ? <View style={{ ...styles.progress, backgroundColor: theme['c-primary'], width: `${Math.max(5, progress * 100)}%` }} />
+          ? <View pointerEvents="none" style={{ ...styles.progress, backgroundColor: theme['c-primary'], width: `${Math.max(5, progress * 100)}%` }} />
           : null
       }
       <WebView
         ref={webviewRef}
         key={webViewKey}
         source={{ uri: currentUrl }}
+        originWhitelist={['*']}
         userAgent={DEFAULT_UA}
         sharedCookiesEnabled
         thirdPartyCookiesEnabled
@@ -120,10 +126,20 @@ export default memo(({ componentId, url, title }: { componentId: string, url: st
         cacheEnabled
         allowFileAccess
         allowsInlineMediaPlayback
-        setSupportMultipleWindows
-        javaScriptCanOpenWindowsAutomatically
+        allowsFullscreenVideo
+        nestedScrollEnabled
+        androidLayerType="hardware"
+        mediaPlaybackRequiresUserAction={false}
+        keyboardDisplayRequiresUserAction={false}
+        textZoom={100}
+        setSupportMultipleWindows={false}
+        javaScriptCanOpenWindowsAutomatically={false}
         mixedContentMode="always"
+        overScrollMode="never"
         onShouldStartLoadWithRequest={handleShouldStartLoad}
+        onOpenWindow={({ nativeEvent }) => {
+          if (nativeEvent.targetUrl && isWebUrl(nativeEvent.targetUrl)) loadUrl(nativeEvent.targetUrl)
+        }}
         onNavigationStateChange={state => {
           setCanGoBack(state.canGoBack)
           if (state.url) setCurrentUrl(state.url)

@@ -259,6 +259,7 @@ export default () => {
   const handlePlayLine = useCallback((time: number) => {
     playLineRef.current?.setVisible(false)
     global.app_event.setProgress(time)
+    if (!playerState.isPlay) global.app_event.play()
   }, [])
 
   const handleSelectLine = useCallback((lineNum: number) => {

@@ -27,6 +27,8 @@ const getIntentFallbackUrl = (url: string) => {
   }
 }
 
+const isWebUrl = (url: string) => /^(https?:|about:blank|data:|blob:|file:)/i.test(url)
+
 export default memo(() => {
   const t = useI18n()
   const theme = useTheme()
@@ -93,19 +95,24 @@ export default memo(() => {
     }
   }
 
+  const loadLoginUrl = useCallback((targetUrl: string) => {
+    if (!targetUrl) return
+    setLoginPageUrl(targetUrl)
+    setWebViewKey(key => key + 1)
+  }, [])
+
   const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
-    if (/^(https?:|about:blank)/i.test(url)) return true
+    if (isWebUrl(url)) return true
     const fallbackUrl = getIntentFallbackUrl(url)
     if (/^https?:/i.test(fallbackUrl)) {
-      setLoginPageUrl(fallbackUrl)
-      setWebViewKey(key => key + 1)
+      loadLoginUrl(fallbackUrl)
       return false
     }
     void Linking.openURL(url).catch(() => {
       setLoginStatus(t('setting_basic_netease_login_failed'))
     })
     return false
-  }, [t])
+  }, [loadLoginUrl, t])
 
   useEffect(() => {
     if (!loginVisible) return
@@ -144,10 +151,19 @@ export default memo(() => {
                     domStorageEnabled
                     javaScriptEnabled
                     cacheEnabled
+                    originWhitelist={['*']}
+                    androidLayerType="hardware"
+                    nestedScrollEnabled
+                    textZoom={100}
+                    mediaPlaybackRequiresUserAction={false}
+                    keyboardDisplayRequiresUserAction={false}
                     setSupportMultipleWindows={false}
                     javaScriptCanOpenWindowsAutomatically={false}
                     mixedContentMode="always"
                     overScrollMode="never"
+                    onOpenWindow={({ nativeEvent }) => {
+                      if (nativeEvent.targetUrl && isWebUrl(nativeEvent.targetUrl)) loadLoginUrl(nativeEvent.targetUrl)
+                    }}
                     onLoadEnd={() => {
                       void saveWebCookie()
                     }}

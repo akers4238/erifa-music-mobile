@@ -37,6 +37,8 @@ const getIntentFallbackUrl = (url: string) => {
   }
 }
 
+const isWebUrl = (url: string) => /^(https?:|about:blank|data:|blob:|file:)/i.test(url)
+
 export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, settingKey }: Props) => {
   const t = useI18n()
   const theme = useTheme()
@@ -101,19 +103,24 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
     setLoginStatus(t('setting_plugin_login_web_cleared'))
   }
 
+  const loadLoginUrl = useCallback((targetUrl: string) => {
+    if (!targetUrl) return
+    setLoginPageUrl(targetUrl)
+    setWebViewKey(key => key + 1)
+  }, [])
+
   const handleShouldStartLoad = useCallback(({ url }: { url: string }) => {
-    if (/^(https?:|about:blank)/i.test(url)) return true
+    if (isWebUrl(url)) return true
     const fallbackUrl = getIntentFallbackUrl(url)
     if (/^https?:/i.test(fallbackUrl)) {
-      setLoginPageUrl(fallbackUrl)
-      setWebViewKey(key => key + 1)
+      loadLoginUrl(fallbackUrl)
       return false
     }
     void Linking.openURL(url).catch(() => {
       setLoginStatus(t('setting_plugin_login_web_failed'))
     })
     return false
-  }, [t])
+  }, [loadLoginUrl, t])
 
   useEffect(() => {
     if (!loginVisible) return
@@ -153,11 +160,20 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
                     domStorageEnabled
                     javaScriptEnabled
                     cacheEnabled
+                    originWhitelist={['*']}
+                    androidLayerType="hardware"
+                    nestedScrollEnabled
+                    textZoom={100}
+                    mediaPlaybackRequiresUserAction={false}
+                    keyboardDisplayRequiresUserAction={false}
                     setSupportMultipleWindows={false}
                     javaScriptCanOpenWindowsAutomatically={false}
                     mixedContentMode="always"
                     overScrollMode="never"
                     allowsInlineMediaPlayback
+                    onOpenWindow={({ nativeEvent }) => {
+                      if (nativeEvent.targetUrl && isWebUrl(nativeEvent.targetUrl)) loadLoginUrl(nativeEvent.targetUrl)
+                    }}
                     onLoadEnd={() => {
                       void saveWebCookie()
                     }}

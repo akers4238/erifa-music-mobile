@@ -12,10 +12,10 @@ export default () => {
   const t = useI18n()
   const musicInfo = usePlayerMusicInfo()
 
-  const handleSave = async () => {
+  const handleSave = async() => {
     const picUrl = musicInfo.pic
     if (!picUrl) {
-      tipDialog({ message: t('player_pic_no_cover') })
+      void tipDialog({ message: t('player_pic_no_cover') })
       return
     }
 

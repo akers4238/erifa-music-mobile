@@ -101,7 +101,7 @@ export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInf
     const source = legacySource
     const songId = legacyParts[1]
     const name = legacyParts.slice(2, -1).join('@') || UNKNOWN_NAME
-    const singer = legacyParts.at(-1) || UNKNOWN_NAME
+    const singer = legacyParts.at(-1) ?? UNKNOWN_NAME
     return {
       name,
       singer,

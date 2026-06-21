@@ -94,7 +94,7 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
 
   const handlePlayLine = () => {
     if (!lyricLines.length) return
-    const num = selectedLineNum
+    const num = targetLineNum
     if (num == null || num < 0 || num >= lyricLines.length) return
     const t = lyricLines[num]?.time
     if (t == null) return
