@@ -128,7 +128,7 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
 
   return (
     <View style={styles.item}>
-      <Text size={15}>{title}</Text>
+      <Text style={styles.title} size={15}>{title}</Text>
       <View style={styles.btns}>
         <Button disabled={loading} onPress={handleShowLogin}>{t('setting_plugin_login_web_btn')}</Button>
         <Button disabled={!cookie || loading} onPress={handleClearLogin}>{t('setting_plugin_login_web_clear')}</Button>
@@ -191,6 +191,10 @@ export default memo(({ title, loginUrl, userAgent, cookieUrls, requiredKeys, set
 const styles = createStyle({
   item: {
     marginTop: 12,
+  },
+  title: {
+    marginLeft: -10,
+    marginBottom: 10,
   },
   btns: {
     marginTop: 10,

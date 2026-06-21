@@ -1,6 +1,7 @@
 import { LIST_IDS } from '@/config/constant'
 import { createList, getListMusics, overwriteList, overwriteListFull, overwriteListMusics } from '@/core/list'
 import { filterMusicList, fixNewMusicInfoQuality, toNewMusicInfo } from '@/utils'
+import { formatPlayTime2 } from '@/utils/common'
 import { log } from '@/utils/log'
 import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
 import listState from '@/store/list/state'
@@ -22,6 +23,72 @@ const buildPlayListBackupData = async() => JSON.parse(JSON.stringify({
   type: 'playList_v2',
   data: await getAllLists(),
 }))
+
+/**
+ * 构建 MusicFree 兼容的备份数据
+ */
+const buildMusicFreeBackupData = async() => {
+  const lists = await getAllLists()
+  return {
+    musicSheets: lists.map(list => ({
+      id: list.id,
+      title: list.name,
+      musicList: list.list.map((item: any) => ({
+        id: item.id,
+        title: item.name,
+        artist: item.singer,
+        album: item.meta?.albumName || '',
+        artwork: item.meta?.picUrl || '',
+        platform: item.source,
+        duration: item.interval ? (() => {
+          const parts = item.interval.split(':')
+          return parts.length === 2 ? parseInt(parts[0]) * 60 + parseInt(parts[1]) : 0
+        })() : 0,
+      })),
+    })),
+    plugins: [],
+  }
+}
+
+/**
+ * 将 MusicFree 格式的歌曲项转换为内部格式
+ */
+const convertMusicFreeItem = (item: any): LX.Music.MusicInfoOnline => {
+  return {
+    id: `${item.id ?? ''}`,
+    name: item.title ?? '',
+    singer: item.artist ?? '',
+    source: item.platform ?? 'wy',
+    interval: item.duration ? formatPlayTime2(item.duration) : null,
+    meta: {
+      songId: `${item.id ?? ''}`,
+      albumName: item.album ?? '',
+      picUrl: item.artwork ?? '',
+      qualitys: [],
+      _qualitys: {},
+    },
+  } as LX.Music.MusicInfoOnline
+}
+
+/**
+ * 导入 MusicFree 格式的歌单数据
+ */
+const importMusicFreeData = async(musicSheets: any[]) => {
+  const lists: Array<LX.List.MyDefaultListInfoFull | LX.List.MyLoveListInfoFull | LX.List.UserListInfoFull> = []
+  for (const sheet of musicSheets) {
+    const musicList = (sheet.musicList || []).map((item: any) => convertMusicFreeItem(item))
+    const list: LX.List.UserListInfoFull = {
+      id: sheet.id ?? `musicfree__${Date.now()}`,
+      name: sheet.title || '未命名歌单',
+      list: filterMusicList(musicList),
+      source: null,
+      sourceListId: null,
+      locationUpdateTime: null,
+    }
+    lists.push(list)
+  }
+  return importNewListData(lists)
+}
 
 const importOldListData = async(lists: any[]) => {
   const allLists = await getAllLists()
@@ -140,6 +207,12 @@ const importPlayList = async(path: string) => {
 }
 
 const importPlayListData = async(configData: any) => {
+  // 检测 MusicFree 格式（含有 musicSheets 字段）
+  if (configData.musicSheets && Array.isArray(configData.musicSheets)) {
+    if (!await showConfirm()) return true
+    await importMusicFreeData(configData.musicSheets)
+    return
+  }
   switch (configData.type) {
     case 'defautlList': // 兼容0.6.2及以前版本的列表数据
       if (!await showConfirm()) return true
@@ -307,7 +380,7 @@ export const handleWebDavBackupList = (config: WebDavBackupConfig) => {
     const dir = normalizeWebDavPath(config.dir || 'lx-music-mobile/playlist-backup')
     await ensureWebDavDir(baseUrl, config, dir)
 
-    const data = await buildPlayListBackupData()
+    const data = await buildMusicFreeBackupData()
     const fileName = buildWebDavFileName()
     const fileUrl = buildWebDavFileUrl(baseUrl, `${dir}/${fileName}`)
     await requestWebDav(fileUrl, config, {

@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import { type NativeScrollEvent, type NativeSyntheticEvent, View, TouchableOpacity } from 'react-native'
 import Text from '@/components/common/Text'
 import { createStyle } from '@/utils/tools'
@@ -29,21 +29,21 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   const [visible, setVisible] = useState(false)
 
   useImperativeHandle(ref, () => ({
-    updateScrollInfo(scrollInfo) {
-      setScrollInfo(scrollInfo)
+    updateScrollInfo(info) {
+      setScrollInfo(info)
     },
-    updateLayoutInfo(listLayoutInfo) {
-      setListLayoutInfo(listLayoutInfo)
+    updateLayoutInfo(info) {
+      setListLayoutInfo(info)
     },
-    updateLyricLines(lyricLines) {
-      setLyricLines(lyricLines)
+    updateLyricLines(lines) {
+      setLyricLines(lines)
     },
     selectLine(lineNum) {
       setSelectedLineNum(lineNum)
       setVisible(true)
     },
-    setVisible(visible) {
-      if (visible) {
+    setVisible(v) {
+      if (v) {
         setVisible(true)
       } else {
         setSelectedLineNum(null)
@@ -53,37 +53,54 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }))
 
   const handlePlayLine = () => {
+    if (!lyricLines.length) return
+    const targetLineNum = selectedLineNum
+    if (targetLineNum == null || targetLineNum < 0 || targetLineNum >= lyricLines.length) return
+    const time = lyricLines[targetLineNum]?.time
+    if (time == null) return
     onPlayLine(time / 1000)
   }
 
   if (!visible) return null
-  let targetLineNum = selectedLineNum
-  if (targetLineNum == null) {
-    if (!scrollInfo) return null
+
+  let targetLineNum: number
+  if (selectedLineNum != null) {
+    targetLineNum = selectedLineNum
+  } else if (scrollInfo) {
     const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * 0.4
-    let lineOffset = listLayoutInfo.spaceHeight
-    targetLineNum = -1
+    let lineOffset = listLayoutInfo.spaceHeight || 0
+    let found = -1
     for (let line = 0; line < listLayoutInfo.lineHeights.length; line++) {
-      lineOffset += listLayoutInfo.lineHeights[line]
+      lineOffset += listLayoutInfo.lineHeights[line] || 0
       if (lineOffset < offset) continue
-      targetLineNum = line
+      found = line
       break
     }
-    if (targetLineNum == -1) targetLineNum = listLayoutInfo.lineHeights.length - 1
+    targetLineNum = found === -1 ? listLayoutInfo.lineHeights.length - 1 : found
+  } else {
+    return null
   }
+
+  if (targetLineNum < 0 || targetLineNum >= lyricLines.length) return null
+
   const time = lyricLines[targetLineNum]?.time ?? 0
-  const timeLabel = formatPlayTime2(time / 1000)
+  const timeLabel = formatPlayTime2(Math.max(0, time) / 1000)
 
   const lineY = useMemo(() => {
-    if (targetLineNum == null || !scrollInfo || !listLayoutInfo.lineHeights.length) return null
-    let y = listLayoutInfo.spaceHeight
-    for (let line = 0; line <= targetLineNum; line++) {
-      y += listLayoutInfo.lineHeights[line] ?? 0
+    try {
+      if (!scrollInfo || !listLayoutInfo.lineHeights.length) return null
+      let y = listLayoutInfo.spaceHeight || 0
+      const end = Math.min(targetLineNum, listLayoutInfo.lineHeights.length - 1)
+      for (let line = 0; line <= end; line++) {
+        y += listLayoutInfo.lineHeights[line] || 0
+      }
+      const result = y - (scrollInfo.contentOffset?.y || 0)
+      if (isNaN(result)) return null
+      return result
+    } catch {
+      return null
     }
-    return y - scrollInfo.contentOffset.y
   }, [targetLineNum, scrollInfo, listLayoutInfo])
-
-  const lineText = lyricLines[targetLineNum]?.text ?? ''
 
   if (lineY == null) return null
 
@@ -119,7 +136,6 @@ const styles = createStyle({
   rightContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
     paddingLeft: 8,
   },
   playBtn: {
