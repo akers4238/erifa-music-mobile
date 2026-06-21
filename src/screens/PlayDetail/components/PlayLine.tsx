@@ -1,5 +1,5 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
-import { type NativeScrollEvent, type NativeSyntheticEvent, View, TouchableOpacity, Animated } from 'react-native'
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { type NativeScrollEvent, type NativeSyntheticEvent, View, TouchableOpacity } from 'react-native'
 import Text from '@/components/common/Text'
 import { createStyle } from '@/utils/tools'
 import { type Lines } from 'lrc-file-parser'
@@ -20,8 +20,6 @@ export interface PlayLineProps {
   onPlayLine: (time: number) => void
 }
 
-const ANIMATION_DURATION = 300
-
 export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => {
   const theme = useTheme()
   const [scrollInfo, setScrollInfo] = useState<NativeSyntheticEvent<NativeScrollEvent>['nativeEvent'] | null>(null)
@@ -29,19 +27,6 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   const [lyricLines, setLyricLines] = useState<Lines>([])
   const [selectedLineNum, setSelectedLineNum] = useState<number | null>(null)
   const [visible, setVisible] = useState(false)
-  const opsAnim = useRef<Animated.Value>(
-    new Animated.Value(0),
-  ).current
-
-  const setShow = (visible: boolean) => {
-    Animated.timing(opsAnim, {
-      toValue: visible ? 1 : 0,
-      duration: ANIMATION_DURATION,
-      useNativeDriver: true,
-    }).start(() => {
-      if (!visible) setVisible(false)
-    })
-  }
 
   useImperativeHandle(ref, () => ({
     updateScrollInfo(scrollInfo) {
@@ -56,20 +41,14 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     selectLine(lineNum) {
       setSelectedLineNum(lineNum)
       setVisible(true)
-      requestAnimationFrame(() => {
-        setShow(true)
-      })
     },
     setVisible(visible) {
       if (visible) {
         setVisible(true)
       } else {
         setSelectedLineNum(null)
+        setVisible(false)
       }
-      requestAnimationFrame(() => {
-        setShow(visible)
-      })
-      // setVisible()
     },
   }))
 
@@ -94,57 +73,58 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }
   const time = lyricLines[targetLineNum]?.time ?? 0
   const timeLabel = formatPlayTime2(time / 1000)
+
+  const lineY = useMemo(() => {
+    if (targetLineNum == null || !scrollInfo || !listLayoutInfo.lineHeights.length) return null
+    let y = listLayoutInfo.spaceHeight
+    for (let line = 0; line <= targetLineNum; line++) {
+      y += listLayoutInfo.lineHeights[line] ?? 0
+    }
+    return y - scrollInfo.contentOffset.y
+  }, [targetLineNum, scrollInfo, listLayoutInfo])
+
+  const lineText = lyricLines[targetLineNum]?.text ?? ''
+
+  if (lineY == null) return null
+
   return (
-    <Animated.View style={{ ...styles.playLine, opacity: opsAnim }}>
-      <View style={{
-        ...styles.selectedContent,
-        backgroundColor: theme['c-primary-light-100-alpha-700'],
-      }}>
-        <View style={styles.textContent}>
-          <Text style={styles.label} color={theme['c-primary-font']} size={12}>{timeLabel}</Text>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={handlePlayLine}>
-          <Icon name="play" color={theme['c-button-font']} size={18} />
+    <View style={{ ...styles.container, top: lineY }}>
+      <View style={{ ...styles.line, backgroundColor: theme['c-primary-alpha-600'] }} />
+      <View style={styles.rightContent}>
+        <Text color={theme['c-primary']} size={11}>{timeLabel}</Text>
+        <TouchableOpacity style={styles.playBtn} onPress={handlePlayLine}>
+          <Icon name="play" color={theme['c-primary']} size={16} />
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   )
 })
 
 const styles = createStyle({
-  playLine: {
+  container: {
     position: 'absolute',
-    width: '92%',
-    top: '40%',
-    left: '4%',
-    minHeight: 44,
-    marginTop: -22,
-    zIndex: 10,
-    elevation: 10,
-    overflow: 'visible',
-    // paddingTop: 5,
-    // paddingBottom: 5,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  selectedContent: {
-    minHeight: 44,
-    borderRadius: 4,
-    paddingLeft: 12,
+    left: 0,
+    right: 0,
+    height: 22,
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
+    zIndex: 10,
+    elevation: 10,
+    paddingRight: 14,
   },
-  textContent: {
+  line: {
     flex: 1,
-    paddingVertical: 6,
+    height: 1,
   },
-  label: {
-    marginBottom: 2,
+  rightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingLeft: 8,
   },
-  button: {
-    flex: 0,
-    width: 48,
-    minHeight: 44,
+  playBtn: {
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
