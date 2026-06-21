@@ -52,21 +52,9 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     },
   }))
 
-  const handlePlayLine = () => {
-    if (!lyricLines.length) return
-    const targetLineNum = selectedLineNum
-    if (targetLineNum == null || targetLineNum < 0 || targetLineNum >= lyricLines.length) return
-    const time = lyricLines[targetLineNum]?.time
-    if (time == null) return
-    onPlayLine(time / 1000)
-  }
-
-  if (!visible) return null
-
-  let targetLineNum: number
-  if (selectedLineNum != null) {
-    targetLineNum = selectedLineNum
-  } else if (scrollInfo) {
+  const targetLineNum = useMemo(() => {
+    if (selectedLineNum != null) return selectedLineNum
+    if (!scrollInfo) return null
     const offset = scrollInfo.contentOffset.y + scrollInfo.layoutMeasurement.height * 0.4
     let lineOffset = listLayoutInfo.spaceHeight || 0
     let found = -1
@@ -76,19 +64,21 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
       found = line
       break
     }
-    targetLineNum = found === -1 ? listLayoutInfo.lineHeights.length - 1 : found
-  } else {
-    return null
-  }
+    return found === -1 ? listLayoutInfo.lineHeights.length - 1 : found
+  }, [selectedLineNum, scrollInfo, listLayoutInfo])
 
-  if (targetLineNum < 0 || targetLineNum >= lyricLines.length) return null
+  const time = useMemo(() => {
+    if (targetLineNum == null || targetLineNum < 0 || targetLineNum >= lyricLines.length) return 0
+    return lyricLines[targetLineNum]?.time ?? 0
+  }, [targetLineNum, lyricLines])
 
-  const time = lyricLines[targetLineNum]?.time ?? 0
-  const timeLabel = formatPlayTime2(Math.max(0, time) / 1000)
+  const timeLabel = useMemo(() => {
+    return formatPlayTime2(Math.max(0, time) / 1000)
+  }, [time])
 
   const lineY = useMemo(() => {
     try {
-      if (!scrollInfo || !listLayoutInfo.lineHeights.length) return null
+      if (targetLineNum == null || !scrollInfo || !listLayoutInfo.lineHeights.length) return null
       let y = listLayoutInfo.spaceHeight || 0
       const end = Math.min(targetLineNum, listLayoutInfo.lineHeights.length - 1)
       for (let line = 0; line <= end; line++) {
@@ -102,6 +92,18 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     }
   }, [targetLineNum, scrollInfo, listLayoutInfo])
 
+  const handlePlayLine = () => {
+    if (!lyricLines.length) return
+    const num = selectedLineNum
+    if (num == null || num < 0 || num >= lyricLines.length) return
+    const t = lyricLines[num]?.time
+    if (t == null) return
+    onPlayLine(t / 1000)
+  }
+
+  if (!visible) return null
+  if (targetLineNum == null) return null
+  if (targetLineNum < 0 || targetLineNum >= lyricLines.length) return null
   if (lineY == null) return null
 
   return (

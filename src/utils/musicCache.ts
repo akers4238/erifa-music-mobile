@@ -10,6 +10,7 @@ const SOURCE_ALIASES = new Map<string, LX.OnlineSource>([
   ['wy', 'wy'],
   ['netease', 'wy'],
   ['网易云', 'wy'],
+  ['网易音乐', 'wy'],
   ['网易云音乐', 'wy'],
   ['bilibili', 'bilibili'],
   ['bili', 'bilibili'],
