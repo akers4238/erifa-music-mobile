@@ -4,7 +4,6 @@ import Text from '@/components/common/Text'
 import { createStyle } from '@/utils/tools'
 import { type Lines } from 'lrc-file-parser'
 import { useTheme } from '@/store/theme/hook'
-import { BorderWidths } from '@/theme'
 import { formatPlayTime2 } from '@/utils'
 import { Icon } from '@/components/common/Icon'
 
@@ -99,7 +98,9 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
     <Animated.View style={{ ...styles.playLine, opacity: opsAnim }}>
       <Text style={styles.label} color={theme['c-primary-font']} size={13}>{timeLabel}</Text>
       <View style={styles.lineContent}>
-        <View style={{ ...styles.line, backgroundColor: theme['c-primary-alpha-700'] }} />
+        <View style={{ ...styles.lineShadow, backgroundColor: theme['c-content-background'] }}>
+          <View style={{ ...styles.line, backgroundColor: theme['c-primary-font'] }} />
+        </View>
         <TouchableOpacity style={styles.button} onPress={handlePlayLine}>
           <Icon name="play" color={theme['c-button-font']} size={18} />
         </TouchableOpacity>
@@ -142,10 +143,17 @@ const styles = createStyle({
     gap: 5,
   },
   line: {
+    flex: 1,
+    height: 3,
+    borderRadius: 3,
+  },
+  lineShadow: {
     marginLeft: 30,
     flex: 1,
-    height: BorderWidths.normal2,
-    borderRadius: BorderWidths.normal2,
+    height: 7,
+    borderRadius: 7,
+    padding: 2,
+    opacity: 0.95,
   },
   button: {
     flex: 0,

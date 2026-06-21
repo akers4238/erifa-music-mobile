@@ -42,7 +42,6 @@ export default forwardRef<ListType, ListProps>(({ onTagChange }, ref) => {
           prevSource.current = source
           setList([
             { name: '', list: [{ name: t('songlist_tag_default'), id: '', parent_id: '', parent_name: '', source }] },
-            { name: t('songlist_tag_hot'), list: [...tagInfo.hotTag] },
             ...tagInfo.tags,
           ].filter(t => t.list.length))
         })

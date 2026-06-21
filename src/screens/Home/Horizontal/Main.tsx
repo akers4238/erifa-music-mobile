@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Search from '../Views/Search'
 import SongList from '../Views/SongList'
 import Mylist from '../Views/Mylist'
-import Leaderboard from '../Views/Leaderboard'
 import LocalMusic from '../Views/LocalMusic'
 import PluginManage from '../Views/PluginManage'
 import PlayHistory from '../Views/PlayHistory'
@@ -29,7 +28,6 @@ const Main = () => {
   const component = useMemo(() => {
     switch (id) {
       case 'nav_songlist': return <SongList />
-      case 'nav_top': return <Leaderboard />
       case 'nav_love': return <Mylist />
       case 'nav_local_music': return <LocalMusic />
       case 'nav_plugin_manage': return <PluginManage />

@@ -5,7 +5,7 @@ import ChoosePath, { type ChoosePathType } from '@/components/common/ChoosePath'
 import { Icon } from '@/components/common/Icon'
 import Text from '@/components/common/Text'
 import { LIST_IDS } from '@/config/constant'
-import { clearListMusics, getListMusics, removeListMusics } from '@/core/list'
+import { clearListMusics, getListMusics, removeListMusics, updateListMusics } from '@/core/list'
 import { playList } from '@/core/player/player'
 import { useI18n } from '@/lang'
 import { usePlayMusicInfo } from '@/store/player/hook'
@@ -14,11 +14,44 @@ import { confirmDialog, createStyle, toast } from '@/utils/tools'
 import Button from '../Setting/components/Button'
 import Section from '../Setting/components/Section'
 import { handleImportMediaFile } from '../Mylist/MyList/listAction'
+import { parseLocalMusicFileName } from '@/utils/musicCache'
 
 const localMusicListInfo: LX.List.UserListInfo = {
   id: LIST_IDS.LOCAL_MUSIC,
   name: 'Local Music',
   locationUpdateTime: null,
+}
+
+const getFileNameByPath = (path: string) => path.split(/\/|\\/).at(-1) ?? path
+
+const repairLocalMusicInfo = (musicInfo: LX.Music.MusicInfo): LX.Music.MusicInfo | null => {
+  if (musicInfo.source != 'local') return null
+  const parsed = parseLocalMusicFileName(getFileNameByPath(musicInfo.meta.filePath))
+  if (!parsed) return null
+  if (
+    musicInfo.name == parsed.name &&
+    musicInfo.singer == parsed.singer &&
+    musicInfo.meta.originSource == parsed.source &&
+    musicInfo.meta.originSongId == parsed.songId
+  ) return null
+
+  return {
+    ...musicInfo,
+    name: parsed.name,
+    singer: parsed.singer,
+    meta: {
+      ...musicInfo.meta,
+      albumName: parsed.source,
+      ext: parsed.ext || musicInfo.meta.ext,
+      originSource: parsed.source,
+      originSongId: parsed.songId,
+    },
+  }
+}
+
+const repairLocalMusicList = async(list: LX.Music.MusicInfo[]) => {
+  const updates = list.map(repairLocalMusicInfo).filter(Boolean) as LX.Music.MusicInfo[]
+  if (updates.length) await updateListMusics(updates.map(musicInfo => ({ id: LIST_IDS.LOCAL_MUSIC, musicInfo })))
 }
 
 const LocalMusicItem = ({
@@ -89,6 +122,7 @@ export default memo(() => {
   const refreshList = () => {
     void getListMusics(LIST_IDS.LOCAL_MUSIC).then(list => {
       setList([...list])
+      void repairLocalMusicList(list)
     })
   }
 

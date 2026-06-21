@@ -64,6 +64,28 @@ const normalizeSource = (source: string): LX.OnlineSource | null => {
   return SOURCE_ALIASES[source.trim()] ?? SOURCE_ALIASES[source.trim().toLowerCase()] ?? null
 }
 
+const isSingerContinuationPart = (part: string) => {
+  const value = part.trim()
+  if (!value) return false
+  if (/^[A-Za-z]$/.test(value)) return true
+  if (/^[A-Z0-9]{2,8}$/.test(value)) return true
+  return false
+}
+
+const splitFormattedTitleAndSinger = (parts: string[]) => {
+  if (parts.length <= 1) return {
+    name: parts[0] || UNKNOWN_NAME,
+    singer: UNKNOWN_NAME,
+  }
+
+  let singerStartIndex = parts.length - 1
+  while (singerStartIndex > 1 && isSingerContinuationPart(parts[singerStartIndex - 1])) singerStartIndex--
+  return {
+    name: parts.slice(0, singerStartIndex).join('-') || UNKNOWN_NAME,
+    singer: parts.slice(singerStartIndex).join('-') || UNKNOWN_NAME,
+  }
+}
+
 export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInfo | null => {
   const { baseName, ext } = splitNameAndExt(fileName)
   if (!baseName || !ext) return null
@@ -92,8 +114,7 @@ export const parseLocalMusicFileName = (fileName: string): LocalMusicFileNameInf
     const source = normalizeSource(normalizedParts.at(-2)!)
     if (source && songId) {
       const titleAndSinger = normalizedParts.slice(0, -2)
-      const singer = titleAndSinger.pop() || UNKNOWN_NAME
-      const name = titleAndSinger.join('-') || UNKNOWN_NAME
+      const { name, singer } = splitFormattedTitleAndSinger(titleAndSinger)
       return {
         name,
         singer,

@@ -3,7 +3,6 @@ import { View } from 'react-native'
 import Search from '../Views/Search'
 import SongList from '../Views/SongList'
 import Mylist from '../Views/Mylist'
-import Leaderboard from '../Views/Leaderboard'
 import LocalMusic from '../Views/LocalMusic'
 import PluginManage from '../Views/PluginManage'
 import PlayHistory from '../Views/PlayHistory'
@@ -91,41 +90,6 @@ const SongListPage = () => {
 
   return visible ? component : null
   // return activeId == 1 || activeId == 0  ? SongList : null
-}
-const LeaderboardPage = () => {
-  const [visible, setVisible] = useState(commonState.navActiveId == 'nav_top')
-  const component = useMemo(() => <Leaderboard />, [])
-  useEffect(() => {
-    let currentId: CommonState['navActiveId'] = commonState.navActiveId
-    const handleNavIdUpdate = (id: CommonState['navActiveId']) => {
-      currentId = id
-      if (id == 'nav_top') {
-        requestAnimationFrame(() => {
-          setVisible(true)
-        })
-      }
-    }
-    const handleHide = () => {
-      if (currentId != 'nav_setting') return
-      setVisible(false)
-    }
-    const handleConfigUpdated = (keys: Array<keyof LX.AppSetting>) => {
-      if (keys.some(k => hideKeys.includes(k))) handleHide()
-    }
-    global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
-    global.state_event.on('themeUpdated', handleHide)
-    global.state_event.on('languageChanged', handleHide)
-    global.state_event.on('configUpdated', handleConfigUpdated)
-
-    return () => {
-      global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
-      global.state_event.off('themeUpdated', handleHide)
-      global.state_event.off('languageChanged', handleHide)
-      global.state_event.off('configUpdated', handleConfigUpdated)
-    }
-  }, [])
-
-  return visible ? component : null
 }
 const MylistPage = () => {
   const [visible, setVisible] = useState(commonState.navActiveId == 'nav_love')
@@ -325,18 +289,16 @@ const PermissionManagePage = () => {
 const viewMap = {
   nav_search: 0,
   nav_songlist: 1,
-  nav_top: 2,
-  nav_love: 3,
-  nav_local_music: 4,
-  nav_plugin_manage: 5,
-  nav_play_history: 6,
-  nav_permission_manage: 7,
-  nav_setting: 8,
+  nav_love: 2,
+  nav_local_music: 3,
+  nav_plugin_manage: 4,
+  nav_play_history: 5,
+  nav_permission_manage: 6,
+  nav_setting: 7,
 }
 const indexMap = [
   'nav_search',
   'nav_songlist',
-  'nav_top',
   'nav_love',
   'nav_local_music',
   'nav_plugin_manage',
@@ -432,9 +394,6 @@ const Main = () => {
       <View collapsable={false} key="nav_songlist" style={styles.pageStyle}>
         <SongListPage />
       </View>
-      <View collapsable={false} key="nav_top" style={styles.pageStyle}>
-        <LeaderboardPage />
-      </View>
       <View collapsable={false} key="nav_love" style={styles.pageStyle}>
         <MylistPage />
       </View>
@@ -453,21 +412,6 @@ const Main = () => {
       <View collapsable={false} key="nav_setting" style={styles.pageStyle}>
         <SettingPage />
       </View>
-      {/* <View collapsable={false} key="nav_search" style={styles.pageStyle}>
-        <Search />
-      </View>
-      <View collapsable={false} key="nav_songlist" style={styles.pageStyle}>
-        <SongList />
-      </View>
-      <View collapsable={false} key="nav_top" style={styles.pageStyle}>
-        <Leaderboard />
-      </View>
-      <View collapsable={false} key="nav_love" style={styles.pageStyle}>
-        <Mylist />
-      </View>
-      <View collapsable={false} key="nav_setting" style={styles.pageStyle}>
-        <Setting />
-      </View> */}
     </PagerView>
   ), [onPageScrollStateChanged, onPageSelected])
 

@@ -2,17 +2,19 @@ import { getMusicResource } from '@/core/music'
 import settingState from '@/store/setting/state'
 import { downloadFile, existsFile } from '@/utils/fs'
 import { requestStoragePermission, toast } from '@/utils/tools'
-import { buildMusicCachePath, ensureMusicCacheDir, findCachedMusicPath, getExtFromUrl } from '@/utils/musicCache'
+import { buildMusicCachePath, buildPicCachePath, ensureMusicCacheDir, ensureMusicPrivateCacheDir, findCachedMusicPath, findCachedPicPath, getExtFromUrl } from '@/utils/musicCache'
+import musicSdk from '@/utils/musicSdk'
+import { toOldMusicInfo } from '@/utils'
 
 const MAX_CONCURRENT_DOWNLOADS = 5
 
 const buildSavePath = async(musicInfo: LX.Music.MusicInfo, url: string) => {
   if (musicInfo.source == 'local') return musicInfo.meta.filePath
-  const cachedPath = await findCachedMusicPath(musicInfo)
+  const cachedPath = await findCachedMusicPath(musicInfo as LX.Music.MusicInfoOnline)
   if (cachedPath) return cachedPath
 
   const ext = getExtFromUrl(url)
-  return buildMusicCachePath(musicInfo, ext)
+  return buildMusicCachePath(musicInfo as LX.Music.MusicInfoOnline, ext)
 }
 
 const buildHeaders = (resource: LX.Player.MusicResource) => {
@@ -22,6 +24,29 @@ const buildHeaders = (resource: LX.Player.MusicResource) => {
 }
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error)
+
+const getPicUrl = async(musicInfo: LX.Music.MusicInfoOnline) => {
+  if (musicInfo.meta.picUrl) return musicInfo.meta.picUrl
+  const sdk = musicSdk[musicInfo.source as LX.OnlineSource]
+  if (!sdk?.getPic) return ''
+  return sdk.getPic(toOldMusicInfo(musicInfo))
+}
+
+const downloadMusicPic = async(musicInfo: LX.Music.MusicInfoOnline) => {
+  try {
+    if (await findCachedPicPath(musicInfo)) return
+    const picUrl = await getPicUrl(musicInfo)
+    if (!picUrl || !/^https?:\/\//i.test(picUrl)) return
+    await ensureMusicPrivateCacheDir()
+    const savePath = buildPicCachePath(musicInfo, picUrl)
+    if (await existsFile(savePath)) return
+    const { promise } = downloadFile(picUrl, savePath, { background: true })
+    const result = await promise
+    if (result.statusCode && result.statusCode >= 400) throw new Error(`HTTP ${result.statusCode}`)
+  } catch (error) {
+    console.warn('Download music pic failed:', error)
+  }
+}
 
 const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   if (musicInfo.source == 'local') {
@@ -45,6 +70,7 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   })
   const savePath = await buildSavePath(musicInfo, resource.url)
   if (await existsFile(savePath)) {
+    await downloadMusicPic(musicInfo as LX.Music.MusicInfoOnline)
     toast(global.i18n.t('download_music_success'))
     return
   }
@@ -54,6 +80,7 @@ const downloadMusic = async(musicInfo: LX.Music.MusicInfo) => {
   })
   const result = await promise
   if (result.statusCode && result.statusCode >= 400) throw new Error(`HTTP ${result.statusCode}`)
+  await downloadMusicPic(musicInfo as LX.Music.MusicInfoOnline)
   toast(global.i18n.t('download_music_success'))
 }
 

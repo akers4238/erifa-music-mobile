@@ -27,6 +27,7 @@ export enum COMPONENT_IDS {
   playDetail = 'playDetail',
   songlistDetail = 'songlistDetail',
   comment = 'comment',
+  webview = 'webview',
 }
 
 export enum NAV_SHEAR_NATIVE_IDS {
@@ -105,7 +106,6 @@ export const APP_PROVIDER_NAME = 'com.erifa.music2.provider'
 export const NAV_MENUS = [
   { id: 'nav_search', icon: 'search-2' },
   { id: 'nav_songlist', icon: 'album' },
-  { id: 'nav_top', icon: 'leaderboard' },
   { id: 'nav_love', icon: 'love' },
   { id: 'nav_local_music', icon: 'add-music' },
   // { id: 'download', icon: 'download-2' },

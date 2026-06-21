@@ -32,7 +32,7 @@ export default forwardRef<ActiveListType, ActiveListProps>(({ onShowSearchBar, o
       case LIST_IDS.TEMP:
         return global.i18n.t('list_name_temp')
       case LIST_IDS.DEFAULT:
-        return global.i18n.t('list_name_default')
+        return global.i18n.t('list_name_love')
       case LIST_IDS.LOVE:
         return global.i18n.t('list_name_love')
       default:

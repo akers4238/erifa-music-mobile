@@ -1,5 +1,5 @@
 import { getData, saveData, getAllKeys, removeDataMultiple, saveDataMultiple, removeData, getDataMultiple } from '@/plugins/storage'
-import { DEFAULT_SETTING, LIST_IDS, storageDataPrefix, type NAV_ID_Type } from '@/config/constant'
+import { DEFAULT_SETTING, LIST_IDS, NAV_MENUS, storageDataPrefix, type NAV_ID_Type } from '@/config/constant'
 import { throttle } from './common'
 // import { gzip, ungzip } from '@/utils/nativeModules/gzip'
 // import { readFile, writeFile, temporaryDirectoryPath, unlink } from '@/utils/fs'
@@ -108,8 +108,8 @@ const saveListPrevSelectIdThrottle = throttle(() => {
 }, 200)
 export const getListPrevSelectId = async() => {
   // eslint-disable-next-line require-atomic-updates
-  listPrevSelectId ??= await getData(listPrevSelectIdKey) ?? LIST_IDS.DEFAULT
-  return listPrevSelectId || LIST_IDS.DEFAULT
+  listPrevSelectId ??= await getData(listPrevSelectIdKey) ?? LIST_IDS.LOVE
+  return listPrevSelectId == LIST_IDS.DEFAULT ? LIST_IDS.LOVE : listPrevSelectId || LIST_IDS.LOVE
 }
 export const saveListPrevSelectId = (id: string) => {
   listPrevSelectId = id
@@ -270,7 +270,9 @@ export const saveLeaderboardSetting = async(setting: Partial<typeof DEFAULT_SETT
 }
 
 export const getViewPrevState = async() => {
-  return (await getData<{ id: NAV_ID_Type }>(viewPrevStateKey)) ?? { ...DEFAULT_SETTING.viewPrevState }
+  const state = (await getData<{ id: string }>(viewPrevStateKey)) ?? { ...DEFAULT_SETTING.viewPrevState }
+  if (!NAV_MENUS.some(menu => menu.id == state.id)) state.id = DEFAULT_SETTING.viewPrevState.id
+  return state as { id: NAV_ID_Type }
 }
 export const saveViewPrevState = (state: { id: NAV_ID_Type }) => {
   saveViewPrevStateThrottle(state)

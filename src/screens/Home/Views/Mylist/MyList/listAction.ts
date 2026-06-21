@@ -174,16 +174,16 @@ export const buildLocalMusicInfo = (filePath: string, metadata: MusicMetadataFul
   const parsed = parseLocalMusicFileName(getFileNameByPath(filePath))
   return {
     id: filePath,
-    name: metadata.name,
-    singer: metadata.singer,
+    name: parsed?.name ?? metadata.name,
+    singer: parsed?.singer ?? metadata.singer,
     source: 'local',
     interval: formatPlayTime2(metadata.interval),
     meta: {
-      albumName: metadata.albumName,
+      albumName: parsed?.source ?? metadata.albumName,
       filePath,
       songId: filePath,
       picUrl: '',
-      ext: metadata.ext,
+      ext: parsed?.ext ?? metadata.ext,
       originSource: parsed?.source,
       originSongId: parsed?.songId,
     },

@@ -12,7 +12,7 @@ declare namespace LX {
 
     interface MyDefaultListInfo {
       id: 'default'
-      name: '试听列表'
+      name: string
       // list: LX.Music.MusicInfo[]
     }
 

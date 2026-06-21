@@ -11,7 +11,6 @@ import { useTheme } from '@/store/theme/hook'
 // import { BorderWidths } from '@/theme'
 // import { useTheme } from '@/store/theme/hook'
 import BoardsList, { type BoardsListType, type BoardsListProps } from '../BoardsList'
-import type { InitState as CommonState } from '@/store/common/state'
 import settingState from '@/store/setting/state'
 import { getBoardsList } from '@/core/leaderboard'
 import { COMPONENT_IDS } from '@/config/constant'
@@ -115,13 +114,9 @@ export default () => {
         musicListRef.current?.loadList(source, bound.id)
       })
     }
-    const handleFixDrawer = (id: CommonState['navActiveId']) => {
-      if (id == 'nav_top') drawer.current?.fixWidth()
-    }
     const handleApiSourceUpdated = () => {
       void loadSetting(boundInfo.current.source)
     }
-    global.state_event.on('navActiveIdUpdated', handleFixDrawer)
     global.state_event.on('apiSourceUpdated', handleApiSourceUpdated)
 
 
@@ -129,7 +124,6 @@ export default () => {
     void loadSetting()
 
     return () => {
-      global.state_event.off('navActiveIdUpdated', handleFixDrawer)
       global.state_event.off('apiSourceUpdated', handleApiSourceUpdated)
       isUnmountedRef.current = true
     }
